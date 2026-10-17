@@ -34,7 +34,7 @@ async function fillUntilContact(page: Page, title: string, project: string, scre
 
   // 2. O quê
   await expect(flow.getByRole('heading', { name: 'O quê' })).toBeVisible();
-  await flow.getByText('Concentração / vigília').click();
+  await flow.getByText('Concentração', { exact: true }).click();
   await flow.getByLabel('Título').fill(title);
   await flow.getByLabel('Descrição (opcional)').fill('Evento criado pelos testes e2e.');
   if (screens) await shot(page, '11-adicionar-o-que', project);

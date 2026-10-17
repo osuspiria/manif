@@ -6,5 +6,6 @@ export const SHAPE_PATHS: Record<MarkerShape, string> = {
   square: 'M4 4h16v16H4Z',
   triangle: 'M12 2.5L22 20.5H2Z',
   diamond: 'M12 1.5L22.5 12L12 22.5L1.5 12Z',
+  pentagon: 'M12 2l10 7.5l-3.8 12H5.8L2 9.5Z',
   hexagon: 'M7 3h10l5 9l-5 9H7l-5-9Z',
 };

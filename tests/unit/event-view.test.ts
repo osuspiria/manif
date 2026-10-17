@@ -136,6 +136,7 @@ describe('countByType', () => {
       rally: 2,
       action: 0,
       assembly: 1,
+      camp: 0,
       other: 0,
     });
   });

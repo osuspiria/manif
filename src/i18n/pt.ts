@@ -447,10 +447,11 @@ export const pt = {
     },
   },
   eventTypes: {
-    demonstration: 'Manifestação / desfile',
-    rally: 'Concentração / vigília',
+    demonstration: 'Manifestação',
+    rally: 'Concentração',
     action: 'Ação num local',
-    assembly: 'Assembleia / reunião aberta',
+    assembly: 'Assembleia Popular',
+    camp: 'Acampada',
     other: 'Outro',
   },
   when: {

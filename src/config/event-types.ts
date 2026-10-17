@@ -1,8 +1,15 @@
 /** Event types (SPEC §3.3). Colour is never the only cue: each type also has a distinct shape. */
-export const EVENT_TYPE_KEYS = ['demonstration', 'rally', 'action', 'assembly', 'other'] as const;
+export const EVENT_TYPE_KEYS = [
+  'demonstration',
+  'rally',
+  'action',
+  'assembly',
+  'camp',
+  'other',
+] as const;
 export type EventType = (typeof EVENT_TYPE_KEYS)[number];
 
-export type MarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'hexagon';
+export type MarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'pentagon' | 'hexagon';
 
 export interface EventTypeConfig {
   /** Key into `pt.eventTypes` in src/i18n/pt.ts. */
@@ -18,6 +25,7 @@ export const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
   rally: { key: 'rally', color: '#6a1b9a', shape: 'square', icon: 'flame' },
   action: { key: 'action', color: '#e65100', shape: 'triangle', icon: 'flag' },
   assembly: { key: 'assembly', color: '#1565c0', shape: 'diamond', icon: 'people' },
+  camp: { key: 'camp', color: '#2e7d32', shape: 'pentagon', icon: 'tent' },
   other: { key: 'other', color: '#37474f', shape: 'hexagon', icon: 'dot' },
 };
 

@@ -97,6 +97,18 @@ const SEEDS: Seed[] = [
     occ: weekly(nextWeekday(3), 6, '19:00', '21:00'),
   },
   {
+    type: 'camp',
+    title: 'Acampada no jardim',
+    lat: 38.7275,
+    lng: -9.1565,
+    place: 'Jardim da Estrela',
+    organizer: 'Coletivo Fictício da Estrela',
+    occ: [
+      { date: d(2), start: null, end: null },
+      { date: d(3), start: null, end: null },
+    ],
+  },
+  {
     type: 'action',
     title: 'Ação junto ao centro de saúde',
     lat: 38.7369,

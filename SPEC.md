@@ -145,10 +145,11 @@ CREATE TABLE signatures (
 
 | key | Rótulo | Ícone/cor |
 |---|---|---|
-| `demonstration` | Manifestação / desfile | |
-| `rally` | Concentração / vigília | |
+| `demonstration` | Manifestação | |
+| `rally` | Concentração | |
 | `action` | Ação num local (posto, empresa, serviço público…) | |
-| `assembly` | Assembleia / reunião aberta | |
+| `assembly` | Assembleia Popular | |
+| `camp` | Acampada | |
 | `other` | Outro | |
 
 Cada tipo tem cor + forma de ícone distintas (não depender só da cor).
