@@ -96,6 +96,16 @@ export function lisbonToday(now: Date): string {
   return toInstant(now).toZonedDateTimeISO(CALENDAR_TZ).toPlainDate().toString();
 }
 
+/** Civil date in the given time zone at `now`. */
+export function todayIn(tz: Tz, now: Date): string {
+  return toInstant(now).toZonedDateTimeISO(tz).toPlainDate().toString();
+}
+
+/** Adds calendar months, clamping to the end of the month (31 Jan + 1 month = 28/29 Feb). */
+export function addMonths(date: string, months: number): string {
+  return Temporal.PlainDate.from(date).add({ months }, { overflow: 'constrain' }).toString();
+}
+
 export function addDays(date: string, days: number): string {
   return Temporal.PlainDate.from(date).add({ days }).toString();
 }

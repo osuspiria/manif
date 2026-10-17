@@ -3,6 +3,7 @@
  * (SPEC §4.2), keeps the filter in the URL, and shows them on the map and in
  * the equivalent list.
  */
+import type { ComponentType } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import { LIMITS } from '../../config/app';
 import type { EventType } from '../../config/event-types';
@@ -25,6 +26,8 @@ import {
   serializeMapUrl,
   type MapUrlState,
 } from '../../shared/url-state';
+import { PlaceSearchBox } from '../forms/PlaceSearchBox';
+import type { AddEventFlowProps } from './AddEventFlow';
 import { EventList } from './EventList';
 import { EventSheet } from './EventSheet';
 import { FilterPanel } from './FilterPanel';
@@ -65,6 +68,12 @@ export function MapApp() {
   const [dayStripOpen, setDayStripOpen] = useState(() => url.when.kind === 'day');
   const [command, setCommand] = useState<MapCommand | null>(null);
   const [message, setMessage] = useState('');
+  // "Adicionar evento" (lazy-loaded) and "Procurar local".
+  const [adding, setAdding] = useState(false);
+  const [AddFlow, setAddFlow] = useState<ComponentType<AddEventFlowProps> | null>(null);
+  const [picking, setPicking] = useState(false);
+  const [center, setCenter] = useState<[number, number] | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Keep a focused event visible next to the event sheet (bottom on mobile, right on desktop).
   const sheetOffset = (): [number, number] =>
@@ -188,23 +197,41 @@ export function MapApp() {
       issue({ kind: 'focus', lng: e.lng, lat: e.lat, offset: sheetOffset() });
   };
   const goRegion = (region: RegionKey) => issue({ kind: 'region', region });
-  const nearMe = () => {
+  const locate = (onPos: (lng: number, lat: number) => void, highAccuracy = false) => {
     if (!('geolocation' in navigator)) return setMessage(pt.map.nearMeError);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        // Stays in the browser: nothing is sent to the server.
-        update({ view: 'map' });
-        issue({ kind: 'user', lng: pos.coords.longitude, lat: pos.coords.latitude });
-      },
+      // Stays in the browser: nothing is sent to the server.
+      (pos) => onPos(pos.coords.longitude, pos.coords.latitude),
       () => setMessage(pt.map.nearMeError),
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 },
+      { enableHighAccuracy: highAccuracy, timeout: 10_000, maximumAge: 300_000 },
     );
+  };
+  const nearMe = () =>
+    locate((lng, lat) => {
+      update({ view: 'map' });
+      issue({ kind: 'user', lng, lat });
+    });
+
+  const startAdding = () => {
+    setSelectedId(null);
+    setPanelOpen(false);
+    setSearchOpen(false);
+    update({ view: 'map' });
+    setAdding(true);
+
+    if (!AddFlow) {
+      void import('./AddEventFlow').then((m) => setAddFlow(() => m.AddEventFlow));
+    }
+  };
+  const stopAdding = () => {
+    setAdding(false);
+    setPicking(false);
   };
 
   const isDefault = isDefaultFilter(url);
-  const showList = isDesktop || url.view === 'list';
-  const showMap = isDesktop || url.view === 'map';
-  const overlay = !isDesktop && panelOpen;
+  const showList = !adding && (isDesktop || url.view === 'list');
+  const showMap = isDesktop || url.view === 'map' || adding;
+  const overlay = !isDesktop && panelOpen && !adding;
 
   const panel = (
     <FilterPanel
@@ -230,7 +257,11 @@ export function MapApp() {
   );
 
   return (
-    <main class="map-app" data-view={url.view} data-desktop={isDesktop}>
+    <main
+      class={`map-app${adding ? ' adding' : ''}${picking ? ' picking' : ''}`}
+      data-view={url.view}
+      data-desktop={isDesktop}
+    >
       <h1 class="visually-hidden">{pt.map.heading}</h1>
 
       <div class="topbar">
@@ -293,8 +324,37 @@ export function MapApp() {
         </p>
       )}
 
-      {(isDesktop || overlay) && (
+      {((isDesktop && !adding) || overlay) && (
         <div class={overlay ? 'panel-overlay' : 'panel-side'}>{panel}</div>
+      )}
+
+      {adding && (
+        <div class={`add-container${picking ? ' add-compact' : ''}`}>
+          {AddFlow ? (
+            <AddFlow
+              center={center}
+              now={now}
+              onPickingChange={setPicking}
+              onFly={(lng, lat, zoom) => issue({ kind: 'fly', lng, lat, zoom })}
+              onUseLocation={() =>
+                locate((lng, lat) => issue({ kind: 'fly', lng, lat, zoom: 16 }), true)
+              }
+              onStartOutside={() =>
+                // Wide screens can start out at sea. Zoom 9: at lower zooms the pan
+                // limit keeps the centre offshore; no animation, as a resize may follow.
+                issue({ kind: 'jump', lng: -8.1, lat: 39.6, zoom: 9 })
+              }
+              onClose={stopAdding}
+              onCreated={fetchEvents}
+              onView={(id) => {
+                stopAdding();
+                setSelectedId(id);
+              }}
+            />
+          ) : (
+            <p class="empty">{pt.map.loading}</p>
+          )}
+        </div>
       )}
 
       <div class="content">
@@ -308,14 +368,48 @@ export function MapApp() {
               </button>
             </p>
           )}
+          {!isDesktop && (
+            <button type="button" class="btn-primary list-add" onClick={startAdding}>
+              + {pt.add.open}
+            </button>
+          )}
           {load.state === 'ok' && (
             <EventList results={results} selectedId={selectedId} onSelect={select} />
           )}
         </div>
 
         <div class="map-pane" hidden={!showMap}>
-          <MapCanvas markers={markers} visible={showMap} command={command} onSelect={select} />
-          <div class="regions" role="group" aria-label={pt.map.regions}>
+          <MapCanvas
+            markers={markers}
+            visible={showMap}
+            command={command}
+            onSelect={(id) => {
+              if (!adding) select(id);
+            }}
+            picking={adding && picking}
+            onCenter={setCenter}
+          />
+          {searchOpen && !adding && (
+            <div class="map-search">
+              <PlaceSearchBox
+                id="map-search"
+                autoFocus
+                onPick={(r) => {
+                  setSearchOpen(false);
+                  issue({ kind: 'fly', lng: r.lng, lat: r.lat, zoom: 15 });
+                }}
+              />
+              <button
+                type="button"
+                class="btn-icon"
+                aria-label={pt.search.close}
+                onClick={() => setSearchOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+          )}
+          <div class="regions" role="group" aria-label={pt.map.regions} hidden={adding}>
             <button type="button" onClick={() => goRegion('mainland')}>
               {pt.map.regionMainland}
             </button>
@@ -326,22 +420,72 @@ export function MapApp() {
               {pt.map.regionAzores}
             </button>
           </div>
-          <button type="button" class="fab" onClick={nearMe} aria-label={pt.map.nearMe}>
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
-              <circle cx="12" cy="12" r="4" fill="currentColor" />
-              <path
-                d="M12 2v3M12 19v3M2 12h3M19 12h3"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-              <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="2" />
-            </svg>
-          </button>
+          {!adding && (
+            <div class="fabs">
+              <button
+                type="button"
+                class="fab"
+                aria-label={pt.search.open}
+                aria-expanded={searchOpen}
+                onClick={() => setSearchOpen((o) => !o)}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle
+                    cx="10.5"
+                    cy="10.5"
+                    r="6.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M15.5 15.5 21 21"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </button>
+              <button type="button" class="fab" onClick={nearMe} aria-label={pt.map.nearMe}>
+                <svg
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle cx="12" cy="12" r="4" fill="currentColor" />
+                  <path
+                    d="M12 2v3M12 19v3M2 12h3M19 12h3"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="7.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  />
+                </svg>
+              </button>
+              <button type="button" class="fab fab-add" onClick={startAdding}>
+                <span aria-hidden="true">+</span> {pt.add.open}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {selectedId && (
+      {selectedId && !adding && (
         <EventSheet
           event={selectedEvent}
           loading={

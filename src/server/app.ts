@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import municipalities from '../../data/geo/municipalities.geo.json';
 import { GEO_SNAP_METERS } from '../config/app';
-import { systemClock, type Clock } from './clock';
+import { defaultDeps, type AppDeps } from './deps';
 import type { Env } from './env';
 import { eventsRoutes } from './routes/events';
 import { geoRoutes } from './routes/geo';
@@ -13,14 +13,12 @@ import { createGeoService, type MunicipalityCollection } from './services/geo-se
 // Built once per isolate.
 const geo = createGeoService(municipalities as MunicipalityCollection, GEO_SNAP_METERS);
 
-export interface AppDeps {
-  clock: Clock;
-}
-
-export function createApp({ clock }: AppDeps) {
+export function createApp(overrides: Partial<AppDeps> = {}) {
+  const deps: AppDeps = { ...defaultDeps, ...overrides };
+  const clock = deps.clock;
   const api = new Hono<{ Bindings: Env }>()
-    .route('/geo', geoRoutes(geo))
-    .route('/', eventsRoutes(clock));
+    .route('/geo', geoRoutes(geo, deps))
+    .route('/', eventsRoutes(geo, deps));
 
   const app = new Hono<{ Bindings: Env }>()
     .route('/api', api)
@@ -42,4 +40,4 @@ export function createApp({ clock }: AppDeps) {
   return app;
 }
 
-export const app = createApp({ clock: systemClock });
+export const app = createApp();

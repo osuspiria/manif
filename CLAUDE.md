@@ -20,6 +20,7 @@ A especificação completa está em `SPEC.md`. **Lê-a antes de qualquer tarefa 
 ## Comandos
 
 ```bash
+npm run setup        # cria .dev.vars a partir de .dev.vars.example (chaves de teste do Turnstile)
 npm run dev          # Astro + Worker + D1 local
 npm run test         # Vitest
 npm run test:e2e     # Playwright

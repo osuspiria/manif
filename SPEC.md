@@ -224,6 +224,7 @@ Fluxo em passos curtos (bottom sheet em telemóvel):
 5. **Enviar** — Turnstile invisível + honeypot. Ecrã final com:
    - estado ("Publicado" ou "A aguardar moderação", conforme `MODERATION_MODE`);
    - **link secreto de edição** (para guardar; também enviado por email se foi indicado) que permite editar datas, cancelar uma ocorrência ou o evento inteiro.
+     Formato: `/editar/#e=<id>&t=<token>`. O token fica no fragmento do URL (nunca é enviado ao servidor em pedidos de página, nem aparece em logs ou no Referer) e segue só no header `X-Edit-Token`.
 
 Não se pede nome nem morada de quem submete.
 
@@ -321,7 +322,8 @@ Necessário para as duas funcionalidades, mantido mínimo:
 | GET | `/api/events.geojson` | Todos os eventos visíveis + ocorrências futuras. Cache 60 s |
 | GET | `/api/events/:id` | Ficha de um evento |
 | POST | `/api/events` | Criar evento (Turnstile) → `{id, editUrl, status}` |
-| PATCH | `/api/events/:id` | Editar (header `X-Edit-Token`) |
+| GET | `/api/events/:id/edit` | Dados para edição, com o estado de moderação (header `X-Edit-Token`) |
+| PATCH | `/api/events/:id` | Editar (header `X-Edit-Token`): corpo `{…campos, occurrences}` ou `{cancelEvent: true}` |
 | POST | `/api/events/:id/report` | Reportar |
 | GET | `/api/geo/search?q=` | Proxy de pesquisa de locais (só PT, cache) |
 | GET | `/api/geo/reverse?lat&lng` | Concelho/distrito/tz via CAOP local |

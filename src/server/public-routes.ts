@@ -15,6 +15,21 @@ export interface PublicRoute {
   samples: { url: string; init?: RequestInit }[];
 }
 
+const json = (body: unknown, headers: Record<string, string> = {}): RequestInit => ({
+  headers: { 'Content-Type': 'application/json', ...headers },
+  body: JSON.stringify(body),
+});
+
+const NEW_EVENT = {
+  type: 'rally',
+  title: 'Concentração de teste',
+  lat: 41.1496,
+  lng: -8.6109,
+  contactEmail: 'pessoa@exemplo.pt',
+  occurrences: [{ localDate: '2026-11-18', startTime: '18:00', endTime: null, note: null }],
+  turnstileToken: 'token',
+};
+
 export const PUBLIC_ROUTES: PublicRoute[] = [
   {
     method: 'GET',
@@ -25,6 +40,41 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
       { url: '/api/geo/reverse?lat=40&lng=-15' },
       { url: '/api/geo/reverse?lat=abc' },
     ],
+  },
+  {
+    method: 'GET',
+    route: '/api/geo/search',
+    samples: [{ url: '/api/geo/search?q=Rossio' }, { url: '/api/geo/search?q=a' }],
+  },
+  {
+    method: 'POST',
+    route: '/api/events',
+    samples: [
+      { url: '/api/events', init: json(NEW_EVENT) },
+      { url: '/api/events', init: json({ ...NEW_EVENT, title: 'x' }) },
+    ],
+  },
+  {
+    method: 'GET',
+    route: '/api/events/:id/edit',
+    samples: [
+      { url: '/api/events/{eventId}/edit', init: { headers: { 'X-Edit-Token': 'wrong' } } },
+    ],
+  },
+  {
+    method: 'PATCH',
+    route: '/api/events/:id',
+    samples: [
+      {
+        url: '/api/events/{eventId}',
+        init: json({ cancelEvent: true }, { 'X-Edit-Token': 'wrong' }),
+      },
+    ],
+  },
+  {
+    method: 'POST',
+    route: '/api/events/:id/report',
+    samples: [{ url: '/api/events/{eventId}/report', init: json({ reason: 'fake' }) }],
   },
   {
     method: 'GET',

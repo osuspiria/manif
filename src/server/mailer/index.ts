@@ -1,4 +1,4 @@
-/** Outgoing email port. The real provider (Resend, decision D4) arrives in phase 5. */
+/** Outgoing email port (decision D4: Resend). */
 export interface MailMessage {
   to: string;
   subject: string;
@@ -21,5 +21,35 @@ export class FakeMailer implements Mailer {
 
   last(): MailMessage | undefined {
     return this.sent.at(-1);
+  }
+}
+
+/** Drops messages (no provider configured). Never logs addresses or content. */
+export class NullMailer implements Mailer {
+  send(): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
+export class ResendMailer implements Mailer {
+  constructor(
+    private readonly apiKey: string,
+    private readonly from: string,
+    private readonly fetchFn: typeof fetch = (input, init) => fetch(input, init),
+  ) {}
+
+  async send(m: MailMessage): Promise<void> {
+    const res = await this.fetchFn('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: this.from,
+        to: [m.to],
+        subject: m.subject,
+        text: m.text,
+        html: m.html,
+      }),
+    });
+    if (!res.ok) throw new Error(`resend ${res.status}`);
   }
 }

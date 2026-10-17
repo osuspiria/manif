@@ -4,6 +4,7 @@ import { nowIso } from '../../shared/dates';
 import { filterEvents, type WhenFilter } from '../../shared/event-filter';
 import { formatOccurrence } from '../../shared/event-view';
 import type { PublicEvent, PublicOccurrence } from '../../shared/schemas';
+import { ReportForm } from './ReportForm';
 import { TypeIcon } from './TypeIcon';
 
 interface Props {
@@ -37,10 +38,12 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState('');
+  const [reporting, setReporting] = useState(false);
 
   useEffect(() => {
     setExpanded(false);
     setStatus('');
+    setReporting(false);
     titleRef.current?.focus();
   }, [event?.id]);
 
@@ -168,7 +171,13 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
         <a class="btn" href={osm} rel="noopener noreferrer" target="_blank">
           {pt.event.openInOsm}
         </a>
+        {!reporting && (
+          <button type="button" class="btn btn-quiet" onClick={() => setReporting(true)}>
+            {pt.report.open}
+          </button>
+        )}
       </div>
+      {reporting && <ReportForm eventId={event.id} onClose={() => setReporting(false)} />}
       <p class="sr-status" role="status">
         {status}
       </p>

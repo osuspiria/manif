@@ -6,10 +6,21 @@
 import { env } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { app, createApp } from '../../src/server/app';
+import { FakeMailer } from '../../src/server/mailer';
 import { PUBLIC_ROUTES } from '../../src/server/public-routes';
+import { FakeCaptcha } from '../../src/server/security/captcha';
+import { MemoryRateLimiter } from '../../src/server/security/rate-limit';
 import { IDS, insertEvent, resetDb, SENTINELS } from './fixtures';
 
-const fixedApp = createApp({ clock: () => new Date('2026-11-11T10:00:00Z') });
+const fixedApp = createApp({
+  clock: () => new Date('2026-11-11T10:00:00Z'),
+  captcha: () => new FakeCaptcha(true),
+  mailer: () => new FakeMailer(),
+  rateLimiter: () => new MemoryRateLimiter(),
+  placeSearch: () => ({
+    search: () => Promise.resolve([{ label: 'Rossio, Lisboa', lat: 38.71, lng: -9.14 }]),
+  }),
+});
 
 /** Keys that must never appear in a public response, at any depth. */
 const FORBIDDEN_KEYS = new Set(
@@ -107,7 +118,9 @@ describe('public API privacy', () => {
       env,
     );
     expect(res.headers.get('Set-Cookie')).toBeNull();
-    const body = await res.text();
+    const contentType = res.headers.get('Content-Type') ?? '';
+    // Binary responses (tiles, glyphs) carry no personal data; only scan text.
+    const body = /json|html|text/.test(contentType) ? await res.text() : '';
     for (const secret of Object.values(SENTINELS)) expect(body).not.toContain(secret);
     if (res.headers.get('Content-Type')?.includes('json')) {
       expect(findLeaks(JSON.parse(body))).toEqual([]);

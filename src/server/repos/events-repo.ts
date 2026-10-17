@@ -77,3 +77,192 @@ export function eventsRepo(db: Db): EventsRepo {
     },
   };
 }
+
+// --- write side ----------------------------------------------------------------
+
+export interface NewEventRow {
+  id: string;
+  type: string;
+  title: string;
+  description: string | null;
+  organizer: string | null;
+  lat: number;
+  lng: number;
+  place_label: string | null;
+  municipality: string;
+  district: string;
+  tz: string;
+  status: 'pending' | 'published';
+  contact_email: string | null;
+  edit_token_hash: string;
+  created_at: string;
+}
+
+export type NewOccurrenceRow = OccurrenceRow;
+
+/** Owner view: includes moderation fields and the token hash (never returned publicly). */
+export interface OwnerEventRow extends EventRow {
+  status: 'pending' | 'published' | 'hidden';
+  edit_token_hash: string;
+}
+
+export interface EventFieldsUpdate {
+  type: string;
+  title: string;
+  description: string | null;
+  organizer: string | null;
+  place_label: string | null;
+}
+
+export interface OccurrenceChanges {
+  insert: NewOccurrenceRow[];
+  update: NewOccurrenceRow[];
+  remove: string[];
+}
+
+export interface EventsWriteRepo {
+  insert(event: NewEventRow, occurrences: NewOccurrenceRow[]): Promise<void>;
+  getOwner(id: string): Promise<OwnerEventRow | null>;
+  update(
+    id: string,
+    fields: EventFieldsUpdate,
+    changes: OccurrenceChanges,
+    resetVerified: boolean,
+    nowIso: string,
+  ): Promise<void>;
+  cancelOccurrencesEndingAfter(id: string, nowIso: string): Promise<void>;
+  addReport(r: {
+    id: string;
+    event_id: string;
+    reason: string;
+    detail: string | null;
+    created_at: string;
+  }): Promise<number>;
+  setStatus(id: string, status: 'pending' | 'published' | 'hidden', nowIso: string): Promise<void>;
+}
+
+const INSERT_OCC = `INSERT INTO event_occurrences (id, event_id, local_date, start_time, end_time,
+  starts_at, ends_at, note, cancelled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+const occParams = (o: NewOccurrenceRow) => [
+  o.id,
+  o.event_id,
+  o.local_date,
+  o.start_time,
+  o.end_time,
+  o.starts_at,
+  o.ends_at,
+  o.note,
+  o.cancelled,
+];
+
+export function eventsWriteRepo(db: Db): EventsWriteRepo {
+  return {
+    async insert(e, occurrences) {
+      await db.batch([
+        {
+          sql: `INSERT INTO events (id, type, title, description, organizer, lat, lng, place_label,
+                  municipality, district, tz, status, verified, contact_email, edit_token_hash,
+                  created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`,
+          params: [
+            e.id,
+            e.type,
+            e.title,
+            e.description,
+            e.organizer,
+            e.lat,
+            e.lng,
+            e.place_label,
+            e.municipality,
+            e.district,
+            e.tz,
+            e.status,
+            e.contact_email,
+            e.edit_token_hash,
+            e.created_at,
+            e.created_at,
+          ],
+        },
+        ...occurrences.map((o) => ({ sql: INSERT_OCC, params: occParams(o) })),
+      ]);
+    },
+
+    getOwner(id) {
+      return db.first<OwnerEventRow>(
+        `SELECT ${EVENT_COLUMNS}, e.status, e.edit_token_hash FROM events e WHERE e.id = ?`,
+        [id],
+      );
+    },
+
+    async update(id, f, changes, resetVerified, nowIso) {
+      await db.batch([
+        {
+          sql: `UPDATE events SET type = ?, title = ?, description = ?, organizer = ?, place_label = ?,
+                  verified = CASE WHEN ? THEN 0 ELSE verified END, updated_at = ?
+                WHERE id = ?`,
+          params: [
+            f.type,
+            f.title,
+            f.description,
+            f.organizer,
+            f.place_label,
+            resetVerified ? 1 : 0,
+            nowIso,
+            id,
+          ],
+        },
+        ...changes.remove.map((occId) => ({
+          sql: 'DELETE FROM event_occurrences WHERE id = ? AND event_id = ?',
+          params: [occId, id],
+        })),
+        ...changes.update.map((o) => ({
+          sql: `UPDATE event_occurrences SET local_date = ?, start_time = ?, end_time = ?, starts_at = ?,
+                  ends_at = ?, note = ?, cancelled = ? WHERE id = ? AND event_id = ?`,
+          params: [
+            o.local_date,
+            o.start_time,
+            o.end_time,
+            o.starts_at,
+            o.ends_at,
+            o.note,
+            o.cancelled,
+            o.id,
+            id,
+          ],
+        })),
+        ...changes.insert.map((o) => ({ sql: INSERT_OCC, params: occParams(o) })),
+      ]);
+    },
+
+    async cancelOccurrencesEndingAfter(id, nowIso) {
+      await db.batch([
+        {
+          sql: 'UPDATE event_occurrences SET cancelled = 1 WHERE event_id = ? AND ends_at > ?',
+          params: [id, nowIso],
+        },
+        { sql: 'UPDATE events SET updated_at = ? WHERE id = ?', params: [nowIso, id] },
+      ]);
+    },
+
+    async addReport(r) {
+      await db.run(
+        'INSERT INTO event_reports (id, event_id, reason, detail, created_at) VALUES (?, ?, ?, ?, ?)',
+        [r.id, r.event_id, r.reason, r.detail, r.created_at],
+      );
+      const row = await db.first<{ n: number }>(
+        'SELECT count(*) AS n FROM event_reports WHERE event_id = ?',
+        [r.event_id],
+      );
+      return row?.n ?? 0;
+    },
+
+    async setStatus(id, status, nowIso) {
+      await db.run('UPDATE events SET status = ?, updated_at = ? WHERE id = ?', [
+        status,
+        nowIso,
+        id,
+      ]);
+    },
+  };
+}

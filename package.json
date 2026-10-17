@@ -7,13 +7,14 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "concurrently -k -n worker,astro -c blue,magenta \"wrangler dev --port 8787 --var EDGE_CACHE:off\" \"astro dev --port 4321\"",
+    "setup": "node -e \"const f=require('fs');if(!f.existsSync('.dev.vars'))f.copyFileSync('.dev.vars.example','.dev.vars')\"",
+    "dev": "npm run setup && concurrently -k -n worker,astro -c blue,magenta \"wrangler dev --port 8787 --var EDGE_CACHE:off\" \"astro dev --port 4321\"",
     "build": "astro build",
     "preview": "npm run build && wrangler dev --port 8787 --var EDGE_CACHE:off",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "e2e:server": "npm run build && npm run db:migrate && npm run db:seed && npm run tiles:dev && wrangler dev --port 8787 --var EDGE_CACHE:off",
+    "e2e:server": "npm run setup && node -e \"require('fs').rmSync('.wrangler/state/v3/kv',{recursive:true,force:true})\" && npm run build && npm run db:migrate && npm run db:seed && npm run tiles:dev && wrangler dev --port 8787 --var EDGE_CACHE:off",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit && tsc --noEmit -p src/server/tsconfig.json && astro check",

@@ -47,6 +47,10 @@ export interface MapEngine {
   /** `offset`: pixels to shift the point from the centre (e.g. above a bottom sheet). */
   focus(lng: number, lat: number, offset?: [number, number]): void;
   showUser(lng: number, lat: number): void;
+  flyTo(lng: number, lat: number, zoom: number): void;
+  /** Like flyTo without animation (safe right before a resize). */
+  jumpTo(lng: number, lat: number, zoom: number): void;
+  getCenter(): [number, number];
   resize(): void;
   destroy(): void;
 }
@@ -97,7 +101,12 @@ function markerImage(type: EventType): ImageData {
 
 export function createMapEngine(
   container: HTMLElement,
-  opts: { onSelect: (id: string) => void; initialBounds?: LngLatBoundsLike },
+  opts: {
+    onSelect: (id: string) => void;
+    /** Called with the map centre after every move (used by "escolher ponto"). */
+    onMoveEnd?: (center: [number, number]) => void;
+    initialBounds?: LngLatBoundsLike;
+  },
 ): MapEngine {
   if (!protocolRegistered) {
     const style = document.createElement('style');
@@ -192,6 +201,11 @@ export function createMapEngine(
     loaded = true;
   });
 
+  map.on('moveend', () => {
+    const c = map.getCenter();
+    opts.onMoveEnd?.([c.lng, c.lat]);
+  });
+
   map.on('click', 'event-icons', (e) => {
     const id = e.features?.[0]?.properties?.id as unknown;
     if (typeof id === 'string') opts.onSelect(id);
@@ -229,6 +243,16 @@ export function createMapEngine(
       }
       userMarker.setLngLat([lng, lat]).addTo(map);
       map.easeTo({ center: [lng, lat], zoom: 11 });
+    },
+    flyTo(lng, lat, zoom) {
+      map.easeTo({ center: [lng, lat], zoom });
+    },
+    jumpTo(lng, lat, zoom) {
+      map.jumpTo({ center: [lng, lat], zoom });
+    },
+    getCenter() {
+      const c = map.getCenter();
+      return [c.lng, c.lat];
     },
     resize() {
       map.resize();

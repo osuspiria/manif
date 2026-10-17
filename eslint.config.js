@@ -31,6 +31,11 @@ export default tseslint.config(
     },
   },
   {
+    // End-to-end tests run against the real server clock.
+    files: ['tests/e2e/**'],
+    rules: { 'no-restricted-syntax': 'off' },
+  },
+  {
     // Non-null assertions are fine in tests and in tight geometry loops with checked bounds.
     files: ['tests/**', 'src/server/services/geo-service.ts'],
     rules: { '@typescript-eslint/no-non-null-assertion': 'off' },

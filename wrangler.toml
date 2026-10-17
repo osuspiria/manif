@@ -19,6 +19,13 @@ migrations_dir = "migrations"
 binding = "TILES"
 bucket_name = "mobilizacao-tiles"
 
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "00000000000000000000000000000000" # replace after `wrangler kv namespace create RATE_LIMIT`
+
+# Secrets (wrangler secret put …; locally in .dev.vars, see .dev.vars.example):
+# TURNSTILE_SECRET_KEY, RATE_LIMIT_SECRET, RESEND_API_KEY, MAIL_FROM
+
 [vars]
 MODERATION_MODE = "post"
 EDGE_CACHE = "on"

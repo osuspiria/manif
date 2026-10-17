@@ -92,3 +92,41 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - O fundo do estilo passa de cinzento para a cor da água.
     - O extrato do continente foi alargado para −11° a −5° de longitude e 36° a 43,5° de latitude (`data/geo/pt-region.geojson`): ~1,1 GB em z15 e 51 MB no extrato de dev (z11).
     - O limite de arrastamento (`MAX_BOUNDS`) coincide com as bordas leste e norte do extrato, por isso o corte nunca aparece no ecrã. A oeste e a sul só há mar, exceto a costa de Marrocos, que aparece como mar se se afastar o mapa entre o continente e a Madeira.
+
+## Fase 4 — adicionar e editar eventos (2026-10-17)
+
+27. **Pesquisa de locais:** usa o [Photon](https://photon.komoot.io), um geocodificador baseado no OpenStreetMap, em vez do Nominatim.
+    - O Nominatim público limita a 1 pedido por segundo e proíbe uso intensivo atrás de um proxy partilhado.
+    - O pedido é feito pelo Worker: só o texto pesquisado sai para o Photon, nunca o IP de quem pesquisa.
+    - Os resultados ficam 1 dia em cache e há um limite de 60 pesquisas por hora por pessoa.
+    - Deve ser mencionado na página de privacidade (Fase 7).
+28. **Link de edição:** tem o formato `/editar/#e=<id>&t=<token>`.
+    - O token tem 32 bytes aleatórios; a base de dados guarda só o hash SHA-256.
+    - Está no fragmento do URL, por isso nunca vai em pedidos de página, logs nem `Referer`. A API recebe-o pelo header `X-Edit-Token`.
+    - Um token errado devolve 404 (não revela se o evento existe).
+    - A página `/editar/` tem `noindex` e `no-referrer`.
+29. **Datas na submissão:** "todas no futuro" (SPEC §3.1) passa a significar "ainda não terminou". Um evento já a decorrer pode ser adicionado.
+    - Máximo de 12 meses à frente, contados no fuso do evento.
+    - Não pode haver duas datas com o mesmo dia e a mesma hora de início.
+    - As regras estão em `src/shared/occurrence-rules.ts`, usado pelo formulário e pela API.
+30. **Edição:**
+    - As datas que já passaram não se alteram nem se apagam, mesmo que o pedido as omita ou mude.
+    - Mudar texto, tipo ou datas tira o selo "Confirmado" até nova verificação; cancelar datas não.
+    - A localização não se pode alterar pelo link.
+31. **Reports:**
+    - Cada pessoa (IP com hash e sal diário) conta uma vez por evento por dia.
+    - À 3.ª denúncia o evento fica `hidden` até revisão (SPEC §4.5).
+    - O motivo é escolhido de uma lista fixa (`src/config/reports.ts`).
+32. **Honeypot:** se o campo escondido vier preenchido, a resposta é `400 {"error":"rejected"}` e o formulário mostra uma mensagem genérica. Não finge sucesso: um preenchimento automático do browser num caso legítimo tem de ser visível.
+33. **Rate limit:**
+    - Contadores no KV (`RATE_LIMIT`) por janela fixa de 1 hora. São aproximados sob concorrência, o que chega para travar abusos.
+    - A chave é um HMAC do IP com um sal diário, derivado do secret `RATE_LIMIT_SECRET`.
+    - Sem esse secret, usa um valor fixo e regista um erro (nunca o IP).
+34. **Turnstile:**
+    - O script só é carregado quando se envia o formulário, nunca ao abrir a página.
+    - Em dev usa as chaves de teste da Cloudflare: site key `1x00000000000000000000BB` e o secret em `.dev.vars`, criado por `npm run setup`.
+    - Sem `TURNSTILE_SECRET_KEY`, a verificação falha sempre (fail closed).
+35. **Email:**
+    - Usa o Resend quando `RESEND_API_KEY` e `MAIL_FROM` estão definidos; caso contrário, os emails são descartados sem registo.
+    - Uma falha no envio não impede a criação do evento: o link aparece sempre no ecrã.
+36. **Armadilha do runtime Workers:** guardar o `fetch` global numa propriedade e chamá-lo como método (`this.fetchFn(...)`) dá "Illegal invocation". Os adaptadores usam `(input, init) => fetch(input, init)`.

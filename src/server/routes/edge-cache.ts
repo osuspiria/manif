@@ -20,7 +20,7 @@ export async function edgeCached(
   }
 
   const res = await build();
-  res.headers.set('Cache-Control', `public, max-age=${ttl}`);
+  if (res.ok) res.headers.set('Cache-Control', `public, max-age=${ttl}`);
   if (cache && res.ok) c.executionCtx.waitUntil(cache.put(key, res.clone()));
   return res;
 }
