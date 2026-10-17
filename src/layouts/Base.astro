@@ -25,7 +25,7 @@ const { title, description, secret = false } = Astro.props;
       <nav aria-label={pt.nav.main}>
         <a href="/">{pt.site.title}</a>
         <a href="/mapa">{pt.nav.map}</a>
-        {FEATURES.signatures && <a href='\"/apoio/\"'>{pt.nav.support}</a>}
+        {FEATURES.signatures && <a href="/apoio/">{pt.nav.support}</a>}
       </nav>
     </header>
     <main id="conteudo" tabindex="-1">
@@ -33,7 +33,7 @@ const { title, description, secret = false } = Astro.props;
     </main>
     <footer class="site-footer">
       <nav aria-label={pt.nav.footer}>
-        {FEATURES.privacyPage && <a href='\"/privacidade/\"'>{pt.nav.privacy}</a>}
+        {FEATURES.privacyPage && <a href="/privacidade/">{pt.nav.privacy}</a>}
         <a href="/mapa?vista=lista">{pt.nav.eventList}</a>
       </nav>
     </footer>

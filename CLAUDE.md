@@ -34,6 +34,7 @@ npm run tiles:dev    # carrega data/geo/dev.pmtiles no R2 local (ver data/geo/RE
 npm run map:assets   # (re)descarrega glyphs/sprites do Protomaps para public/map/
 npm run og:image     # regenera public/og.png (pré-visualização de links) a partir de pt.ts
 npm run ci           # lint + typecheck + test
+npm run deploy       # produção: verificações + ci + build + migrações remotas + wrangler deploy (ver docs/deploy.md)
 ```
 Se algum destes comandos ainda não existir, cria-o quando criares a peça correspondente.
 

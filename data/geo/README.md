@@ -74,7 +74,10 @@ pmtiles extract https://build.protomaps.com/<YYYYMMDD>.pmtiles data/geo/dev.pmti
 Upload to R2. The Worker/R2 serves the file with `Range` support:
 
 ```bash
-npx wrangler r2 object put mobilizacao-tiles/pt.pmtiles --file data/geo/pt.pmtiles
+# ~1.1 GB: too big for `wrangler r2 object put` (limit ~300 MB). Use the S3 API with rclone:
+# R2 → Manage API tokens → Object Read & Write; then `rclone config`:
+#   provider = Cloudflare, endpoint = https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+rclone copyto data/geo/pt.pmtiles r2:mobilizacao-tiles/pt.pmtiles --s3-chunk-size=100M --progress
 ```
 
 ### Development tiles

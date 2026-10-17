@@ -9,3 +9,6 @@ playwright-report/
 # Large geodata: never commit raw downloads or tiles
 data/geo/raw/
 *.pmtiles
+
+# R2 S3-API credentials for uploading the basemap (docs/deploy.md); never commit
+.r2.env

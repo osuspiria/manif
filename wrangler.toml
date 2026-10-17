@@ -12,7 +12,7 @@ run_worker_first = ["/api/*", "/tiles/*", "/mapa/e/*", "/map/fonts/*"]
 [[d1_databases]]
 binding = "DB"
 database_name = "mobilizacao-pt"
-database_id = "00000000-0000-0000-0000-000000000000" # replace after `wrangler d1 create`
+database_id = "8e16ad64-1dae-4f29-99b0-352adea43b34"
 migrations_dir = "migrations"
 
 [[r2_buckets]]
@@ -21,10 +21,24 @@ bucket_name = "mobilizacao-tiles"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
-id = "00000000000000000000000000000000" # replace after `wrangler kv namespace create RATE_LIMIT`
+id = "a7a8254dd46f4bdcac52174f6807f46d"
 
 # Secrets (wrangler secret put …; locally in .dev.vars, see .dev.vars.example):
 # TURNSTILE_SECRET_KEY, RATE_LIMIT_SECRET, RESEND_API_KEY, MAIL_FROM, ADMIN_EMAILS
+
+# Custom domain (D2): the zone must be on this Cloudflare account. The Worker
+# also stays reachable on *.workers.dev.
+[[routes]]
+pattern = "pedroduarte.eu"
+custom_domain = true
+
+# Logs: only our own console output (counts and error codes, never personal data).
+# Invocation logs stay off: they would record request metadata for every request.
+[observability]
+enabled = true
+
+[observability.logs]
+invocation_logs = false
 
 # Retention job (SPEC §7): daily at 03:17 UTC.
 [triggers]

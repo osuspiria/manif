@@ -24,7 +24,10 @@
     "geo:build": "tsx data/geo/scripts/build-municipalities.ts",
     "map:assets": "tsx data/geo/scripts/fetch-map-assets.ts",
     "ci": "npm run lint && npm run typecheck && npm run test",
-    "og:image": "tsx scripts/og-image.ts"
+    "og:image": "tsx scripts/og-image.ts",
+    "deploy:check": "tsx scripts/deploy-check.ts",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "deploy": "npm run deploy:check && npm run ci && npm run build && npm run db:migrate:remote && wrangler deploy"
   },
   "dependencies": {
     "@protomaps/basemaps": "^5.7.2",

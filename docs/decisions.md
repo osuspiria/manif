@@ -219,3 +219,10 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - A API ignora um `contactEmail` enviado diretamente: não é guardado nem usado para enviar email.
     - O link de edição continua a aparecer no ecrã no fim (com "Copiar link"); deixa de ir por email.
     - **Para ligar:** só em conjunto com a página de privacidade (`privacyPage`).
+
+## Deploy (17/10/2026)
+
+65. **D2 — domínio:** `pedroduarte.eu` (Custom Domain do Worker, `[[routes]]` no `wrangler.toml`). O nome do site continua "Mobilização" (`APP_NAME`, por decidir).
+66. **Recursos de produção** (conta Cloudflare do utilizador): D1 `mobilizacao-pt` e bucket R2 `mobilizacao-tiles`, ambos na Europa Ocidental (`weur`); KV `RATE_LIMIT`. Mapa base: extrato do build Protomaps `20261017` (zoom 0–15, 1,06 GB), carregado com `rclone`.
+67. **Turnstile em modo Managed** (escolha do utilizador): normalmente invisível; mostra uma caixa a confirmar só quando a Cloudflare tem dúvidas. O cliente já usa `appearance: 'interaction-only'`, por isso o widget só aparece nesses casos.
+68. **Administração:** para já, um único endereço em `ADMIN_EMAILS` (secret).
