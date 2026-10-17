@@ -144,7 +144,9 @@
 }
 
 .sig-orgs a {
-  color: var(--accent);
+  color: var(--fg);
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
 }
 
 .sig-meta {

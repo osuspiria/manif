@@ -1,18 +1,25 @@
-/* Design tokens and shared components (map page, forms, edit page). */
+/* Design tokens and shared components (map page, forms, edit page).
+   "Acid" theme: black on white, square corners, orange accent. Orange is never
+   text on white (3.3:1 contrast) — only a background behind black text. */
+@import '@fontsource/archivo/latin-400.css';
+@import '@fontsource/archivo/latin-600.css';
+@import '@fontsource/archivo/latin-800.css';
 
 :root {
   --bg: #ffffff;
-  --fg: #1a1a1a;
-  --muted: #555b61;
-  --line: #d5d9dd;
-  --chip-bg: #f1f3f5;
-  --accent: #0b57d0;
-  --accent-fg: #ffffff;
-  --key: #f2b600;
+  --fg: #000000;
+  --muted: #3d3d3d;
+  --line: #000000;
+  --chip-bg: #ffffff;
+  --accent: #ff4d00;
+  --accent-fg: #000000;
+  --accent-tint: #ffe2d4;
+  --key: #ff4d00;
   --danger: #b3261e;
-  --shadow: 0 2px 10px rgb(0 0 0 / 0.18);
-  --topbar-h: 56px;
-  --radius: 12px;
+  --shadow: none;
+  --topbar-h: 60px;
+  --radius: 0;
+  --font: 'Archivo', system-ui, sans-serif;
 }
 
 .visually-hidden {
@@ -34,7 +41,7 @@ button,
 }
 
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--fg);
   outline-offset: 2px;
 }
 
@@ -69,8 +76,8 @@ button,
   gap: 6px;
   min-height: 44px;
   padding: 0 14px;
-  border: 1px solid var(--line);
-  border-radius: 22px;
+  border: 2px solid var(--fg);
+  border-radius: 0;
   background: var(--chip-bg);
   cursor: pointer;
   white-space: nowrap;
@@ -98,18 +105,24 @@ button,
   justify-content: center;
   min-height: 44px;
   padding: 0 14px;
-  border-radius: 22px;
-  border: 1px solid var(--line);
+  border-radius: 0;
+  border: 2px solid var(--fg);
   background: var(--bg);
   text-decoration: none;
   cursor: pointer;
 }
 
 .btn-primary {
-  border-color: var(--accent);
+  border-color: var(--fg);
   background: var(--accent);
   color: var(--accent-fg);
-  font-weight: 600;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--fg);
+  color: var(--accent);
 }
 
 .btn-link {
@@ -117,8 +130,9 @@ button,
   padding: 0 8px;
   border: 0;
   background: none;
-  color: var(--accent);
-  text-decoration: underline;
+  color: var(--fg);
+  text-decoration: underline 2px var(--accent);
+  text-underline-offset: 3px;
   cursor: pointer;
 }
 
@@ -126,7 +140,7 @@ button,
   width: 44px;
   height: 44px;
   border: 0;
-  border-radius: 50%;
+  border-radius: 0;
   background: var(--chip-bg);
   font-size: 1.5rem;
   line-height: 1;
@@ -136,22 +150,23 @@ button,
 .badge {
   display: inline-block;
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: 0;
   background: var(--chip-bg);
   font-size: 0.75rem;
   color: var(--muted);
 }
 
 .badge-ok {
-  background: #dff3e4;
-  color: #145c2c;
+  background: var(--fg);
+  color: var(--bg);
   font-weight: 600;
 }
 
 .btn-quiet {
   border-color: transparent;
-  color: var(--muted);
-  text-decoration: underline;
+  color: var(--fg);
+  text-decoration: underline 2px var(--accent);
+  text-underline-offset: 3px;
 }
 
 .btn-danger {

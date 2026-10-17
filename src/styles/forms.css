@@ -19,11 +19,19 @@ fieldset > legend {
   width: 100%;
   min-height: 44px;
   padding: 8px 10px;
-  border: 1px solid #8a9096;
-  border-radius: 8px;
+  border: 2px solid var(--fg);
+  border-radius: 0;
   background: var(--bg);
   color: var(--fg);
   font: inherit;
+}
+
+.field input:not([type='checkbox'], [type='radio']):focus,
+.field textarea:focus,
+.search-row input:focus,
+.edit-link-box input:focus {
+  outline: 3px solid var(--accent);
+  outline-offset: 0;
 }
 
 .field textarea {
@@ -108,7 +116,7 @@ fieldset {
 }
 
 .chip-radio:has(input:focus-visible) {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--fg);
   outline-offset: 2px;
 }
 
@@ -127,8 +135,8 @@ fieldset {
 .occ-row fieldset {
   margin-bottom: 12px;
   padding: 8px 12px 4px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 2px solid var(--fg);
+  border-radius: 0;
 }
 
 .occ-row fieldset > legend {
@@ -217,16 +225,18 @@ fieldset {
   display: flex;
   align-items: center;
   min-height: 44px;
-  color: var(--accent);
+  color: var(--fg);
+  text-decoration: underline 2px var(--accent);
+  text-underline-offset: 3px;
   cursor: pointer;
 }
 
 .edit-link-box {
   margin: 16px 0;
   padding: 12px;
-  border: 2px solid var(--key);
-  border-radius: var(--radius);
-  background: #fffbea;
+  border: 2px solid var(--fg);
+  border-radius: 0;
+  background: var(--accent-tint);
 }
 
 .edit-link-box h3 {
@@ -244,8 +254,8 @@ fieldset {
   min-height: 44px;
   margin: 4px 0 8px;
   padding: 8px;
-  border: 1px solid #8a9096;
-  border-radius: 8px;
+  border: 2px solid var(--fg);
+  border-radius: 0;
   font: inherit;
   font-size: 0.875rem;
 }
@@ -277,8 +287,8 @@ fieldset {
   min-width: 0;
   min-height: 44px;
   padding: 8px 10px;
-  border: 1px solid #8a9096;
-  border-radius: 8px;
+  border: 2px solid var(--fg);
+  border-radius: 0;
   font: inherit;
 }
 
@@ -322,7 +332,7 @@ body.form-page {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font-family: system-ui, sans-serif;
+  font-family: var(--font);
   line-height: 1.45;
 }
 

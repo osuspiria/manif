@@ -86,11 +86,11 @@ export function MapCanvas({ markers, visible, command, onSelect, picking, onCent
           <svg viewBox="0 0 24 36" width="36" height="54" focusable="false">
             <path
               d="M12 1C6 1 1.5 5.5 1.5 11.3 1.5 19 12 34 12 34s10.5-15 10.5-22.7C22.5 5.5 18 1 12 1Z"
-              fill="#0b57d0"
-              stroke="#fff"
+              fill="#ff4d00"
+              stroke="#000"
               stroke-width="2"
             />
-            <circle cx="12" cy="11.5" r="4" fill="#fff" />
+            <circle cx="12" cy="11.5" r="4" fill="#000" />
           </svg>
         </div>
       )}
