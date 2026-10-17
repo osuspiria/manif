@@ -24,7 +24,7 @@ No CSS-in-JS, no utility framework. Style your own layout with the app's tokens 
 - Forms: `field`, `hint`, `field-error`, `form-error`, `form-ok`, `form-header`, `form-main`.
 - Map shell: `map-app`, `topbar`, `summary-button`, `content`, `list-pane`, `map-pane`, `fabs`/`fab`/`fab-add`, `segmented`, `toast`, `badge`/`badge-ok`, `visually-hidden`.
 
-Selected/pressed state is expressed with ARIA attributes (`aria-pressed`, `aria-current`), not extra classes. Event-type colour is never the only cue — always pair it with `TypeIcon` (shape) and the type label.
+Selected/pressed state is expressed with ARIA attributes (`aria-pressed`, `aria-current`), not extra classes. Event types have no colour code: `TypeIcon` is the same black square for every type with a different white pictogram — always pair it with the type label.
 
 ### Data
 

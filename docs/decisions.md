@@ -231,3 +231,11 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Agora a cache de 60 s é só na edge. O browser recebe `max-age=0, must-revalidate`; o mesmo vale para `/api/events/:id` e para os contadores e a lista das assinaturas.
     - Criar, editar, reportar ou moderar um evento apaga a cópia da edge no centro de dados de quem fez a alteração, e o mapa pede a lista sem cache depois de criar. Quem muda vê na hora; os outros visitantes, no máximo 60 s depois.
     - `wrangler dev` passa a usar `--local-upstream`: com a rota `pedroduarte.eu` no `wrangler.toml`, os pedidos locais passariam a ter o URL de produção (links de email locais errados e a caixa de correio de dev bloqueada).
+
+## Tema ácido (17/10/2026)
+
+70. **Pins quadrados com pictograma** (direção B do Claude Design, `TEMA-ACIDO-patch.md`): os marcadores deixam de ter cor + forma por tipo.
+    - Pin: quadrado preto de 40 px, borda branca de 2 px e contorno preto de 1 px, ponta de 10×6 em baixo (âncora na ponta). Pictograma branco, traço 2,2, 62 % do pin (`src/map/pictograms.ts`, partilhado pelo canvas do mapa e pelo `TypeIcon`).
+    - Selecionado: 48 px, fundo laranja, borda e pictograma pretos, desenhado por cima dos vizinhos. Data-chave (`KEY_DATES`): barra laranja de 4 px no topo.
+    - Grupos: quadrado branco com borda preta de 2 px (32/40/52 px). Só servimos glifos Noto Sans Medium; a contagem ganha peso com um halo da mesma cor, em vez de descarregar mais um conjunto de glifos.
+    - `EVENT_TYPES[*].color` e `shape` foram removidos; `icon` escolhe o pictograma. Nas listas e chips, o `TypeIcon` é o mesmo pin sem ponta.

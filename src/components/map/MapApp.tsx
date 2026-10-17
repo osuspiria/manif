@@ -5,7 +5,7 @@
  */
 import type { ComponentType } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
-import { FEATURES, LIMITS } from '../../config/app';
+import { FEATURES, KEY_DATES, LIMITS } from '../../config/app';
 import type { EventType } from '../../config/event-types';
 import { pt } from '../../i18n/pt';
 import { currentTime } from '../../map/clock';
@@ -166,6 +166,7 @@ export function MapApp() {
           id: event.id,
           type: event.type,
           dayLabel: labels ? formatShortDate(highlight.localDate) : '',
+          keyDate: KEY_DATES.includes(highlight.localDate),
         },
       })),
     };
@@ -388,6 +389,7 @@ export function MapApp() {
         <div class="map-pane" hidden={!showMap}>
           <MapCanvas
             markers={markers}
+            selectedId={selectedId}
             visible={showMap}
             command={command}
             onSelect={(id) => {

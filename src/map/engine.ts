@@ -1,6 +1,6 @@
 /**
  * MapLibre setup: self-hosted Protomaps basemap (PMTiles via /tiles, glyphs and
- * sprites from /map), clustered event markers drawn from the type shapes.
+ * sprites from /map), clustered event markers drawn as square pictogram pins.
  * Loaded lazily so the filters and the list work before the map is ready.
  */
 import { layers, namedFlavor } from '@protomaps/basemaps';
@@ -10,6 +10,7 @@ import {
   Marker,
   NavigationControl,
   setWorkerUrl,
+  type ExpressionSpecification,
   type GeoJSONSource,
   type LngLatBoundsLike,
   type StyleSpecification,
@@ -25,13 +26,15 @@ import { MAP_TILES_PATH } from '../config/app';
 import { EVENT_TYPES, EVENT_TYPE_KEYS, type EventType } from '../config/event-types';
 import { pt } from '../i18n/pt';
 import { MAX_BOUNDS, REGIONS, type RegionKey } from './regions';
-import { SHAPE_PATHS } from './shapes';
+import { PICTOGRAMS, PICTOGRAM_SCALE, PICTOGRAM_STROKE } from './pictograms';
 
 export interface MarkerProps {
   id: string;
   type: EventType;
   /** '24/11' or '' */
   dayLabel: string;
+  /** The highlighted occurrence falls on one of KEY_DATES. */
+  keyDate: boolean;
 }
 
 export interface MarkerCollection {
@@ -45,6 +48,8 @@ export interface MarkerCollection {
 
 export interface MapEngine {
   setMarkers(fc: MarkerCollection): void;
+  /** Draws this event's pin as selected (bigger, orange, on top). */
+  setSelected(id: string | null): void;
   fitRegion(region: RegionKey): void;
   /** `offset`: pixels to shift the point from the centre (e.g. above a bottom sheet). */
   focus(lng: number, lat: number, offset?: [number, number]): void;
@@ -81,24 +86,94 @@ function buildStyle(origin: string): StyleSpecification {
   };
 }
 
-/** Draws a type marker (shape + colour + white outline) at 2× for crisp rendering. */
-function markerImage(type: EventType): ImageData {
-  const size = 48;
+const ACCENT = '#ff4d00';
+const PIN = 40;
+const PIN_SELECTED = 48;
+const TIP_W = 10;
+const TIP_H = 6;
+const CLUSTER_SIZES = [32, 40, 52] as const;
+
+/** A 2× canvas context for an image of `width`×`height` CSS pixels. */
+function canvas2d(width: number, height: number): CanvasRenderingContext2D {
   const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = width * 2;
+  canvas.height = height * 2;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D not available');
-  const cfg = EVENT_TYPES[type];
-  ctx.scale(size / 24, size / 24);
-  const path = new Path2D(SHAPE_PATHS[cfg.shape]);
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = 2.5;
-  ctx.strokeStyle = '#ffffff';
-  ctx.stroke(path);
-  ctx.fillStyle = cfg.color;
-  ctx.fill(path);
-  return ctx.getImageData(0, 0, size, size);
+  ctx.scale(2, 2);
+  return ctx;
+}
+
+/**
+ * Square pin with the type pictogram and a tip pointing at the place: black
+ * with a white border and pictogram; selected is bigger and orange with black
+ * border and pictogram; a key date adds an orange bar along the top.
+ */
+function pinImage(type: EventType, variant: 'base' | 'key' | 'selected'): ImageData {
+  const selected = variant === 'selected';
+  const side = selected ? PIN_SELECTED : PIN;
+  const ctx = canvas2d(side, side + TIP_H);
+  const fg = selected ? '#000000' : '#ffffff';
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, side, side);
+  ctx.fillStyle = fg;
+  ctx.fillRect(1, 1, side - 2, side - 2);
+  ctx.fillStyle = selected ? ACCENT : '#000000';
+  ctx.fillRect(3, 3, side - 6, side - 6);
+  if (variant === 'key') {
+    ctx.fillStyle = ACCENT;
+    ctx.fillRect(3, 3, side - 6, 4);
+  }
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.moveTo((side - TIP_W) / 2, side);
+  ctx.lineTo((side + TIP_W) / 2, side);
+  ctx.lineTo(side / 2, side + TIP_H);
+  ctx.closePath();
+  ctx.fill();
+
+  const icon = side * PICTOGRAM_SCALE;
+  const pic = PICTOGRAMS[EVENT_TYPES[type].icon];
+  ctx.translate((side - icon) / 2, (side - icon) / 2);
+  ctx.scale(icon / 24, icon / 24);
+  const path = new Path2D(pic.d);
+  if (pic.fill) {
+    ctx.fillStyle = fg;
+    ctx.fill(path);
+  } else {
+    ctx.strokeStyle = fg;
+    ctx.lineWidth = PICTOGRAM_STROKE;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke(path);
+  }
+  return ctx.getImageData(0, 0, side * 2, (side + TIP_H) * 2);
+}
+
+/** Cluster background: white square with a 2px black border. */
+function clusterImage(side: number): ImageData {
+  const ctx = canvas2d(side, side);
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, side, side);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(2, 2, side - 4, side - 4);
+  return ctx.getImageData(0, 0, side * 2, side * 2);
+}
+
+function pinExpression(selectedId: string | null): ExpressionSpecification {
+  return [
+    'case',
+    ['==', ['get', 'id'], selectedId ?? ''],
+    ['concat', 'pin-selected-', ['get', 'type']],
+    ['==', ['get', 'keyDate'], true],
+    ['concat', 'pin-key-', ['get', 'type']],
+    ['concat', 'pin-', ['get', 'type']],
+  ];
+}
+
+/** The selected pin is drawn above its neighbours. */
+function sortExpression(selectedId: string | null): ExpressionSpecification {
+  return ['case', ['==', ['get', 'id'], selectedId ?? ''], 1, 0];
 }
 
 export function createMapEngine(
@@ -137,10 +212,16 @@ export function createMapEngine(
   let pending: MarkerCollection | null = null;
   let loaded = false;
   let userMarker: Marker | null = null;
+  let selectedId: string | null = null;
 
   map.on('load', () => {
     for (const type of EVENT_TYPE_KEYS) {
-      map.addImage(`type-${type}`, markerImage(type), { pixelRatio: 2 });
+      map.addImage(`pin-${type}`, pinImage(type, 'base'), { pixelRatio: 2 });
+      map.addImage(`pin-key-${type}`, pinImage(type, 'key'), { pixelRatio: 2 });
+      map.addImage(`pin-selected-${type}`, pinImage(type, 'selected'), { pixelRatio: 2 });
+    }
+    for (const side of CLUSTER_SIZES) {
+      map.addImage(`cluster-${side}`, clusterImage(side), { pixelRatio: 2 });
     }
     map.addSource(SOURCE, {
       type: 'geojson',
@@ -151,28 +232,27 @@ export function createMapEngine(
     });
     map.addLayer({
       id: 'clusters',
-      type: 'circle',
-      source: SOURCE,
-      filter: ['has', 'point_count'],
-      paint: {
-        'circle-color': '#263238',
-        'circle-stroke-color': '#ffffff',
-        'circle-stroke-width': 2,
-        'circle-radius': ['step', ['get', 'point_count'], 16, 10, 20, 50, 26],
-      },
-    });
-    map.addLayer({
-      id: 'cluster-count',
       type: 'symbol',
       source: SOURCE,
       filter: ['has', 'point_count'],
       layout: {
+        'icon-image': [
+          'step',
+          ['get', 'point_count'],
+          `cluster-${CLUSTER_SIZES[0]}`,
+          10,
+          `cluster-${CLUSTER_SIZES[1]}`,
+          50,
+          `cluster-${CLUSTER_SIZES[2]}`,
+        ],
+        'icon-allow-overlap': true,
         'text-field': ['get', 'point_count_abbreviated'],
         'text-font': FONT,
-        'text-size': 13,
+        'text-size': 14,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': '#ffffff' },
+      // Only a Medium glyph set is self-hosted: a same-colour halo makes the count heavier.
+      paint: { 'text-color': '#000000', 'text-halo-color': '#000000', 'text-halo-width': 0.6 },
     });
     map.addLayer({
       id: 'event-icons',
@@ -180,9 +260,10 @@ export function createMapEngine(
       source: SOURCE,
       filter: ['!', ['has', 'point_count']],
       layout: {
-        'icon-image': ['concat', 'type-', ['get', 'type']],
+        'icon-image': pinExpression(selectedId),
+        'icon-anchor': 'bottom',
         'icon-allow-overlap': true,
-        'icon-size': 1,
+        'symbol-sort-key': sortExpression(selectedId),
       },
     });
     map.addLayer({
@@ -195,11 +276,11 @@ export function createMapEngine(
         'text-field': ['get', 'dayLabel'],
         'text-font': FONT,
         'text-size': 11,
-        'text-offset': [0, 1.5],
+        'text-offset': [0, 0.3],
         'text-anchor': 'top',
         'text-optional': true,
       },
-      paint: { 'text-color': '#1a1a1a', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 },
+      paint: { 'text-color': '#000000', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 },
     });
     loaded = true;
   });
@@ -229,6 +310,12 @@ export function createMapEngine(
     setMarkers(fc) {
       pending = fc;
       if (loaded) (map.getSource(SOURCE) as GeoJSONSource).setData(fc);
+    },
+    setSelected(id) {
+      selectedId = id;
+      if (!loaded) return;
+      map.setLayoutProperty('event-icons', 'icon-image', pinExpression(id));
+      map.setLayoutProperty('event-icons', 'symbol-sort-key', sortExpression(id));
     },
     fitRegion(region) {
       map.fitBounds(REGIONS[region], { padding: 24 });

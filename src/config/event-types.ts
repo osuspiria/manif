@@ -1,4 +1,6 @@
-/** Event types (SPEC §3.3). Colour is never the only cue: each type also has a distinct shape. */
+import type { PictogramName } from '../map/pictograms';
+
+/** Event types (SPEC §3.3). Each type has its own pictogram on the same square pin (no colour code). */
 export const EVENT_TYPE_KEYS = [
   'demonstration',
   'rally',
@@ -9,24 +11,20 @@ export const EVENT_TYPE_KEYS = [
 ] as const;
 export type EventType = (typeof EVENT_TYPE_KEYS)[number];
 
-export type MarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'pentagon' | 'hexagon';
-
 export interface EventTypeConfig {
   /** Key into `pt.eventTypes` in src/i18n/pt.ts. */
   key: EventType;
-  color: string;
-  shape: MarkerShape;
-  /** Icon file name under public/icons/ (added in phase 2). */
-  icon: string;
+  /** Pictogram drawn on the pin (src/map/pictograms.ts). */
+  icon: PictogramName;
 }
 
 export const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
-  demonstration: { key: 'demonstration', color: '#c62828', shape: 'circle', icon: 'megaphone' },
-  rally: { key: 'rally', color: '#6a1b9a', shape: 'square', icon: 'flame' },
-  action: { key: 'action', color: '#e65100', shape: 'triangle', icon: 'flag' },
-  assembly: { key: 'assembly', color: '#1565c0', shape: 'diamond', icon: 'people' },
-  camp: { key: 'camp', color: '#2e7d32', shape: 'pentagon', icon: 'tent' },
-  other: { key: 'other', color: '#37474f', shape: 'hexagon', icon: 'dot' },
+  demonstration: { key: 'demonstration', icon: 'megaphone' },
+  rally: { key: 'rally', icon: 'flame' },
+  action: { key: 'action', icon: 'flag' },
+  assembly: { key: 'assembly', icon: 'people' },
+  camp: { key: 'camp', icon: 'tent' },
+  other: { key: 'other', icon: 'dots' },
 };
 
 export function isEventType(value: string): value is EventType {

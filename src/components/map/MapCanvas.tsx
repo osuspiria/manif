@@ -16,6 +16,7 @@ export interface MapCommand {
 
 interface Props {
   markers: MarkerCollection;
+  selectedId: string | null;
   visible: boolean;
   command: MapCommand | null;
   onSelect: (id: string) => void;
@@ -25,11 +26,19 @@ interface Props {
 }
 
 /** Hosts the lazily-loaded MapLibre engine. */
-export function MapCanvas({ markers, visible, command, onSelect, picking, onCenter }: Props) {
+export function MapCanvas({
+  markers,
+  selectedId,
+  visible,
+  command,
+  onSelect,
+  picking,
+  onCenter,
+}: Props) {
   const container = useRef<HTMLDivElement>(null);
   const engine = useRef<MapEngine | null>(null);
-  const latest = useRef({ markers, command, onSelect, onCenter });
-  latest.current = { markers, command, onSelect, onCenter };
+  const latest = useRef({ markers, selectedId, command, onSelect, onCenter });
+  latest.current = { markers, selectedId, command, onSelect, onCenter };
 
   // Load MapLibre only once the map is actually shown (not in list view).
   const [wanted, setWanted] = useState(visible);
@@ -48,6 +57,7 @@ export function MapCanvas({ markers, visible, command, onSelect, picking, onCent
       });
       latest.current.onCenter?.(e.getCenter());
       e.setMarkers(latest.current.markers);
+      e.setSelected(latest.current.selectedId);
       engine.current = e;
       run(e, latest.current.command);
     });
@@ -61,6 +71,10 @@ export function MapCanvas({ markers, visible, command, onSelect, picking, onCent
   useEffect(() => {
     engine.current?.setMarkers(markers);
   }, [markers]);
+
+  useEffect(() => {
+    engine.current?.setSelected(selectedId);
+  }, [selectedId]);
 
   useEffect(() => {
     if (visible) engine.current?.resize();

@@ -143,16 +143,16 @@ CREATE TABLE signatures (
 
 ### 3.3 Tipos de evento (configuráveis num único ficheiro `src/config/event-types.ts`)
 
-| key | Rótulo | Ícone/cor |
+| key | Rótulo | Pictograma |
 |---|---|---|
-| `demonstration` | Manifestação | |
-| `rally` | Concentração | |
-| `action` | Ação num local (posto, empresa, serviço público…) | |
-| `assembly` | Assembleia Popular | |
-| `camp` | Acampada | |
-| `other` | Outro | |
+| `demonstration` | Manifestação | megafone |
+| `rally` | Concentração | chama |
+| `action` | Ação num local (posto, empresa, serviço público…) | bandeira |
+| `assembly` | Assembleia Popular | pessoas |
+| `camp` | Acampada | tenda |
+| `other` | Outro | reticências |
 
-Cada tipo tem cor + forma de ícone distintas (não depender só da cor).
+Todos os tipos usam o mesmo pin quadrado preto; o tipo distingue-se pelo pictograma branco (não há código de cores). Pin selecionado: maior e laranja. Data-chave: barra laranja no topo do pin.
 
 ---
 
