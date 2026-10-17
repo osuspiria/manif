@@ -16,7 +16,10 @@ export default defineConfig({
           cloudflareTest(async () => ({
             wrangler: { configPath: './wrangler.toml' },
             miniflare: {
-              bindings: { TEST_MIGRATIONS: await readD1Migrations('./migrations') },
+              bindings: {
+                TEST_MIGRATIONS: await readD1Migrations('./migrations'),
+                EDGE_CACHE: 'off',
+              },
             },
           })),
         ],

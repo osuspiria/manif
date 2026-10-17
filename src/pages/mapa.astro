@@ -1,9 +1,25 @@
 ---
-import Base from '../layouts/Base.astro';
+import { MapApp } from '../components/map/MapApp';
 import { pt } from '../i18n/pt';
+import '../styles/map.css';
 ---
 
-<Base title={pt.map.heading}>
-  <h1>{pt.map.heading}</h1>
-  <p>{pt.map.placeholder}</p>
-</Base>
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={pt.site.tagline} />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>{pt.map.heading} · {pt.site.title}</title>
+  </head>
+  <body class="map-page">
+    <div id="map-root">
+      <MapApp client:only="preact" />
+    </div>
+    <noscript>
+      <h1>{pt.map.heading}</h1>
+      <p>{pt.map.noscript}</p>
+    </noscript>
+  </body>
+</html>

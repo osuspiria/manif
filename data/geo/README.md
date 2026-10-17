@@ -77,4 +77,21 @@ Upload to R2. The Worker/R2 serves the file with `Range` support:
 npx wrangler r2 object put mobilizacao-tiles/pt.pmtiles --file data/geo/pt.pmtiles
 ```
 
-> **Phase 2:** the Protomaps style also needs _glyphs_ (fonts) and _sprites_, which must also be self-hosted (no third-party CDNs). They come from [protomaps/basemaps-assets](https://github.com/protomaps/basemaps-assets). Copy only the fonts needed (e.g. Noto Sans Regular/Medium/Italic) into `public/map/`.
+### Development tiles
+
+For local development, use an extract of the whole country down to z11 (~35 MB). MapLibre overzooms beyond that:
+
+```bash
+pmtiles extract https://build.protomaps.com/<YYYYMMDD>.pmtiles data/geo/dev.pmtiles   --region=data/geo/pt-region.geojson --maxzoom=11
+npm run tiles:dev   # puts it in the LOCAL R2 bucket as pt.pmtiles
+```
+
+The Worker serves it at `/tiles/pt.pmtiles`, with `Range` support. In production, upload the full extract under the same key.
+
+## 3. Glyphs and sprites
+
+The Protomaps style also needs fonts (_glyphs_) and _sprites_, which are self-hosted in `public/map/` and committed (~1.7 MB). They come from [protomaps/basemaps-assets](https://github.com/protomaps/basemaps-assets), pinned to a specific commit. Only Latin ranges of Noto Sans Regular, Medium and Italic are included. The Noto fonts are under the SIL Open Font License.
+
+```bash
+npm run map:assets   # behind a TLS proxy: NODE_USE_SYSTEM_CA=1 npm run map:assets
+```

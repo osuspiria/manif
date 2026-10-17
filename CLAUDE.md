@@ -28,6 +28,8 @@ npm run typecheck    # tsc --noEmit + astro check
 npm run db:migrate   # aplica migrations ao D1 local
 npm run db:seed      # ~50 eventos de exemplo com várias datas, continente + ilhas
 npm run geo:build    # regenera data/geo/municipalities.* a partir da CAOP
+npm run tiles:dev    # carrega data/geo/dev.pmtiles no R2 local (ver data/geo/README.md)
+npm run map:assets   # (re)descarrega glyphs/sprites do Protomaps para public/map/
 npm run ci           # lint + typecheck + test
 ```
 Se algum destes comandos ainda não existir, cria-o quando criares a peça correspondente.

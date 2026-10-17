@@ -8,3 +8,4 @@ data/geo/raw/
 worker-configuration.d.ts
 SPEC.md
 CLAUDE.md
+public/map/

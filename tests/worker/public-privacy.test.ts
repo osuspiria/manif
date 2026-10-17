@@ -3,10 +3,13 @@
  * (CLAUDE.md › Privacidade). Every public route must be listed in
  * src/server/public-routes.ts with samples; this test calls them all.
  */
-import { exports } from 'cloudflare:workers';
-import { describe, expect, it } from 'vitest';
-import { app } from '../../src/server/app';
+import { env } from 'cloudflare:workers';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { app, createApp } from '../../src/server/app';
 import { PUBLIC_ROUTES } from '../../src/server/public-routes';
+import { IDS, insertEvent, resetDb, SENTINELS } from './fixtures';
+
+const fixedApp = createApp({ clock: () => new Date('2026-11-11T10:00:00Z') });
 
 /** Keys that must never appear in a public response, at any depth. */
 const FORBIDDEN_KEYS = new Set(
@@ -75,17 +78,41 @@ describe('public API privacy', () => {
   });
 
   const samples = PUBLIC_ROUTES.flatMap((r) =>
-    r.samples.map((s) => ({ name: `${r.method} ${s.url}`, method: r.method, ...s })),
+    r.samples.map((s) => ({
+      name: `${r.method} ${s.url}`,
+      method: r.method,
+      init: s.init,
+      url: s.url.replace('{eventId}', IDS.a).replace('{hiddenEventId}', IDS.c),
+    })),
   );
 
-  it.each(samples)('$name leaks no personal data and sets no cookie', async (s) => {
-    const res = await exports.default.fetch(`http://localhost${s.url}`, {
-      method: s.method,
-      ...s.init,
+  beforeEach(async () => {
+    await resetDb();
+    // Fixtures carry a contact email and an edit-token hash that must never leak.
+    await insertEvent({
+      id: IDS.a,
+      occurrences: [{ localDate: '2026-11-18', startTime: '18:00', note: 'Concentração às 18h' }],
     });
+    await insertEvent({
+      id: IDS.c,
+      status: 'pending',
+      occurrences: [{ localDate: '2026-11-18', startTime: '18:00' }],
+    });
+  });
+
+  it.each(samples)('$name leaks no personal data and sets no cookie', async (s) => {
+    const res = await fixedApp.request(
+      `http://localhost${s.url}`,
+      { method: s.method, ...s.init },
+      env,
+    );
     expect(res.headers.get('Set-Cookie')).toBeNull();
     const body = await res.text();
-    const json: unknown = body ? JSON.parse(body) : null;
-    expect(findLeaks(json)).toEqual([]);
+    for (const secret of Object.values(SENTINELS)) expect(body).not.toContain(secret);
+    if (res.headers.get('Content-Type')?.includes('json')) {
+      expect(findLeaks(JSON.parse(body))).toEqual([]);
+    } else {
+      expect(EMAIL_RE.test(body), 'email-like text in non-JSON body').toBe(false);
+    }
   });
 });

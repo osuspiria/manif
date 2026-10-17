@@ -64,3 +64,52 @@ export const EventInputSchema = z.object({
   occurrences: z.array(OccurrenceInputSchema).min(LIMITS.occurrencesMin).max(LIMITS.occurrencesMax),
 });
 export type EventInput = z.infer<typeof EventInputSchema>;
+
+// --- Public event (API output) ------------------------------------------------
+// Whitelist of fields that may leave the public API. Never add contact_email,
+// edit_token_hash or anything personal here.
+
+export const PublicOccurrenceSchema = z.object({
+  id: z.string(),
+  localDate: LocalDate,
+  startTime: LocalTime.nullable(),
+  endTime: LocalTime.nullable(),
+  startsAt: z.string(),
+  endsAt: z.string(),
+  note: z.string().nullable(),
+  cancelled: z.boolean(),
+});
+export type PublicOccurrence = z.infer<typeof PublicOccurrenceSchema>;
+
+export const PublicEventSchema = z.object({
+  id: z.string(),
+  type: z.enum(EVENT_TYPE_KEYS),
+  title: z.string(),
+  description: z.string().nullable(),
+  organizer: z.string().nullable(),
+  lat: z.number(),
+  lng: z.number(),
+  placeLabel: z.string().nullable(),
+  municipality: z.string(),
+  district: z.string(),
+  tz: TzSchema,
+  verified: z.boolean(),
+  occurrences: z.array(PublicOccurrenceSchema),
+});
+export type PublicEvent = z.infer<typeof PublicEventSchema>;
+
+export const PublicEventCollectionSchema = z.object({
+  type: z.literal('FeatureCollection'),
+  features: z.array(
+    z.object({
+      type: z.literal('Feature'),
+      id: z.string(),
+      geometry: z.object({
+        type: z.literal('Point'),
+        coordinates: z.tuple([z.number(), z.number()]),
+      }),
+      properties: PublicEventSchema,
+    }),
+  ),
+});
+export type PublicEventCollection = z.infer<typeof PublicEventCollectionSchema>;

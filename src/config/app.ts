@@ -45,5 +45,8 @@ export const RATE_LIMITS = {
   report: 10,
 } as const;
 
+/** Basemap archive, served by the Worker from R2 (see data/geo/README.md). */
+export const MAP_TILES_PATH = '/tiles/pt.pmtiles';
+
 /** Reverse geocoding: max distance (metres) to snap a point to the nearest municipality. */
 export const GEO_SNAP_METERS = 1000;

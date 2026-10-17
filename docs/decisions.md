@@ -56,3 +56,26 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - `CHECK` nos enums (`tz`, `status`, `kind`);
     - `REFERENCES … ON DELETE CASCADE` em `event_reports.event_id`;
     - índices em `event_occurrences.event_id`, `events.status` e `signatures(status, created_at)`.
+
+## Fases 2 e 3 — mapa e filtros (2026-10-17)
+
+17. **Dados do mapa:**
+    - `GET /api/events.geojson` devolve só eventos `published` com pelo menos uma ocorrência não cancelada e por terminar.
+    - Cada evento leva as ocorrências que ainda não terminaram, incluindo as canceladas (com `cancelled: true`), para a ficha as poder mostrar riscadas.
+    - Em produção fica 60 s na cache de edge (Cache API, `EDGE_CACHE=on`). No `wrangler dev` e nos testes está desligada, porque a cache local persiste em `.wrangler/` e devolvia dados de seeds antigos.
+18. **`GET /api/events/:id`** devolve um evento `published` mesmo que já tenha terminado, para que links partilhados continuem a abrir ("Este evento já terminou"). Os eventos `pending` e `hidden` dão 404.
+19. **Página de partilha `/mapa/e/:id`:** é o Worker que a serve. Pega na página estática `/mapa/` e injeta o `<title>` e as tags Open Graph com `HTMLRewriter`; o cliente lê o id a partir do caminho. Em dev, um middleware do Vite reescreve o caminho para `/mapa/`.
+20. **Tiles:**
+    - `/tiles/:file` serve o `.pmtiles` a partir do R2 (binding `TILES`), com suporte a `Range`.
+    - Em dev usa-se `data/geo/dev.pmtiles`, um extrato de Portugal inteiro até z11 com 35 MB, carregado no R2 local com `npm run tiles:dev`. Acima de z11 o MapLibre faz overzoom.
+    - Os glyphs (Noto Sans, só os intervalos latinos) e os sprites do Protomaps ficam em `public/map/` (`npm run map:assets`).
+    - Etiquetas de Marrocos em árabe ou tifinagh são desenhadas pelo browser (fallback do MapLibre): há pedidos 404 a esses intervalos, sem impacto em Portugal.
+21. **Contadores por tipo:** refletem o filtro "Quando" mas ignoram o filtro de tipo. Assim, um tipo não selecionado mostra quantos eventos se ganham ao ativá-lo.
+22. **Filtros por dia nos marcadores:** a etiqueta "24/11" aparece a partir do zoom 8 quando o filtro abrange vários dias ("Próximos", "Fim de semana", "7 dias").
+23. **Zod fica fora do bundle do cliente.** O cliente confia na nossa própria API, coberta por testes de schema no Worker.
+24. **Funcionalidades adiadas para a Fase 4:** os botões "Procurar local" e "Adicionar evento" e a ação "Reportar" da ficha (SPEC §4.1, §4.3), porque precisam de endpoints novos (`/api/geo/search`, `POST /api/events`, `/report`).
+25. **Orçamento de JS (SPEC §9: ≤ 250 KB gzip com o MapLibre) — POR DECIDIR.**
+    - O MapLibre 6.14 sozinho tem 286 KB gzip no ficheiro principal, mais 144 KB no worker. A versão 5.24 tem 248 KB mais 124 KB. Nenhuma versão atual cabe no orçamento.
+    - Hoje o JS inicial da página é de ~38 KB: a lista, os filtros e os contadores já funcionam nessa altura.
+    - O motor do mapa carrega a seguir, de forma preguiçosa: 295 KB mais o worker.
+    - Proposta: redefinir o orçamento como "JS inicial ≤ 250 KB; o mapa carrega depois de a lista estar utilizável".

@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "404-page"
-run_worker_first = ["/api/*"]
+run_worker_first = ["/api/*", "/tiles/*", "/mapa/e/*"]
 
 [[d1_databases]]
 binding = "DB"
@@ -15,5 +15,10 @@ database_name = "mobilizacao-pt"
 database_id = "00000000-0000-0000-0000-000000000000" # replace after `wrangler d1 create`
 migrations_dir = "migrations"
 
+[[r2_buckets]]
+binding = "TILES"
+bucket_name = "mobilizacao-tiles"
+
 [vars]
 MODERATION_MODE = "post"
+EDGE_CACHE = "on"
