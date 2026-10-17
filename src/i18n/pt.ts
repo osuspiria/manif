@@ -24,6 +24,8 @@ export const pt = {
     heading: 'Mapa de eventos',
     description:
       'Manifestações, concentrações e assembleias em todo o país, do continente às ilhas. Filtra por dia e tipo, ou adiciona um evento.',
+    domainNote:
+      'Este site é um projeto independente e não tem qualquer ligação ao Presidente da Câmara Municipal do Porto nem à Câmara Municipal. A semelhança do nome é pura coincidência.',
     noscript:
       'O mapa e a lista de eventos precisam de JavaScript. Ativa o JavaScript no teu browser para os veres.',
     loading: 'A carregar eventos…',

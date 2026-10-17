@@ -163,7 +163,7 @@ Todos os tipos usam o mesmo pin quadrado preto; o tipo distingue-se pelo pictogr
 O mapa é a página de entrada. `/mapa` redireciona (301) para `/`, mantendo os filtros do URL; as fichas continuam em `/mapa/e/<id>`.
 
 Layout telemóvel (de cima para baixo):
-0. Introdução: "Mobilização" + uma frase sobre a plataforma (`pt.map.description`). Esconde-se (só visualmente; o `h1` fica para leitores de ecrã) enquanto o painel de filtros ou a ficha de um evento estão abertos. Abrir os filtros fecha a ficha; escolher um evento fecha os filtros. No desktop fica sempre visível no topo do painel lateral.
+0. Introdução: "Mobilização" + uma frase sobre a plataforma (`pt.map.description`) + uma nota a dizer que o site é independente e não tem ligação ao Presidente da Câmara Municipal do Porto nem à Câmara (`pt.map.domainNote`). Esconde-se (só visualmente; o `h1` fica para leitores de ecrã) enquanto o painel de filtros ou a ficha de um evento estão abertos. Abrir os filtros fecha a ficha; escolher um evento fecha os filtros. No desktop fica sempre visível no topo do painel lateral.
 1. Barra fixa: **resumo do filtro ativo** ("23 eventos · Este fim de semana") — tocar abre o painel de filtros.
 2. Mapa em ecrã inteiro.
 3. Botões flutuantes: 📍 *Perto de mim* (geolocalização no browser; nada é enviado ao servidor), 🔍 *Procurar local*, ➕ *Adicionar evento*.
@@ -222,7 +222,7 @@ Fluxo em passos curtos (bottom sheet em telemóvel):
 1. **Onde** — o mapa entra em modo "escolher ponto": pin fixo ao centro, a pessoa arrasta o mapa por baixo. Alternativas: "Usar a minha localização" ou pesquisar morada/local. Mostra o concelho detetado ("Porto · Porto"). Opcional: nome do local.
 2. **O quê** — tipo (chips), título, descrição (opcional), organizador (opcional).
 3. **Quando** — lista de datas:
-   - Primeira linha: data + hora de início (opcional "todo o dia") + hora de fim (opcional) + nota (opcional).
+   - Primeira linha: data + hora de início (opcional "todo o dia") + nota (opcional). Ao criar não se pede hora de fim (o evento conta até ao fim do dia); a página de edição mantém a hora de fim (opcional) dos eventos existentes.
    - **"+ Adicionar outra data"** (copia a hora da linha anterior).
    - Atalho **"Repetir semanalmente até…"** → gera as linhas, que ficam editáveis/removíveis individualmente.
    - Inputs nativos `type="date"` e `type="time"` (são os melhores em telemóvel).

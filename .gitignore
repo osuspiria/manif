@@ -22,3 +22,6 @@ ds-bundle/
 .design-sync/.cache/
 .design-sync/learnings/
 .design-sync/node_modules
+
+# Design handoffs downloaded from Claude Design (inputs, not source)
+handoff-*/

@@ -45,7 +45,8 @@ async function fillUntilContact(page: Page, title: string, project: string, scre
   const dates = flow.getByLabel('Data', { exact: true });
   await dates.nth(0).fill(dayFromNow(3));
   await flow.getByLabel('Hora de início').nth(0).fill('18:00');
-  await flow.getByLabel('Hora de fim (opcional)').nth(0).fill('20:00');
+  // New events only ask for the start time.
+  await expect(flow.getByLabel('Hora de fim (opcional)')).toHaveCount(0);
   await flow.getByRole('button', { name: '+ Adicionar outra data' }).click();
   await dates.nth(1).fill(dayFromNow(10));
   await flow.getByRole('button', { name: '+ Adicionar outra data' }).click();

@@ -14,3 +14,6 @@ public/map/
 .design-sync/
 .ds-sync/
 ds-bundle/
+
+# Design handoffs downloaded from Claude Design (inputs, not source)
+handoff-*/

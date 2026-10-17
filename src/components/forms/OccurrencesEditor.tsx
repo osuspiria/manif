@@ -25,6 +25,8 @@ interface Props {
 }
 
 export function OccurrencesEditor({ rows, onChange, errors, tz, minDate, maxDate, mode }: Props) {
+  // New events only ask for a start time; the edit page keeps the end time of existing ones.
+  const withEnd = mode === 'edit';
   const [repeatUntil, setRepeatUntil] = useState('');
   const [repeatMsg, setRepeatMsg] = useState('');
 
@@ -109,7 +111,17 @@ export function OccurrencesEditor({ rows, onChange, errors, tz, minDate, maxDate
                   checked={r.allDay}
                   onChecked={(v) => update(r.key, { allDay: v })}
                 />
-                {!r.allDay && (
+                {!r.allDay && !withEnd && (
+                  <TextField
+                    id={id('start')}
+                    type="time"
+                    label={pt.add.when.start}
+                    value={r.startTime}
+                    onValue={(v) => update(r.key, { startTime: v })}
+                    error={e('startTime')}
+                  />
+                )}
+                {!r.allDay && withEnd && (
                   <div class="time-pair">
                     <TextField
                       id={id('start')}
@@ -129,7 +141,7 @@ export function OccurrencesEditor({ rows, onChange, errors, tz, minDate, maxDate
                     />
                   </div>
                 )}
-                {!r.allDay && r.endTime && r.startTime && r.endTime < r.startTime && (
+                {!r.allDay && withEnd && r.endTime && r.startTime && r.endTime < r.startTime && (
                   <p class="hint">{pt.add.when.endHint}</p>
                 )}
                 <TextField

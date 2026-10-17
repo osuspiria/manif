@@ -135,6 +135,9 @@ test.describe('map page (/)', () => {
     const intro = page.locator('.map-app .map-intro');
     await expect(intro).toBeVisible();
     await expect(intro).toContainText('Manifestações, concentrações e assembleias');
+    await expect(intro).toContainText(
+      'não tem qualquer ligação ao Presidente da Câmara Municipal do Porto',
+    );
     await shot(page, '00-intro', info.project.name);
 
     await page.locator('#summary-button').click();
