@@ -1,0 +1,19 @@
+name = "mobilizacao-pt"
+main = "src/server/index.ts"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "404-page"
+run_worker_first = ["/api/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mobilizacao-pt"
+database_id = "00000000-0000-0000-0000-000000000000" # replace after `wrangler d1 create`
+migrations_dir = "migrations"
+
+[vars]
+MODERATION_MODE = "post"

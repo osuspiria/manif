@@ -1,0 +1,14 @@
+import type { D1Migration } from '@cloudflare/vitest-plugin';
+import type { Env as AppEnv } from '../../src/server/env';
+import type * as MainModule from '../../src/server/index';
+
+declare global {
+  namespace Cloudflare {
+    interface Env extends AppEnv {
+      TEST_MIGRATIONS: D1Migration[];
+    }
+    interface GlobalProps {
+      mainModule: typeof MainModule;
+    }
+  }
+}

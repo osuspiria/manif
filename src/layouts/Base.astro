@@ -1,0 +1,57 @@
+---
+import { pt } from '../i18n/pt';
+
+interface Props {
+  title?: string;
+}
+const { title } = Astro.props;
+const fullTitle = title ? `${title} · ${pt.site.title}` : pt.site.title;
+---
+
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={pt.site.tagline} />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>{fullTitle}</title>
+  </head>
+  <body>
+    <header>
+      <nav aria-label={pt.site.title}>
+        <a href="/">{pt.site.title}</a>
+        <a href="/mapa">{pt.nav.map}</a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: light;
+    font-family: system-ui, sans-serif;
+    line-height: 1.5;
+  }
+  body {
+    margin: 0;
+    background: #fff;
+    color: #1a1a1a;
+  }
+  header nav {
+    display: flex;
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+  header a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  main {
+    padding: 0 1rem;
+  }
+</style>

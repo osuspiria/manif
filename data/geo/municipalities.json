@@ -1,0 +1,1850 @@
+[
+  {
+    "code": "1401",
+    "name": "Abrantes",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0101",
+    "name": "Águeda",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0901",
+    "name": "Aguiar da Beira",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0701",
+    "name": "Alandroal",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0102",
+    "name": "Albergaria-a-Velha",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0801",
+    "name": "Albufeira",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1501",
+    "name": "Alcácer do Sal",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1402",
+    "name": "Alcanena",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1001",
+    "name": "Alcobaça",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1502",
+    "name": "Alcochete",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0802",
+    "name": "Alcoutim",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1101",
+    "name": "Alenquer",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0401",
+    "name": "Alfândega da Fé",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1701",
+    "name": "Alijó",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0803",
+    "name": "Aljezur",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0201",
+    "name": "Aljustrel",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1503",
+    "name": "Almada",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0902",
+    "name": "Almeida",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1403",
+    "name": "Almeirim",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0202",
+    "name": "Almodôvar",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1404",
+    "name": "Alpiarça",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1201",
+    "name": "Alter do Chão",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1002",
+    "name": "Alvaiázere",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0203",
+    "name": "Alvito",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1115",
+    "name": "Amadora",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1301",
+    "name": "Amarante",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0301",
+    "name": "Amares",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0103",
+    "name": "Anadia",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4301",
+    "name": "Angra do Heroísmo",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "1003",
+    "name": "Ansião",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1601",
+    "name": "Arcos de Valdevez",
+    "district": "Viana do Castelo",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0601",
+    "name": "Arganil",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1801",
+    "name": "Armamar",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0104",
+    "name": "Arouca",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0702",
+    "name": "Arraiolos",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1202",
+    "name": "Arronches",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1102",
+    "name": "Arruda dos Vinhos",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0105",
+    "name": "Aveiro",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1203",
+    "name": "Avis",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1103",
+    "name": "Azambuja",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1302",
+    "name": "Baião",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0302",
+    "name": "Barcelos",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0204",
+    "name": "Barrancos",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1504",
+    "name": "Barreiro",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1004",
+    "name": "Batalha",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0205",
+    "name": "Beja",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0501",
+    "name": "Belmonte",
+    "district": "Castelo Branco",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1405",
+    "name": "Benavente",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1005",
+    "name": "Bombarral",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0703",
+    "name": "Borba",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1702",
+    "name": "Boticas",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0303",
+    "name": "Braga",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0402",
+    "name": "Bragança",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0304",
+    "name": "Cabeceiras de Basto",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1104",
+    "name": "Cadaval",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1006",
+    "name": "Caldas da Rainha",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "3101",
+    "name": "Calheta",
+    "district": "Região Autónoma da Madeira",
+    "tz": "Atlantic/Madeira"
+  },
+  {
+    "code": "4501",
+    "name": "Calheta de São Jorge",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "3102",
+    "name": "Câmara de Lobos",
+    "district": "Região Autónoma da Madeira",
+    "tz": "Atlantic/Madeira"
+  },
+  {
+    "code": "1602",
+    "name": "Caminha",
+    "district": "Viana do Castelo",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1204",
+    "name": "Campo Maior",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0602",
+    "name": "Cantanhede",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0403",
+    "name": "Carrazeda de Ansiães",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1802",
+    "name": "Carregal do Sal",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1406",
+    "name": "Cartaxo",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1105",
+    "name": "Cascais",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1007",
+    "name": "Castanheira de Pêra",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0502",
+    "name": "Castelo Branco",
+    "district": "Castelo Branco",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0106",
+    "name": "Castelo de Paiva",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1205",
+    "name": "Castelo de Vide",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1803",
+    "name": "Castro Daire",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0804",
+    "name": "Castro Marim",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0206",
+    "name": "Castro Verde",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0903",
+    "name": "Celorico da Beira",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0305",
+    "name": "Celorico de Basto",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1407",
+    "name": "Chamusca",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1703",
+    "name": "Chaves",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1804",
+    "name": "Cinfães",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0603",
+    "name": "Coimbra",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0604",
+    "name": "Condeixa-a-Nova",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1408",
+    "name": "Constância",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1409",
+    "name": "Coruche",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4901",
+    "name": "Corvo",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "0503",
+    "name": "Covilhã",
+    "district": "Castelo Branco",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1206",
+    "name": "Crato",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0207",
+    "name": "Cuba",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1207",
+    "name": "Elvas",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1410",
+    "name": "Entroncamento",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0107",
+    "name": "Espinho",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0306",
+    "name": "Esposende",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0108",
+    "name": "Estarreja",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0704",
+    "name": "Estremoz",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0705",
+    "name": "Évora",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0307",
+    "name": "Fafe",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0805",
+    "name": "Faro",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1303",
+    "name": "Felgueiras",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0208",
+    "name": "Ferreira do Alentejo",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1411",
+    "name": "Ferreira do Zêzere",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0605",
+    "name": "Figueira da Foz",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0904",
+    "name": "Figueira de Castelo Rodrigo",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1008",
+    "name": "Figueiró dos Vinhos",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0905",
+    "name": "Fornos de Algodres",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0404",
+    "name": "Freixo de Espada à Cinta",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1208",
+    "name": "Fronteira",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "3103",
+    "name": "Funchal",
+    "district": "Região Autónoma da Madeira",
+    "tz": "Atlantic/Madeira"
+  },
+  {
+    "code": "0504",
+    "name": "Fundão",
+    "district": "Castelo Branco",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1209",
+    "name": "Gavião",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0606",
+    "name": "Góis",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1412",
+    "name": "Golegã",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1304",
+    "name": "Gondomar",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0906",
+    "name": "Gouveia",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1505",
+    "name": "Grândola",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0907",
+    "name": "Guarda",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0308",
+    "name": "Guimarães",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4701",
+    "name": "Horta",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "0505",
+    "name": "Idanha-a-Nova",
+    "district": "Castelo Branco",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0110",
+    "name": "Ílhavo",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0806",
+    "name": "Lagoa",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4201",
+    "name": "Lagoa",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "0807",
+    "name": "Lagos",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4801",
+    "name": "Lajes das Flores",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "4601",
+    "name": "Lajes do Pico",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "1805",
+    "name": "Lamego",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1009",
+    "name": "Leiria",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1106",
+    "name": "Lisboa",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0808",
+    "name": "Loulé",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1107",
+    "name": "Loures",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1108",
+    "name": "Lourinhã",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0607",
+    "name": "Lousã",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1305",
+    "name": "Lousada",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1413",
+    "name": "Mação",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0405",
+    "name": "Macedo de Cavaleiros",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "3104",
+    "name": "Machico",
+    "district": "Região Autónoma da Madeira",
+    "tz": "Atlantic/Madeira"
+  },
+  {
+    "code": "4602",
+    "name": "Madalena",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "1109",
+    "name": "Mafra",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1306",
+    "name": "Maia",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1806",
+    "name": "Mangualde",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0908",
+    "name": "Manteigas",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1307",
+    "name": "Marco de Canaveses",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1010",
+    "name": "Marinha Grande",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1210",
+    "name": "Marvão",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1308",
+    "name": "Matosinhos",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0111",
+    "name": "Mealhada",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0909",
+    "name": "Mêda",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1603",
+    "name": "Melgaço",
+    "district": "Viana do Castelo",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0209",
+    "name": "Mértola",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1704",
+    "name": "Mesão Frio",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0608",
+    "name": "Mira",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0609",
+    "name": "Miranda do Corvo",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0406",
+    "name": "Miranda do Douro",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0407",
+    "name": "Mirandela",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0408",
+    "name": "Mogadouro",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1807",
+    "name": "Moimenta da Beira",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1506",
+    "name": "Moita",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1604",
+    "name": "Monção",
+    "district": "Viana do Castelo",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0809",
+    "name": "Monchique",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1705",
+    "name": "Mondim de Basto",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1211",
+    "name": "Monforte",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1706",
+    "name": "Montalegre",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0706",
+    "name": "Montemor-o-Novo",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0610",
+    "name": "Montemor-o-Velho",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1507",
+    "name": "Montijo",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0707",
+    "name": "Mora",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1808",
+    "name": "Mortágua",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0210",
+    "name": "Moura",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0708",
+    "name": "Mourão",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1707",
+    "name": "Murça",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0112",
+    "name": "Murtosa",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1011",
+    "name": "Nazaré",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1809",
+    "name": "Nelas",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1212",
+    "name": "Nisa",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4202",
+    "name": "Nordeste",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "1012",
+    "name": "Óbidos",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0211",
+    "name": "Odemira",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1116",
+    "name": "Odivelas",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1110",
+    "name": "Oeiras",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0506",
+    "name": "Oleiros",
+    "district": "Castelo Branco",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0810",
+    "name": "Olhão",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0113",
+    "name": "Oliveira de Azeméis",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1810",
+    "name": "Oliveira de Frades",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0114",
+    "name": "Oliveira do Bairro",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0611",
+    "name": "Oliveira do Hospital",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1421",
+    "name": "Ourém",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0212",
+    "name": "Ourique",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0115",
+    "name": "Ovar",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1309",
+    "name": "Paços de Ferreira",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1508",
+    "name": "Palmela",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0612",
+    "name": "Pampilhosa da Serra",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1310",
+    "name": "Paredes",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1605",
+    "name": "Paredes de Coura",
+    "district": "Viana do Castelo",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1013",
+    "name": "Pedrógão Grande",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0613",
+    "name": "Penacova",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1311",
+    "name": "Penafiel",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1811",
+    "name": "Penalva do Castelo",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0507",
+    "name": "Penamacor",
+    "district": "Castelo Branco",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1812",
+    "name": "Penedono",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0614",
+    "name": "Penela",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1014",
+    "name": "Peniche",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1708",
+    "name": "Peso da Régua",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0910",
+    "name": "Pinhel",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1015",
+    "name": "Pombal",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4203",
+    "name": "Ponta Delgada",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "3105",
+    "name": "Ponta do Sol",
+    "district": "Região Autónoma da Madeira",
+    "tz": "Atlantic/Madeira"
+  },
+  {
+    "code": "1606",
+    "name": "Ponte da Barca",
+    "district": "Viana do Castelo",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1607",
+    "name": "Ponte de Lima",
+    "district": "Viana do Castelo",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1213",
+    "name": "Ponte de Sor",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1214",
+    "name": "Portalegre",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0709",
+    "name": "Portel",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0811",
+    "name": "Portimão",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1312",
+    "name": "Porto",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1016",
+    "name": "Porto de Mós",
+    "district": "Leiria",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "3106",
+    "name": "Porto Moniz",
+    "district": "Região Autónoma da Madeira",
+    "tz": "Atlantic/Madeira"
+  },
+  {
+    "code": "3201",
+    "name": "Porto Santo",
+    "district": "Região Autónoma da Madeira",
+    "tz": "Atlantic/Madeira"
+  },
+  {
+    "code": "0309",
+    "name": "Póvoa de Lanhoso",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1313",
+    "name": "Póvoa de Varzim",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4204",
+    "name": "Povoação",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "4302",
+    "name": "Praia da Vitória",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "0508",
+    "name": "Proença-a-Nova",
+    "district": "Castelo Branco",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0710",
+    "name": "Redondo",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0711",
+    "name": "Reguengos de Monsaraz",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1813",
+    "name": "Resende",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "3107",
+    "name": "Ribeira Brava",
+    "district": "Região Autónoma da Madeira",
+    "tz": "Atlantic/Madeira"
+  },
+  {
+    "code": "1709",
+    "name": "Ribeira de Pena",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4205",
+    "name": "Ribeira Grande",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "1414",
+    "name": "Rio Maior",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1710",
+    "name": "Sabrosa",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0911",
+    "name": "Sabugal",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1415",
+    "name": "Salvaterra de Magos",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1814",
+    "name": "Santa Comba Dão",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "3108",
+    "name": "Santa Cruz",
+    "district": "Região Autónoma da Madeira",
+    "tz": "Atlantic/Madeira"
+  },
+  {
+    "code": "4401",
+    "name": "Santa Cruz da Graciosa",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "4802",
+    "name": "Santa Cruz das Flores",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "0109",
+    "name": "Santa Maria da Feira",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1711",
+    "name": "Santa Marta de Penaguião",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "3109",
+    "name": "Santana",
+    "district": "Região Autónoma da Madeira",
+    "tz": "Atlantic/Madeira"
+  },
+  {
+    "code": "1416",
+    "name": "Santarém",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1509",
+    "name": "Santiago do Cacém",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1314",
+    "name": "Santo Tirso",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0812",
+    "name": "São Brás de Alportel",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0116",
+    "name": "São João da Madeira",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1815",
+    "name": "São João da Pesqueira",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1816",
+    "name": "São Pedro do Sul",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4603",
+    "name": "São Roque do Pico",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "3110",
+    "name": "São Vicente",
+    "district": "Região Autónoma da Madeira",
+    "tz": "Atlantic/Madeira"
+  },
+  {
+    "code": "1417",
+    "name": "Sardoal",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1817",
+    "name": "Sátão",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0912",
+    "name": "Seia",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1510",
+    "name": "Seixal",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1818",
+    "name": "Sernancelhe",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0213",
+    "name": "Serpa",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0509",
+    "name": "Sertã",
+    "district": "Castelo Branco",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1511",
+    "name": "Sesimbra",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1512",
+    "name": "Setúbal",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0117",
+    "name": "Sever do Vouga",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0813",
+    "name": "Silves",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1513",
+    "name": "Sines",
+    "district": "Setúbal",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1111",
+    "name": "Sintra",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1112",
+    "name": "Sobral de Monte Agraço",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0615",
+    "name": "Soure",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1215",
+    "name": "Sousel",
+    "district": "Portalegre",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0616",
+    "name": "Tábua",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1819",
+    "name": "Tabuaço",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1820",
+    "name": "Tarouca",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0814",
+    "name": "Tavira",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0310",
+    "name": "Terras de Bouro",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1418",
+    "name": "Tomar",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1821",
+    "name": "Tondela",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0409",
+    "name": "Torre de Moncorvo",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1419",
+    "name": "Torres Novas",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1113",
+    "name": "Torres Vedras",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0913",
+    "name": "Trancoso",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1318",
+    "name": "Trofa",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0118",
+    "name": "Vagos",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0119",
+    "name": "Vale de Cambra",
+    "district": "Aveiro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1608",
+    "name": "Valença",
+    "district": "Viana do Castelo",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1315",
+    "name": "Valongo",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1712",
+    "name": "Valpaços",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4502",
+    "name": "Velas",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "0712",
+    "name": "Vendas Novas",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0713",
+    "name": "Viana do Alentejo",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1609",
+    "name": "Viana do Castelo",
+    "district": "Viana do Castelo",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0214",
+    "name": "Vidigueira",
+    "district": "Beja",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0311",
+    "name": "Vieira do Minho",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0510",
+    "name": "Vila de Rei",
+    "district": "Castelo Branco",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0815",
+    "name": "Vila do Bispo",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1316",
+    "name": "Vila do Conde",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4101",
+    "name": "Vila do Porto",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "0410",
+    "name": "Vila Flor",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1114",
+    "name": "Vila Franca de Xira",
+    "district": "Lisboa",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "4206",
+    "name": "Vila Franca do Campo",
+    "district": "Região Autónoma dos Açores",
+    "tz": "Atlantic/Azores"
+  },
+  {
+    "code": "1420",
+    "name": "Vila Nova da Barquinha",
+    "district": "Santarém",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1610",
+    "name": "Vila Nova de Cerveira",
+    "district": "Viana do Castelo",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0312",
+    "name": "Vila Nova de Famalicão",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0914",
+    "name": "Vila Nova de Foz Côa",
+    "district": "Guarda",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1317",
+    "name": "Vila Nova de Gaia",
+    "district": "Porto",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1822",
+    "name": "Vila Nova de Paiva",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0617",
+    "name": "Vila Nova de Poiares",
+    "district": "Coimbra",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1713",
+    "name": "Vila Pouca de Aguiar",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1714",
+    "name": "Vila Real",
+    "district": "Vila Real",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0816",
+    "name": "Vila Real de Santo António",
+    "district": "Faro",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0511",
+    "name": "Vila Velha de Ródão",
+    "district": "Castelo Branco",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0313",
+    "name": "Vila Verde",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0714",
+    "name": "Vila Viçosa",
+    "district": "Évora",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0411",
+    "name": "Vimioso",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0412",
+    "name": "Vinhais",
+    "district": "Bragança",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1823",
+    "name": "Viseu",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "0314",
+    "name": "Vizela",
+    "district": "Braga",
+    "tz": "Europe/Lisbon"
+  },
+  {
+    "code": "1824",
+    "name": "Vouzela",
+    "district": "Viseu",
+    "tz": "Europe/Lisbon"
+  }
+]

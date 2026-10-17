@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+.dev.vars
+*.log
+test-results/
+playwright-report/
+# Large geodata: never commit raw downloads or tiles
+data/geo/raw/
+*.pmtiles

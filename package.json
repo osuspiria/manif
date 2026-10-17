@@ -1,0 +1,62 @@
+{
+  "name": "mobilizacao-pt",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n worker,astro -c blue,magenta \"wrangler dev --port 8787\" \"astro dev --port 4321\"",
+    "build": "astro build",
+    "preview": "npm run build && wrangler dev --port 8787",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p src/server/tsconfig.json && astro check",
+    "db:migrate": "wrangler d1 migrations apply DB --local",
+    "geo:build": "tsx data/geo/scripts/build-municipalities.ts",
+    "ci": "npm run lint && npm run typecheck && npm run test"
+  },
+  "dependencies": {
+    "hono": "^4.13.13",
+    "preact": "^11.0.1",
+    "temporal-polyfill": "^1.0.6",
+    "ulidx": "^2.4.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/preact": "^6.1.0",
+    "@cloudflare/vitest-plugin": "^1.4.4",
+    "@cloudflare/workers-types": "^5.20261016.1",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
+    "@vitest/runner": "^4.1.12",
+    "@vitest/snapshot": "^4.1.12",
+    "astro": "^7.4.0",
+    "concurrently": "^10.0.6",
+    "eslint": "^10.13.0",
+    "eslint-plugin-astro": "^3.2.1",
+    "globals": "^17.13.0",
+    "mapshaper": "^0.7.87",
+    "prettier": "^3.9.10",
+    "prettier-plugin-astro": "^1.1.1",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^4.1.12",
+    "wrangler": "^4.151.1"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "esbuild@0.28.2": true,
+    "workerd@1.20260815.1": true,
+    "workerd@1.20261012.1": true,
+    "better-sqlite3@13.0.3": true,
+    "better-sqlite3@12.11.1": true
+  }
+}

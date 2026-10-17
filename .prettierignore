@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+package-lock.json
+data/geo/municipalities.geo.json
+data/geo/raw/
+worker-configuration.d.ts
+SPEC.md
+CLAUDE.md

@@ -1,0 +1,91 @@
+/**
+ * Guarantees that public API responses never contain personal data
+ * (CLAUDE.md › Privacidade). Every public route must be listed in
+ * src/server/public-routes.ts with samples; this test calls them all.
+ */
+import { exports } from 'cloudflare:workers';
+import { describe, expect, it } from 'vitest';
+import { app } from '../../src/server/app';
+import { PUBLIC_ROUTES } from '../../src/server/public-routes';
+
+/** Keys that must never appear in a public response, at any depth. */
+const FORBIDDEN_KEYS = new Set(
+  [
+    'email',
+    'contact_email',
+    'contactEmail',
+    'phone',
+    'contact_name',
+    'contactName',
+    'edit_token_hash',
+    'editTokenHash',
+    'confirm_token_hash',
+    'confirmTokenHash',
+    'ip',
+    'ip_hash',
+    'ipHash',
+  ].map((k) => k.toLowerCase()),
+);
+
+const EMAIL_RE = /[^\s@"]+@[^\s@"]+\.[a-z]{2,}/i;
+// Portuguese phone numbers (mobile 9x, landline 2x), with optional +351 / spaces.
+const PHONE_RE = /(?:\+351[\s-]?)?\b[29]\d{2}[\s-]?\d{3}[\s-]?\d{3}\b/;
+
+function findLeaks(value: unknown, path = '$'): string[] {
+  if (typeof value === 'string') {
+    const leaks: string[] = [];
+    if (EMAIL_RE.test(value)) leaks.push(`${path}: looks like an email`);
+    if (PHONE_RE.test(value)) leaks.push(`${path}: looks like a phone number`);
+    return leaks;
+  }
+  if (Array.isArray(value)) return value.flatMap((v, i) => findLeaks(v, `${path}[${i}]`));
+  if (value && typeof value === 'object') {
+    return Object.entries(value).flatMap(([k, v]) => [
+      ...(FORBIDDEN_KEYS.has(k.toLowerCase()) ? [`${path}.${k}: forbidden key`] : []),
+      ...findLeaks(v, `${path}.${k}`),
+    ]);
+  }
+  return [];
+}
+
+describe('leak detector self-check', () => {
+  it('flags forbidden keys, emails and phone numbers', () => {
+    expect(findLeaks({ a: [{ Email: 'x' }] })).toHaveLength(1);
+    expect(findLeaks({ note: 'escreve para ana@exemplo.pt' })).toHaveLength(1);
+    expect(findLeaks({ note: 'liga 912 345 678' })).toHaveLength(1);
+    expect(findLeaks({ note: '+351 213456789' })).toHaveLength(1);
+    expect(findLeaks({ municipality: 'Porto', code: '1312', lat: 41.1496 })).toEqual([]);
+  });
+});
+
+describe('public API privacy', () => {
+  it('every public route registered in Hono is listed in PUBLIC_ROUTES', () => {
+    const registered = new Set(
+      app.routes
+        .filter((r) => r.method !== 'ALL' && !r.path.startsWith('/api/admin'))
+        .map((r) => `${r.method} ${r.path}`),
+    );
+    const listed = new Set(PUBLIC_ROUTES.map((r) => `${r.method} ${r.route}`));
+    expect([...registered].filter((r) => !listed.has(r))).toEqual([]);
+    expect([...listed].filter((r) => !registered.has(r))).toEqual([]);
+  });
+
+  it('every listed route has at least one sample', () => {
+    for (const r of PUBLIC_ROUTES) expect(r.samples.length, r.route).toBeGreaterThan(0);
+  });
+
+  const samples = PUBLIC_ROUTES.flatMap((r) =>
+    r.samples.map((s) => ({ name: `${r.method} ${s.url}`, method: r.method, ...s })),
+  );
+
+  it.each(samples)('$name leaks no personal data and sets no cookie', async (s) => {
+    const res = await exports.default.fetch(`http://localhost${s.url}`, {
+      method: s.method,
+      ...s.init,
+    });
+    expect(res.headers.get('Set-Cookie')).toBeNull();
+    const body = await res.text();
+    const json: unknown = body ? JSON.parse(body) : null;
+    expect(findLeaks(json)).toEqual([]);
+  });
+});

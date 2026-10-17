@@ -1,0 +1,21 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "types": ["node"]
+  },
+  "include": [
+    ".astro/types.d.ts",
+    "src/**/*",
+    "tests/unit/**/*",
+    "tests/e2e/**/*",
+    "data/geo/scripts/**/*",
+    "*.config.ts",
+    "*.config.mjs"
+  ],
+  "exclude": ["dist", "src/server", "tests/worker"]
+}
