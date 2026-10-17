@@ -10,9 +10,11 @@ export const DATA_CONTROLLER = {
 } as const;
 
 /**
- * Optional features, all on by default. Switching one off unregisters its API
- * routes and hides its links; its pages must also be renamed with a leading
- * "_" (Astro does not build those).
+ * Features switched on in this deployment. The map launches first; the support
+ * appeal (SPEC §5) and the privacy page are built and tested but switched off
+ * (docs/decisions.md #63). To switch one on: set it to true here AND rename its
+ * pages back (src/pages/_apoio → apoio, src/pages/_privacidade.astro →
+ * privacidade.astro; Astro ignores pages whose name starts with "_").
  */
 export interface Features {
   signatures: boolean;
@@ -25,9 +27,9 @@ export interface Features {
   eventContactEmail: boolean;
 }
 export const FEATURES: Features = {
-  signatures: true,
-  privacyPage: true,
-  eventContactEmail: true,
+  signatures: false,
+  privacyPage: false,
+  eventContactEmail: false,
 };
 
 /** D3 — 'pre': new events wait for approval; 'post': published immediately as "não confirmado". */

@@ -60,6 +60,10 @@ migrations/
 tests/
 ```
 
+## Funcionalidades desligadas
+
+O lançamento inclui só o mapa. As assinaturas e a página de privacidade estão desligadas em `FEATURES` (`src/config/app.ts`) e as suas páginas estão em `src/pages/_apoio/` e `src/pages/_privacidade.astro` (o `_` impede o Astro de as gerar). Para ligar, ver `docs/decisions.md` #63. Não apagar esse código.
+
 ## Regras do projeto
 
 ### Idioma

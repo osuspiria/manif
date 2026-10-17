@@ -203,3 +203,19 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     | `/privacidade/`      | 100         | 100            | 81            | 100 |
 
     As "boas práticas" só perdem pontos por "Does not use HTTPS", que se deve ao servidor local em `http` e ao script injetado pelo antivírus da máquina; em produção, com HTTPS, desaparece. Os alvos do SPEC §9 cumprem-se.
+
+## Lançamento só com o mapa (17/10/2026)
+
+63. **Pedido:** lançar já o mapa; as assinaturas e a página de privacidade ficam para uma fase posterior. Ficam **desligadas, não apagadas**: o código e os testes mantêm-se, para as voltar a ligar sem refazer nada.
+    - Interruptor: `FEATURES` em `src/config/app.ts` (`signatures`, `privacyPage`, ambos `false`).
+    - Com `signatures: false`: as rotas `/api/signatures/*` nem são registadas; as rotas de assinaturas do admin respondem 404; o separador "Assinaturas" do admin não aparece; não há links para `/apoio`.
+    - As páginas estão em `src/pages/_apoio/` e `src/pages/_privacidade.astro`: o Astro não gera páginas cujo nome começa por `_`, por isso `/apoio/*` e `/privacidade/` dão 404.
+    - **Para ligar:** pôr a flag a `true` e tirar o `_` do nome das páginas.
+    - Testes: os de API das assinaturas ligam a flag explicitamente; o teste de privacidade verifica as rotas com tudo ligado e também que a configuração de lançamento regista exatamente as rotas das funcionalidades ligadas; os e2e das funcionalidades desligadas são saltados, e há um e2e que confirma que essas páginas dão 404 e não têm links.
+    - Ficam ligados: submissão e edição de eventos, Turnstile, emails do link de edição, reports, admin (moderação de eventos), retenção, CSP e páginas de erro.
+    - Ver #64 sobre o email de contacto dos eventos.
+64. **Sem email de contacto no lançamento** (escolha do utilizador, opção 1 de 3): sem página de privacidade, não recolhemos dados pessoais no mapa (RGPD art. 13.º).
+    - Flag `FEATURES.eventContactEmail` (`false`): o "Adicionar evento" passa a ter 3 passos (Onde, O quê, Quando) e envia-se no último; o passo "Contacto" só existe com a flag ligada.
+    - A API ignora um `contactEmail` enviado diretamente: não é guardado nem usado para enviar email.
+    - O link de edição continua a aparecer no ecrã no fim (com "Copiar link"); deixa de ir por email.
+    - **Para ligar:** só em conjunto com a página de privacidade (`privacyPage`).

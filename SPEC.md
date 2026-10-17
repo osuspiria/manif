@@ -1,5 +1,7 @@
 # Especificação — Plataforma de mobilização (Portugal) · v1
 
+> **Lançamento faseado:** o primeiro lançamento inclui só o mapa (1), sem o email de contacto opcional no "Adicionar evento". A assinatura (2), a página `/privacidade` e esse email estão implementados mas desligados (`FEATURES` em `src/config/app.ts`; ver `docs/decisions.md` #63–64).
+>
 > Âmbito da v1: **(1) mapa de eventos com submissão de novos eventos** e **(2) assinatura de apoio individual / associativo**. Tudo o resto (notícias, visuais, calendário editorial, galeria, Telegram) fica fora.
 > Referência analisada: 17octobregiletjaune.net (páginas `/`, `/carte/`, `/appel/`), outubro 2026.
 
