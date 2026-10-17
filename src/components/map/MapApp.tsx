@@ -230,7 +230,7 @@ export function MapApp() {
   );
 
   return (
-    <div class="map-app" data-view={url.view} data-desktop={isDesktop}>
+    <main class="map-app" data-view={url.view} data-desktop={isDesktop}>
       <h1 class="visually-hidden">{pt.map.heading}</h1>
 
       <div class="topbar">
@@ -356,6 +356,6 @@ export function MapApp() {
       <p class="toast" role="status">
         {message}
       </p>
-    </div>
+    </main>
   );
 }

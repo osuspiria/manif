@@ -338,8 +338,8 @@ Validação partilhada entre cliente e servidor com **Zod** (`src/shared/schemas
 
 ## 9. Requisitos não funcionais
 
-- Lighthouse mobile ≥ 90 em Performance e Acessibilidade na página do mapa (excluindo o tile download).
-- JS inicial da página do mapa ≤ 250 KB gzip (MapLibre incluído, carregado só nessa página).
+- Lighthouse mobile na página do mapa (excluindo o tile download): **vista Lista** (`/mapa?vista=lista`) ≥ 90 em Performance e Acessibilidade; **vista Mapa** ≥ 90 em Acessibilidade e ≥ 50 em Performance (o arranque do MapLibre domina o TBT; ver `docs/decisions.md` #25).
+- JS inicial da página do mapa ≤ 250 KB gzip. O motor do mapa (MapLibre, ~300 KB gzip + worker) carrega à parte, depois de o resumo, os filtros e a lista estarem utilizáveis, e só quando o mapa está visível. Nenhuma versão atual do MapLibre cabe sozinha em 250 KB (ver `docs/decisions.md` #25).
 - Alvos de toque ≥ 44 px; funciona em ecrã de 360 px de largura; sem scroll horizontal da página.
 - WCAG 2.1 AA: contraste, foco visível, lista de eventos como alternativa ao mapa, formulários com labels e erros anunciados.
 - Funciona sem geolocalização e com JS lento; o formulário de assinatura funciona sem JS (POST normal) exceto Turnstile.

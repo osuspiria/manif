@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { pt } from '../../i18n/pt';
 import type { MapEngine, MarkerCollection } from '../../map/engine';
 import type { RegionKey } from '../../map/regions';
@@ -26,7 +26,14 @@ export function MapCanvas({ markers, visible, command, onSelect }: Props) {
   const latest = useRef({ markers, command, onSelect });
   latest.current = { markers, command, onSelect };
 
+  // Load MapLibre only once the map is actually shown (not in list view).
+  const [wanted, setWanted] = useState(visible);
   useEffect(() => {
+    if (visible) setWanted(true);
+  }, [visible]);
+
+  useEffect(() => {
+    if (!wanted) return;
     let cancelled = false;
     void import('../../map/engine').then(({ createMapEngine }) => {
       if (cancelled || !container.current) return;
@@ -42,7 +49,7 @@ export function MapCanvas({ markers, visible, command, onSelect }: Props) {
       engine.current?.destroy();
       engine.current = null;
     };
-  }, []);
+  }, [wanted]);
 
   useEffect(() => {
     engine.current?.setMarkers(markers);

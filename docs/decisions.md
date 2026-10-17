@@ -42,7 +42,7 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
 9. **Sem GDAL:** o `mapshaper` lê o GeoPackage diretamente. A simplificação é feita no CRS projetado de origem, com tolerância de 100 m: 1,2 MB em bruto, ~340 KB gzip, dentro do bundle do Worker.
 10. **Distrito nas ilhas:** "Região Autónoma da Madeira" ou "Região Autónoma dos Açores". O nome da ilha vai num campo à parte (`island`). O `tz` vem da região.
 11. **Pontos fora dos polígonos** (costa, simplificação) são atribuídos ao concelho mais próximo até 1 km (`GEO_SNAP_METERS`). Para lá disso, a resposta é `404 {"error":"outside_portugal"}`.
-12. **PMTiles:** o extrato de Portugal (z0–15, continente + Madeira + Selvagens + Açores) tem ~711 MB. Não entra no repo; o processo está documentado em `data/geo/README.md`.
+12. **PMTiles:** o extrato de Portugal (z0–15, continente + Madeira + Selvagens + Açores) tinha ~711 MB; com a margem da decisão #26 passa a ~1,1 GB. Não entra no repo; o processo está documentado em `data/geo/README.md`.
 
 ## Arquitetura
 
@@ -74,8 +74,21 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
 22. **Filtros por dia nos marcadores:** a etiqueta "24/11" aparece a partir do zoom 8 quando o filtro abrange vários dias ("Próximos", "Fim de semana", "7 dias").
 23. **Zod fica fora do bundle do cliente.** O cliente confia na nossa própria API, coberta por testes de schema no Worker.
 24. **Funcionalidades adiadas para a Fase 4:** os botões "Procurar local" e "Adicionar evento" e a ação "Reportar" da ficha (SPEC §4.1, §4.3), porque precisam de endpoints novos (`/api/geo/search`, `POST /api/events`, `/report`).
-25. **Orçamento de JS (SPEC §9: ≤ 250 KB gzip com o MapLibre) — POR DECIDIR.**
-    - O MapLibre 6.14 sozinho tem 286 KB gzip no ficheiro principal, mais 144 KB no worker. A versão 5.24 tem 248 KB mais 124 KB. Nenhuma versão atual cabe no orçamento.
-    - Hoje o JS inicial da página é de ~38 KB: a lista, os filtros e os contadores já funcionam nessa altura.
-    - O motor do mapa carrega a seguir, de forma preguiçosa: 295 KB mais o worker.
-    - Proposta: redefinir o orçamento como "JS inicial ≤ 250 KB; o mapa carrega depois de a lista estar utilizável".
+25. **Orçamento de JS (SPEC §9) — decidido em 2026-10-17 (opção A).**
+    - O JS inicial fica ≤ 250 KB gzip (hoje ~38 KB). O motor do mapa (MapLibre 6) carrega depois, e só quando o mapa está visível: a vista Lista nunca o descarrega.
+    - O CSS do MapLibre é injetado quando o motor carrega, para não bloquear a primeira pintura.
+    - A página envia no HTML a barra do topo ("A carregar eventos…"), para haver pintura antes do JS.
+    - Critério de aceitação: Lighthouse mobile. Resultados a 2026-10-17 (servidor local, GPU, com o script injetado pelo antivírus bloqueado):
+
+      | Página               | Desempenho | Acessibilidade | FCP   | LCP    | TBT        |
+      | -------------------- | ---------- | -------------- | ----- | ------ | ---------- |
+      | `/mapa/?vista=lista` | **99**     | 100            | 1,4 s | 1,9 s  | 0 ms       |
+      | `/mapa/` (mapa)      | **55–57**  | 100            | 1,4 s | ~4,4 s | ~1,8–2,0 s |
+
+    - Na vista Mapa, o TBT vem do arranque do MapLibre na thread principal. Testei um mapa de fundo sem pontos de interesse, edifícios e etiquetas de ruas: não mudou nada.
+    - **Meta Lighthouse revista (2026-10-17, decidida pelo utilizador):** a vista Lista tem de ter ≥ 90 em Desempenho e Acessibilidade. A vista Mapa tem de ter ≥ 90 em Acessibilidade e ≥ 50 em Desempenho. O SPEC §9 foi atualizado em conformidade.
+    - Nota sobre medições nesta máquina: o antivírus Kaspersky injeta um script de 184 KB em todas as páginas (mesmo em `127.0.0.1`) e interceta o TLS. Medir sempre com `--blocked-url-patterns='*kaspersky-labs.com*'`.
+26. **Margens do mapa (2026-10-17):**
+    - O fundo do estilo passa de cinzento para a cor da água.
+    - O extrato do continente foi alargado para −11° a −5° de longitude e 36° a 43,5° de latitude (`data/geo/pt-region.geojson`): ~1,1 GB em z15 e 51 MB no extrato de dev (z11).
+    - O limite de arrastamento (`MAX_BOUNDS`) coincide com as bordas leste e norte do extrato, por isso o corte nunca aparece no ecrã. A oeste e a sul só há mar, exceto a costa de Marrocos, que aparece como mar se se afastar o mapa entre o continente e a Madeira.

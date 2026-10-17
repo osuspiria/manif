@@ -11,10 +11,17 @@ import '../styles/map.css';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={pt.site.tagline} />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{pt.map.heading} · {pt.site.title}</title>
   </head>
   <body class="map-page">
     <div id="map-root">
+      <!-- Static shell: painted before any JS runs; hidden once the app mounts. -->
+      <div class="map-shell">
+        <div class="topbar">
+          <p class="summary-button shell-summary">{pt.map.loading}</p>
+        </div>
+      </div>
       <MapApp client:only="preact" />
     </div>
     <noscript>

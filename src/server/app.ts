@@ -5,6 +5,7 @@ import { systemClock, type Clock } from './clock';
 import type { Env } from './env';
 import { eventsRoutes } from './routes/events';
 import { geoRoutes } from './routes/geo';
+import { glyphRoutes } from './routes/glyphs';
 import { sharePageRoutes } from './routes/share-page';
 import { tilesRoutes } from './routes/tiles';
 import { createGeoService, type MunicipalityCollection } from './services/geo-service';
@@ -24,6 +25,7 @@ export function createApp({ clock }: AppDeps) {
   const app = new Hono<{ Bindings: Env }>()
     .route('/api', api)
     .route('/tiles', tilesRoutes())
+    .route('/map/fonts', glyphRoutes())
     .route('/mapa/e', sharePageRoutes(clock));
 
   app.notFound((c) => {

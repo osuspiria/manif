@@ -47,6 +47,11 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   },
   {
     method: 'GET',
+    route: '/map/fonts/:font/:range',
+    samples: [{ url: '/map/fonts/Noto%20Sans%20Regular/1536-1791.pbf' }],
+  },
+  {
+    method: 'GET',
     route: '/tiles/:file',
     samples: [{ url: '/tiles/missing.pmtiles' }],
   },

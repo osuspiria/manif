@@ -4,17 +4,17 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "Continente"
+        "name": "Continente (com margem de Espanha e mar)"
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
-            [-9.8, 36.8],
-            [-6, 36.8],
-            [-6, 42.3],
-            [-9.8, 42.3],
-            [-9.8, 36.8]
+            [-11, 36],
+            [-5, 36],
+            [-5, 43.5],
+            [-11, 43.5],
+            [-11, 36]
           ]
         ]
       }

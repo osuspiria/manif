@@ -15,3 +15,14 @@ export const REGIONS: Record<RegionKey, [[number, number], [number, number]]> = 
     [-24.95, 39.8],
   ],
 };
+
+/**
+ * Panning limit: mainland, Madeira (incl. Selvagens) and the Azores. The east
+ * and north edges match the tiles extract (data/geo/pt-region.geojson), so the
+ * edge of the extract is never on screen; west and south are sea, and the
+ * style background is sea-coloured.
+ */
+export const MAX_BOUNDS: [[number, number], [number, number]] = [
+  [-34, 28],
+  [-5, 43.5],
+];

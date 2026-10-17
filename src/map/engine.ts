@@ -14,14 +14,15 @@ import {
   type LngLatBoundsLike,
   type StyleSpecification,
 } from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+// Injected when the engine loads, so it never blocks the first paint.
+import maplibreCss from 'maplibre-gl/dist/maplibre-gl.css?inline';
 // The worker is a separate file; Vite copies it and gives us its URL.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { Protocol } from 'pmtiles';
 import { MAP_TILES_PATH } from '../config/app';
 import { EVENT_TYPES, EVENT_TYPE_KEYS, type EventType } from '../config/event-types';
 import { pt } from '../i18n/pt';
-import { REGIONS, type RegionKey } from './regions';
+import { MAX_BOUNDS, REGIONS, type RegionKey } from './regions';
 import { SHAPE_PATHS } from './shapes';
 
 export interface MarkerProps {
@@ -55,6 +56,9 @@ const FONT = ['Noto Sans Medium'];
 let protocolRegistered = false;
 
 function buildStyle(origin: string): StyleSpecification {
+  const base = namedFlavor('light');
+  // Outside the tiles extract only the background shows: make it sea, not grey.
+  const flavor = { ...base, background: base.water };
   return {
     version: 8,
     glyphs: `${origin}/map/fonts/{fontstack}/{range}.pbf`,
@@ -67,7 +71,7 @@ function buildStyle(origin: string): StyleSpecification {
           '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
       },
     },
-    layers: layers('protomaps', namedFlavor('light'), { lang: 'pt' }),
+    layers: layers('protomaps', flavor, { lang: 'pt' }),
   };
 }
 
@@ -96,6 +100,9 @@ export function createMapEngine(
   opts: { onSelect: (id: string) => void; initialBounds?: LngLatBoundsLike },
 ): MapEngine {
   if (!protocolRegistered) {
+    const style = document.createElement('style');
+    style.textContent = maplibreCss;
+    document.head.append(style);
     setWorkerUrl(workerUrl);
     addProtocol('pmtiles', new Protocol().tile);
     protocolRegistered = true;
@@ -106,6 +113,7 @@ export function createMapEngine(
     style: buildStyle(window.location.origin),
     bounds: opts.initialBounds ?? REGIONS.mainland,
     fitBoundsOptions: { padding: 24 },
+    maxBounds: MAX_BOUNDS,
     attributionControl: { compact: true },
     dragRotate: false,
     pitchWithRotate: false,
