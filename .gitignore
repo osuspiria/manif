@@ -13,6 +13,9 @@ data/geo/raw/
 # R2 S3-API credentials for uploading the basemap (docs/deploy.md); never commit
 .r2.env
 
+# Production build values (docs/deploy.md §7); per machine, not committed
+.env.production
+
 # Claude Design sync (/design-sync): staged scripts, build output, machine state
 .ds-sync/
 ds-bundle/

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkDeployConfig } from '../../scripts/deploy-check';
+import { checkDeployConfig, deployEnv } from '../../scripts/deploy-check';
 
 const READY_TOML = `
 [[d1_databases]]
@@ -56,5 +56,30 @@ describe('checkDeployConfig', () => {
   it('blocks placeholder D1/KV ids and DEV_MAILBOX', () => {
     const errors = checkDeployConfig(ENV, PLACEHOLDER_TOML + '\n[vars]\nDEV_MAILBOX = "on"\n');
     expect(errors).toHaveLength(3);
+  });
+});
+
+describe('deployEnv', () => {
+  it('reads values from .env.production', () => {
+    const env = deployEnv(
+      {},
+      'PUBLIC_SITE_URL=https://exemplo.pt\nPUBLIC_TURNSTILE_SITE_KEY=0x4AAA\n',
+    );
+    expect(env.PUBLIC_SITE_URL).toBe('https://exemplo.pt');
+    expect(env.PUBLIC_TURNSTILE_SITE_KEY).toBe('0x4AAA');
+  });
+
+  it('lets the shell override the file, as Astro does', () => {
+    const env = deployEnv(
+      { PUBLIC_SITE_URL: 'https://outro.pt' },
+      'PUBLIC_SITE_URL=https://exemplo.pt\n',
+    );
+    expect(env.PUBLIC_SITE_URL).toBe('https://outro.pt');
+  });
+
+  it('uses only the shell when there is no file', () => {
+    expect(deployEnv({ PUBLIC_SITE_URL: 'https://exemplo.pt' }, null)).toEqual({
+      PUBLIC_SITE_URL: 'https://exemplo.pt',
+    });
   });
 });

@@ -4,10 +4,11 @@
  * client falls back to Cloudflare's test key, and every submission is then
  * rejected by the real secret.
  *
- * Usage: npm run deploy (runs this first). Pure function + CLI.
+ * Usage: npm run deploy (runs this first). Pure functions + CLI.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { parseEnv } from 'node:util';
 
 const TEST_SITE_KEYS = [
   '1x00000000000000000000AA',
@@ -16,6 +17,18 @@ const TEST_SITE_KEYS = [
   '2x00000000000000000000BB',
   '3x00000000000000000000FF',
 ];
+
+/**
+ * The environment the production build will see: .env.production, which Astro
+ * loads for `astro build`, with variables already set in the shell taking
+ * precedence (Astro/Vite behave the same way).
+ */
+export function deployEnv(
+  shellEnv: Record<string, string | undefined>,
+  envFile: string | null,
+): Record<string, string | undefined> {
+  return { ...(envFile === null ? {} : parseEnv(envFile)), ...shellEnv };
+}
 
 export function checkDeployConfig(
   env: Record<string, string | undefined>,
@@ -48,7 +61,9 @@ export function checkDeployConfig(
 // CLI
 if (process.argv[1] && resolve(process.argv[1]) === resolve(import.meta.filename)) {
   const toml = readFileSync(resolve(import.meta.dirname, '../wrangler.toml'), 'utf8');
-  const errors = checkDeployConfig(process.env, toml);
+  const envPath = resolve(import.meta.dirname, '../.env.production');
+  const envFile = existsSync(envPath) ? readFileSync(envPath, 'utf8') : null;
+  const errors = checkDeployConfig(deployEnv(process.env, envFile), toml);
   if (errors.length) {
     console.error('Deploy blocked:\n' + errors.map((e) => `  - ${e}`).join('\n'));
     process.exit(1);

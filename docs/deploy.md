@@ -63,9 +63,13 @@ O `MODERATION_MODE` e o `EDGE_CACHE` estão em `[vars]`. **Não** definas `DEV_M
 
 ## 7. Deploy
 
+O `PUBLIC_TURNSTILE_SITE_KEY` e o `PUBLIC_SITE_URL` vêm do `.env.production` (lido pelo build
+do Astro e pelo `deploy:check`). Variáveis definidas na shell têm precedência sobre o ficheiro:
+
 ```powershell
-$env:PUBLIC_TURNSTILE_SITE_KEY = "<site key do widget>"
-$env:PUBLIC_SITE_URL = "https://exemplo.pt"
+# .env.production
+# PUBLIC_TURNSTILE_SITE_KEY=<site key do widget>
+# PUBLIC_SITE_URL=https://exemplo.pt
 npm run og:image        # se o nome do site mudou (D2)
 npm run deploy
 ```
