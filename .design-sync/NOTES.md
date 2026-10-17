@@ -14,8 +14,8 @@ Project: "Mobilização PT" — https://claude.ai/design/p/3efc90c0-1a6a-493f-81
   (playwright pinned to the cached chromium-1248 = repo's @playwright/test 1.64.1).
 - Fresh clone (Windows): recreate the junction so ts-morph resolves `react` types from the bridge d.ts:
   `cmd //c "mklink /J .design-sync\node_modules .ds-sync\node_modules"`. Without it the build prints `[DTS_REACT]`.
-- Synced components (10): TypeIcon, TextField, TextArea, Checkbox, RadioChips, EventList, FilterPanel, EventSheet,
-  EventDetailsFields, OccurrencesEditor. Not synced (API/MapLibre/Astro-bound): MapApp, MapCanvas, AddEventFlow,
+- Synced components (11): TypeIcon, TextField, TextArea, Checkbox, RadioChips, EventList, FilterPanel, EventSheet,
+  EventDetailsFields, OccurrencesEditor, MapIntro (home page intro, added 17/10/2026). Not synced (API/MapLibre/Astro-bound): MapApp, MapCanvas, AddEventFlow,
   ReportForm (only inside EventSheet), PlaceSearchBox, admin/*, support/*, all `.astro` components.
 - CSS shipped: `map.css` + `forms.css` (both `@import base.css`), via the bridge entry → `cssEntry: dist/index.css`.
   admin.css / support.css / prose.css are not shipped.
@@ -32,6 +32,9 @@ Project: "Mobilização PT" — https://claude.ai/design/p/3efc90c0-1a6a-493f-81
 - JSDoc summaries lose quotes and non-ASCII in the README index ("O quê" → "O qu") — keep bridge JSDoc ASCII, no quotes.
 - EventSheet is `position: absolute` in the map pane → its preview wraps each story in a 360×640 positioned stage;
   `cfg.overrides.EventSheet.cardMode = "column"` (GRID_OVERFLOW).
+- MapIntro is 360 px wide → `cfg.overrides.MapIntro.cardMode = "column"` (GRID_OVERFLOW). Its `hidden` prop renders
+  the visually-hidden variant (nothing to see), so the preview only shows the visible state; `shell` is for the static
+  Astro page and is not meant for designs.
 - Previews use fixed `NOW = 2026-10-17T09:00Z` and fictional fixtures in `previews/_fixtures.ts` (`.ts` so it isn't
   treated as a component preview).
 
@@ -45,6 +48,9 @@ Project: "Mobilização PT" — https://claude.ai/design/p/3efc90c0-1a6a-493f-81
   host is `display: contents`, so the measured root has no box; screenshots show full content.
 
 ## Re-sync risks
+
+- The Claude Design project also holds `templates/` (design handoffs made in Claude Design, e.g. `handoff-tema-acido`,
+  `map-list`, `event-icons`). They are not sync output: never put `templates/**` in an upload plan's deletes.
 
 - **Prop types in `cfg.dtsPropsFor` are hand copies** of `PublicEvent`, `RowState`, `DetailsState`, `WhenFilter`, the
   event-type and tz enums. If `src/shared/schemas.ts`, `form-state.ts`, `event-filter.ts` or `config/event-types.ts`

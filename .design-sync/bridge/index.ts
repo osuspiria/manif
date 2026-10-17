@@ -13,6 +13,7 @@ import { TypeIcon as PTypeIcon } from '../../src/components/map/TypeIcon';
 import { EventList as PEventList } from '../../src/components/map/EventList';
 import { FilterPanel as PFilterPanel } from '../../src/components/map/FilterPanel';
 import { EventSheet as PEventSheet } from '../../src/components/map/EventSheet';
+import { MapIntro as PMapIntro } from '../../src/components/map/MapIntro';
 import {
   Checkbox as PCheckbox,
   RadioChips as PRadioChips,
@@ -102,6 +103,10 @@ export const FilterPanel: React.FC<FilterPanelProps> = island<FilterPanelProps>(
 export type EventSheetProps = Parameters<typeof PEventSheet>[0];
 /** Event detail sheet: type, title, place, dates, description and actions. */
 export const EventSheet: React.FC<EventSheetProps> = island<EventSheetProps>(PEventSheet, 'EventSheet');
+
+export type MapIntroProps = Parameters<typeof PMapIntro>[0];
+/** Home page intro above the map top bar: site title and a one-line description of the platform. */
+export const MapIntro: React.FC<MapIntroProps> = island<MapIntroProps>(PMapIntro, 'MapIntro');
 
 export type EventDetailsFieldsProps = Parameters<typeof PEventDetailsFields>[0];
 /** What step of the add/edit event form: type chips, title, description, organizer. */

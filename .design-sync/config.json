@@ -22,6 +22,9 @@
   "overrides": {
     "EventSheet": {
       "cardMode": "column"
+    },
+    "MapIntro": {
+      "cardMode": "column"
     }
   },
   "readmeHeader": ".design-sync/conventions.md"
