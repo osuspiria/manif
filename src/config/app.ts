@@ -34,8 +34,24 @@ export const LIMITS = {
 export const RETENTION = {
   eventDaysAfterLastOccurrence: 30,
   unconfirmedSignatureDays: 7,
-  /** Months after campaign end to keep signatures (decided later). */
+  /** Months after CAMPAIGN_END to keep signatures; then the retention job deletes them all. */
   signatureMonthsAfterCampaign: 6,
+} as const;
+
+/**
+ * Last day of the campaign ('YYYY-MM-DD', Lisbon), or null while undecided: with
+ * null, signatures are kept until withdrawn (SPEC §7). Set it before launch.
+ */
+export const CAMPAIGN_END: string | null = null;
+
+/** Admin (SPEC §6): magic-link login. Allowed addresses: ADMIN_EMAILS (env). */
+export const ADMIN = {
+  loginLinkMinutes: 15,
+  sessionHours: 24,
+  /** Login emails per address per hour. */
+  loginEmailsPerHour: 5,
+  /** Rows per admin list. */
+  listLimit: 100,
 } as const;
 
 /** Per-IP rate limits (per hour). */
@@ -43,6 +59,7 @@ export const RATE_LIMITS = {
   createEvent: 5,
   sign: 10,
   report: 10,
+  adminLogin: 10,
 } as const;
 
 /** Basemap archive, served by the Worker from R2 (see data/geo/README.md). */

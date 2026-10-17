@@ -5,3 +5,6 @@ RATE_LIMIT_SECRET=dev-only-not-secret
 # Leave empty to drop emails locally (no provider).
 RESEND_API_KEY=
 MAIL_FROM=
+# Addresses allowed in /admin (comma-separated). Locally, read the login link at
+# http://127.0.0.1:8787/api/dev/mailbox?to=admin@exemplo.invalid
+ADMIN_EMAILS=admin@exemplo.invalid

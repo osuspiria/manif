@@ -97,6 +97,8 @@ describe('API fallbacks', () => {
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE '\\_%' ESCAPE '\\' AND name NOT LIKE 'sqlite%' AND name != 'd1_migrations' ORDER BY name",
     ).all<{ name: string }>();
     expect(results.map((r) => r.name)).toEqual([
+      'admin_login_tokens',
+      'admin_sessions',
       'event_occurrences',
       'event_reports',
       'events',

@@ -294,8 +294,8 @@ O concelho é guardado pelo código DICO da CAOP (há nomes repetidos, como "Lag
 ## 6. Admin mínimo (`/admin`)
 
 Necessário para as duas funcionalidades, mantido mínimo:
-- Login por **magic link** para emails numa allowlist (`ADMIN_EMAILS`). Sessão com cookie estritamente necessário (só no `/admin`).
-- Separador **Eventos**: pendentes, reportados, todos; aprovar, ocultar, marcar "confirmado", editar.
+- Login por **magic link** para emails numa allowlist (`ADMIN_EMAILS`): `/admin/entrar/#t=<token>`, 15 minutos, uso único. Sessão com cookie estritamente necessário: `admin_session`, `Path=/api/admin`, `HttpOnly`, `Secure`, `SameSite=Strict`, 24 horas (ver `docs/decisions.md` #48–50).
+- Separador **Eventos**: pendentes, reportados, ocultos, todos; aprovar (descarta as denúncias), ocultar, marcar "confirmado", editar (sem perder o "confirmado").
 - Separador **Assinaturas**: organizações por aprovar; pesquisa; apagar a pedido.
 - **Exportar CSV** só de quem aceitou recontacto.
 - Funciona bem em telemóvel.
@@ -310,7 +310,7 @@ Necessário para as duas funcionalidades, mantido mínimo:
 - Identificar o **responsável pelo tratamento** (pessoa/associação) e um contacto na página de privacidade.
 - Idade de consentimento digital em Portugal: **13 anos** (Lei 58/2019). Incluir declaração "Tenho 13 anos ou mais" ou equivalente.
 - Minimização: o mapa não pede dados pessoais; email de contacto opcional e nunca público.
-- Retenção: assinaturas não confirmadas 7 dias; eventos 30 dias após a última ocorrência; assinaturas até X meses após o fim da campanha (config) ou até a pessoa retirar.
+- Retenção: assinaturas não confirmadas 7 dias; eventos 30 dias após a última ocorrência; assinaturas até X meses após o fim da campanha (`CAMPAIGN_END` + `RETENTION.signatureMonthsAfterCampaign` em `src/config/app.ts`) ou até a pessoa retirar. Um Cron Trigger diário aplica estas regras.
 - Direitos: retirar assinatura por link; pedidos de acesso/apagamento por email.
 - **Sem cookies** no site público; nada de analytics de terceiros. Se forem precisas métricas: contadores agregados no servidor, sem IP.
 - IPs: usados só para rate limit, guardados como hash com sal diário, nunca persistidos em BD.
@@ -335,7 +335,19 @@ Necessário para as duas funcionalidades, mantido mínimo:
 | POST | `/api/signatures/withdraw` | Retirar: corpo `{token}`; apaga o registo |
 | GET | `/api/signatures/stats` | Contadores (cache 30 s) |
 | GET | `/api/signatures/public?page&municipality` | Lista pública (cache 30 s): organizações aprovadas (só na página 1) e indivíduos públicos, 50 por página; `municipality` = código DICO |
-| * | `/api/admin/*` | Moderação (sessão admin) |
+| POST | `/api/admin/login` | Pedir magic link `{email}` (resposta sempre igual) |
+| POST | `/api/admin/session` | Trocar o token do link por sessão `{token}` (define o cookie) |
+| POST | `/api/admin/logout` | Terminar sessão |
+| GET | `/api/admin/me` | Email da sessão |
+| GET | `/api/admin/events?filter&q` | Fila de eventos: `pending`, `reported`, `hidden`, `all` |
+| GET/PATCH | `/api/admin/events/:id` | Detalhe (com email de contacto e denúncias) / editar |
+| POST | `/api/admin/events/:id/moderate` | `{action: publish \| hide \| verify \| unverify}` |
+| GET | `/api/admin/signatures?filter&q` | `orgs_pending`, `organizations`, `individuals`, `unconfirmed` |
+| POST | `/api/admin/signatures/:id/moderate` | `{action: approve \| reject}` (organizações confirmadas) |
+| DELETE | `/api/admin/signatures/:id` | Apagar a pedido |
+| GET | `/api/admin/signatures/export.csv` | CSV de quem aceitou recontacto |
+
+Todas as rotas `/api/admin/*` exceto `login`, `session` e `logout` exigem sessão; as escritas exigem o header `X-Admin-Request: 1`.
 
 Validação partilhada entre cliente e servidor com **Zod** (`src/shared/schemas.ts`). Rate limits: criar evento 5/h/IP; assinar 10/h/IP; report 10/h/IP.
 

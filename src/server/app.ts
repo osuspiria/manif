@@ -3,6 +3,7 @@ import municipalities from '../../data/geo/municipalities.geo.json';
 import { GEO_SNAP_METERS } from '../config/app';
 import { defaultDeps, type AppDeps } from './deps';
 import type { Env } from './env';
+import { adminRoutes } from './routes/admin';
 import { devRoutes } from './routes/dev';
 import { eventsRoutes } from './routes/events';
 import { geoRoutes } from './routes/geo';
@@ -22,7 +23,8 @@ export function createApp(overrides: Partial<AppDeps> = {}) {
     .route('/geo', geoRoutes(geo, deps))
     .route('/', eventsRoutes(geo, deps))
     .route('/', signaturesRoutes(deps))
-    .route('/dev', devRoutes());
+    .route('/dev', devRoutes())
+    .route('/admin', adminRoutes(geo, deps));
 
   const app = new Hono<{ Bindings: Env }>()
     .route('/api', api)

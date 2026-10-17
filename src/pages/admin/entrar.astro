@@ -1,0 +1,28 @@
+---
+/** Magic-link landing: /admin/entrar/#t=<token> (see AdminEnter). */
+import { AdminEnter } from '../../components/admin/AdminEnter';
+import { pt } from '../../i18n/pt';
+import '../../styles/forms.css';
+import '../../styles/admin.css';
+---
+
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{pt.admin.loginHeading} · {pt.site.title}</title>
+  </head>
+  <body class="form-page">
+    <main class="form-main admin-main">
+      <h1>{pt.admin.loginHeading}</h1>
+      <AdminEnter client:only="preact" />
+      <noscript>
+        <p>{pt.admin.noscript}</p>
+      </noscript>
+    </main>
+  </body>
+</html>

@@ -379,3 +379,106 @@ export interface ApiIssue {
   path: (string | number)[];
   code: string;
 }
+
+// --- Admin (SPEC §6) -------------------------------------------------------------
+// Admin-only responses: these do carry personal data, and are served only to a
+// signed-in admin (src/server/routes/admin.ts).
+
+export const AdminLoginRequestSchema = z.object({ email: RequiredEmail });
+export const AdminSessionRequestSchema = z.object({ token: z.string().min(20).max(100) });
+
+export const ADMIN_EVENT_FILTERS = ['pending', 'reported', 'hidden', 'all'] as const;
+export type AdminEventFilter = (typeof ADMIN_EVENT_FILTERS)[number];
+
+/** Free-text search in admin lists: trimmed, empty = none. */
+const AdminSearch = z
+  .string()
+  .trim()
+  .max(100)
+  .optional()
+  .transform((v) => v || null);
+
+export const AdminEventsQuerySchema = z.object({
+  filter: z.enum(ADMIN_EVENT_FILTERS).catch('pending'),
+  q: AdminSearch,
+});
+
+export const AdminEventActionSchema = z.object({
+  action: z.enum(['publish', 'hide', 'verify', 'unverify'], 'required'),
+});
+export type AdminEventAction = z.infer<typeof AdminEventActionSchema>['action'];
+
+const EventStatusSchema = z.enum(['pending', 'published', 'hidden']);
+
+export const AdminEventListItemSchema = z.object({
+  id: z.string(),
+  type: z.enum(EVENT_TYPE_KEYS),
+  title: z.string(),
+  status: EventStatusSchema,
+  verified: z.boolean(),
+  municipality: z.string(),
+  district: z.string(),
+  createdAt: z.string(),
+  /** Reports still open (dismissed when the event is approved). */
+  reports: z.number().int(),
+  /** Start of the next occurrence that has not ended (cancelled ones excluded). */
+  nextStartsAt: z.string().nullable(),
+});
+export type AdminEventListItem = z.infer<typeof AdminEventListItemSchema>;
+export const AdminEventListSchema = z.object({ items: z.array(AdminEventListItemSchema) });
+
+export const AdminEventDetailSchema = EditableEventSchema.extend({
+  contactEmail: z.string().nullable(),
+  createdAt: z.string(),
+  reports: z.array(
+    z.object({
+      reason: z.enum(REPORT_REASONS),
+      detail: z.string().nullable(),
+      createdAt: z.string(),
+    }),
+  ),
+});
+export type AdminEventDetail = z.infer<typeof AdminEventDetailSchema>;
+
+export const ADMIN_SIGNATURE_FILTERS = [
+  'orgs_pending',
+  'organizations',
+  'individuals',
+  'unconfirmed',
+] as const;
+export type AdminSignatureFilter = (typeof ADMIN_SIGNATURE_FILTERS)[number];
+
+export const AdminSignaturesQuerySchema = z.object({
+  filter: z.enum(ADMIN_SIGNATURE_FILTERS).catch('orgs_pending'),
+  q: AdminSearch,
+});
+
+export const AdminSignatureActionSchema = z.object({
+  action: z.enum(['approve', 'reject'], 'required'),
+});
+
+export const AdminSignatureSchema = z.object({
+  id: z.string(),
+  kind: z.enum(['individual', 'organization']),
+  status: z.enum(['unconfirmed', 'confirmed', 'approved', 'rejected']),
+  /** Person's name or pseudonym, or the organisation's name. */
+  name: z.string(),
+  orgType: z.enum(ORG_TYPES).nullable(),
+  contactName: z.string().nullable(),
+  email: z.string(),
+  phone: z.string().nullable(),
+  municipality: z.string(),
+  activity: z.string().nullable(),
+  website: z.string().nullable(),
+  isPublic: z.boolean(),
+  canContact: z.boolean(),
+  createdAt: z.string(),
+  confirmedAt: z.string().nullable(),
+});
+export type AdminSignature = z.infer<typeof AdminSignatureSchema>;
+export const AdminSignatureListSchema = z.object({
+  items: z.array(AdminSignatureSchema),
+  /** Matching rows (the list shows at most ADMIN.listLimit). */
+  total: z.number().int(),
+});
+export type AdminSignatureList = z.infer<typeof AdminSignatureListSchema>;

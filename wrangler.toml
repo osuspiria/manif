@@ -24,7 +24,11 @@ binding = "RATE_LIMIT"
 id = "00000000000000000000000000000000" # replace after `wrangler kv namespace create RATE_LIMIT`
 
 # Secrets (wrangler secret put …; locally in .dev.vars, see .dev.vars.example):
-# TURNSTILE_SECRET_KEY, RATE_LIMIT_SECRET, RESEND_API_KEY, MAIL_FROM
+# TURNSTILE_SECRET_KEY, RATE_LIMIT_SECRET, RESEND_API_KEY, MAIL_FROM, ADMIN_EMAILS
+
+# Retention job (SPEC §7): daily at 03:17 UTC.
+[triggers]
+crons = ["17 3 * * *"]
 
 [vars]
 MODERATION_MODE = "post"

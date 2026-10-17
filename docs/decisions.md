@@ -154,3 +154,27 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
 45. **Caixa de correio de dev:** com `DEV_MAILBOX=on` (só em `npm run dev` e nos e2e), os emails ficam no KV durante uma hora e podem ser lidos em `/api/dev/mailbox?to=…`. A rota responde 404 se a variável não estiver ativa ou se o pedido não vier de `localhost`/`127.0.0.1`.
 46. **E2E isolados do dev:** o Playwright usa a porta 8788 e estado local próprio (`.wrangler/e2e`, recriado a cada arranque), para nunca reaproveitar nem estragar o `npm run dev` (porta 8787).
 47. **Página `/apoio`:** o texto do apelo vem de `content/apelo.md` (por agora um texto de exemplo, assinalado como tal); `content/primeiros-subscritores.md` só aparece se existir. O link para a política de privacidade aponta para `/privacidade/`, que só existe na Fase 7.
+
+## Fase 6 — Admin, moderação, exportação, retenção
+
+48. **Login por magic link:** o pedido em `/admin` dá sempre a mesma resposta; só os endereços em `ADMIN_EMAILS` (variável/secret, separada por vírgulas) recebem email.
+    - O link é `/admin/entrar/#t=<token>`, válido 15 minutos e de uso único. O token vai no fragmento e a página troca-o por uma sessão com um POST, para que os scanners de email que abrem links não o gastem.
+    - Limites: 10 pedidos por hora por cliente; 5 emails por hora por endereço.
+    - Tirar um endereço de `ADMIN_EMAILS` termina logo as suas sessões.
+49. **Sessão:** cookie `admin_session` com `Path=/api/admin`, `HttpOnly`, `Secure`, `SameSite=Strict`, durante 24 horas. É o único cookie do site e só existe depois de entrar; as páginas públicas (e a própria página `/admin`, estática) nunca o recebem. Guarda-se só o hash do identificador.
+50. **CSRF:** todas as escritas em `/api/admin` exigem o header `X-Admin-Request: 1` (um formulário ou pedido de outro site não o consegue enviar sem um preflight CORS, que nunca autorizamos) e, se vier `Origin`, tem de ser a nossa.
+51. **Moderação de eventos:**
+    - Filas: Pendentes, Reportados (mais denúncias primeiro), Ocultos, Todos; pesquisa por título ou concelho.
+    - "Aprovar" publica e **descarta as denúncias**; sem isso, a denúncia seguinte voltava a ocultar o evento.
+    - "Marcar como confirmado" é independente do estado.
+    - A edição pela moderação segue as mesmas regras de datas que a do link secreto, mas **não tira** o selo "Confirmado". A localização continua a não se poder alterar.
+    - Não há "apagar evento" (o SPEC não o pede): "Ocultar" tira-o do mapa e a retenção apaga-o 30 dias depois da última data.
+52. **Moderação de assinaturas:** filas "Organizações por aprovar" (confirmadas por email), "Organizações", "Pessoas" e "Por confirmar"; pesquisa por nome, organização, responsável ou email (para pedidos de apagamento). Só organizações já confirmadas podem ser aprovadas ou rejeitadas. "Apagar" apaga o registo.
+53. **CSV:** só quem aceitou recontacto e está confirmado (ou aprovado). Separador `;`, UTF-8 com BOM e CRLF, que é o que o Excel em português abre bem. Células que começam por `=`, `+`, `-`, `@` levam um apóstrofo (injeção de fórmulas).
+54. **Retenção (Cron Trigger diário, 03:17 UTC):**
+    - assinaturas por confirmar com mais de 7 dias;
+    - eventos 30 dias depois da última data (qualquer estado), com datas e denúncias;
+    - todas as assinaturas `signatureMonthsAfterCampaign` (6) meses depois de `CAMPAIGN_END`, **que fica `null` até ser decidido** — até lá, as assinaturas ficam até serem retiradas;
+    - links de login e sessões expirados.
+    - O job regista só contagens.
+55. **E2E do admin:** cada projeto do Playwright usa o seu endereço de admin (`admin-<projeto>@exemplo.invalid`), porque correm em paralelo e partilhariam a caixa de correio de dev.

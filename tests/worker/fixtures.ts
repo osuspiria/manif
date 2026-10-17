@@ -18,6 +18,7 @@ export interface EventFixture {
   tz?: Tz;
   contactEmail?: string | null;
   editTokenHash?: string;
+  verified?: boolean;
   occurrences: OccFixture[];
 }
 
@@ -40,6 +41,8 @@ export async function resetDb(): Promise<void> {
     env.DB.prepare('DELETE FROM event_occurrences'),
     env.DB.prepare('DELETE FROM events'),
     env.DB.prepare('DELETE FROM signatures'),
+    env.DB.prepare('DELETE FROM admin_login_tokens'),
+    env.DB.prepare('DELETE FROM admin_sessions'),
   ]);
 }
 
@@ -50,7 +53,7 @@ export async function insertEvent(f: EventFixture): Promise<void> {
       `INSERT INTO events (id, type, title, description, organizer, lat, lng, place_label,
          municipality, district, tz, status, verified, contact_email, edit_token_hash,
          created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, '2026-11-01T00:00:00Z', '2026-11-01T00:00:00Z')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '2026-11-01T00:00:00Z', '2026-11-01T00:00:00Z')`,
     ).bind(
       f.id,
       f.type ?? 'rally',
@@ -64,6 +67,7 @@ export async function insertEvent(f: EventFixture): Promise<void> {
       'Porto',
       tz,
       f.status ?? 'published',
+      f.verified ? 1 : 0,
       f.contactEmail ?? SENTINELS.contactEmail,
       f.editTokenHash ?? SENTINELS.editTokenHash,
     ),
@@ -117,6 +121,9 @@ export interface SignatureFixture {
   createdAt?: string;
   confirmedAt?: string | null;
   tokenHash?: string;
+  canContact?: boolean;
+  contactName?: string;
+  phone?: string | null;
 }
 
 /** Inserts a signature carrying a sentinel email, phone and contact name (never public). */
@@ -133,7 +140,7 @@ export async function insertSignature(f: SignatureFixture): Promise<void> {
     `INSERT INTO signatures (id, kind, first_name, last_name, pseudonym, activity, org_name,
        org_type, contact_name, website, email, municipality, phone, is_public, can_contact,
        status, confirm_token_hash, consent_text_version, created_at, confirmed_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'test', ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'test', ?, ?)`,
   )
     .bind(
       f.id,
@@ -144,16 +151,25 @@ export async function insertSignature(f: SignatureFixture): Promise<void> {
       org ? null : f.activity === undefined ? 'Profissão fictícia' : f.activity,
       org ? (f.orgName ?? `Coletivo Fictício ${f.id.slice(-3)}`) : null,
       org ? 'collective' : null,
-      org ? SENTINELS.contactName : null,
+      org ? (f.contactName ?? SENTINELS.contactName) : null,
       org ? 'https://exemplo.pt/' : null,
       f.email ?? `${f.id.toLowerCase()}.${SENTINELS.signatureEmail}`,
       f.municipality ?? '1312',
-      SENTINELS.signaturePhone,
+      f.phone === undefined ? SENTINELS.signaturePhone : f.phone,
       f.isPublic === false ? 0 : 1,
+      f.canContact === false ? 0 : 1,
       status,
       f.tokenHash ?? `${SENTINELS.confirmTokenHash.slice(0, 54)}${f.id.slice(-10).toLowerCase()}`,
       f.createdAt ?? '2026-11-01T00:00:00Z',
       confirmedAt,
     )
+    .run();
+}
+
+export async function insertReport(eventId: string, reason = 'fake', at = '2026-11-05T00:00:00Z') {
+  await env.DB.prepare(
+    'INSERT INTO event_reports (id, event_id, reason, detail, created_at) VALUES (?, ?, ?, ?, ?)',
+  )
+    .bind(`rep-${++occSeq}`, eventId, reason, 'Detalhe da denúncia', at)
     .run();
 }

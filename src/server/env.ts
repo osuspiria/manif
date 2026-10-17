@@ -15,4 +15,6 @@ export interface Env {
   MAIL_FROM?: string;
   /** 'on' (local dev and e2e only): emails go to a KV mailbox readable at /api/dev/mailbox from localhost. */
   DEV_MAILBOX?: string;
+  /** Comma-separated addresses allowed to sign in to /admin (SPEC §6). */
+  ADMIN_EMAILS?: string;
 }

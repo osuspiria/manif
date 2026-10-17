@@ -22,6 +22,7 @@ A especificação completa está em `SPEC.md`. **Lê-a antes de qualquer tarefa 
 ```bash
 npm run setup        # cria .dev.vars a partir de .dev.vars.example (chaves de teste do Turnstile)
 npm run dev          # Astro + Worker + D1 local; emails em http://127.0.0.1:8787/api/dev/mailbox?to=…
+                     # (admin: entrar em /admin com admin@exemplo.invalid e abrir o link da caixa)
 npm run test         # Vitest
 npm run test:e2e     # Playwright (servidor próprio na porta 8788, estado em .wrangler/e2e)
 npm run lint         # ESLint + Prettier check
@@ -74,7 +75,7 @@ tests/
 - Usar `Intl` / `Temporal` polyfill ou `date-fns-tz`; não escrever aritmética de fusos à mão.
 
 ### Privacidade
-- **Zero cookies no site público.** O único cookie permitido é a sessão do `/admin`.
+- **Zero cookies no site público.** O único cookie permitido é a sessão do admin (`admin_session`, `Path=/api/admin`).
 - Nenhum pedido do browser a domínios de terceiros em runtime, exceto Turnstile. Tiles, fontes, ícones e scripts são servidos por nós.
 - Emails, telefones e nomes de responsáveis de organizações **nunca** saem da API pública. Há um teste que garante isto para cada endpoint público.
 - IPs só como hash com sal diário, em memória/KV para rate limit; nunca em D1 nem em logs.

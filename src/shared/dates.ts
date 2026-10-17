@@ -158,3 +158,15 @@ export function formatLisbonDateTime(iso: string): string {
   const hm = `${String(z.hour).padStart(2, '0')}:${String(z.minute).padStart(2, '0')}`;
   return `${z.day} de ${pt.monthsLong[z.month - 1] ?? ''} de ${z.year}, ${hm}`;
 }
+
+/** `now` + an exact duration (not civil days), as a UTC ISO instant. */
+export function addDurationIso(now: Date, d: { minutes?: number; hours?: number }): string {
+  return instantToIso(toInstant(now).add({ minutes: d.minutes ?? 0, hours: d.hours ?? 0 }));
+}
+
+/** E.g. 'sáb 28 nov, 10:00' (Lisbon time), for compact lists. */
+export function formatInstantShort(iso: string): string {
+  const z = Temporal.Instant.from(iso).toZonedDateTimeISO(CALENDAR_TZ);
+  const hm = `${String(z.hour).padStart(2, '0')}:${String(z.minute).padStart(2, '0')}`;
+  return `${pt.weekdaysShort[z.dayOfWeek - 1] ?? ''} ${z.day} ${pt.monthsShort[z.month - 1] ?? ''} ${z.year}, ${hm}`;
+}

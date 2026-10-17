@@ -143,7 +143,7 @@ async function ownerRow(
   return safeEqual(await hashToken(token), row.edit_token_hash) ? row : null;
 }
 
-function toEditable(row: OwnerEventRow, occurrences: OccurrenceRow[]): EditableEvent {
+export function toEditable(row: OwnerEventRow, occurrences: OccurrenceRow[]): EditableEvent {
   return {
     id: row.id,
     type: isEventType(row.type) ? row.type : 'other',
@@ -191,6 +191,27 @@ export async function editEvent(
 ): Promise<ServiceResult<EditableEvent>> {
   const row = await ownerRow(id, token, d);
   if (!row) return fail(404, 'not_found');
+  return applyEdit(row, req, d, { moderator: false });
+}
+
+/** Moderation edit (SPEC §6): same rules, but the "Confirmado" badge is kept. */
+export async function moderatorEditEvent(
+  id: string,
+  req: z.output<typeof EditEventRequestSchema>,
+  d: SubmissionDeps,
+): Promise<ServiceResult<EditableEvent>> {
+  const row = await d.write.getOwner(id);
+  if (!row) return fail(404, 'not_found');
+  return applyEdit(row, req, d, { moderator: true });
+}
+
+async function applyEdit(
+  row: OwnerEventRow,
+  req: z.output<typeof EditEventRequestSchema>,
+  d: SubmissionDeps,
+  opts: { moderator: boolean },
+): Promise<ServiceResult<EditableEvent>> {
+  const id = row.id;
   const at = nowIso(d.now);
 
   if ('cancelEvent' in req) {
@@ -266,9 +287,9 @@ export async function editEvent(
     substantive = true;
   }
 
-  // Substantive changes lose the "Confirmado" badge until moderation checks again;
-  // cancelling dates does not.
-  await d.write.update(id, fields, { insert, update, remove }, substantive, at);
+  // Substantive changes by the owner lose the "Confirmado" badge until moderation
+  // checks again; cancelling dates does not, nor do the moderators' own edits.
+  await d.write.update(id, fields, { insert, update, remove }, substantive && !opts.moderator, at);
   const updated = await d.write.getOwner(id);
   return { ok: true, value: toEditable(updated ?? row, await d.read.listOccurrences(id)) };
 }

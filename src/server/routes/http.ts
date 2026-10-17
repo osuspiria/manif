@@ -14,7 +14,7 @@ export function zodIssues(error: {
   }));
 }
 
-export async function readJson(c: C): Promise<unknown> {
+export async function readJson(c: { req: { json(): Promise<unknown> } }): Promise<unknown> {
   try {
     return await c.req.json();
   } catch {

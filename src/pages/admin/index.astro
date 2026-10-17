@@ -1,0 +1,31 @@
+---
+/** SPEC §6: moderation. The page itself is static; all data comes from /api/admin. */
+import { AdminApp } from '../../components/admin/AdminApp';
+import { pt } from '../../i18n/pt';
+import '../../styles/forms.css';
+import '../../styles/admin.css';
+---
+
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{pt.admin.title} · {pt.site.title}</title>
+  </head>
+  <body class="form-page">
+    <header class="form-header">
+      <a href="/">{pt.site.title}</a>
+    </header>
+    <main class="form-main admin-main">
+      <h1>{pt.admin.title}</h1>
+      <AdminApp client:only="preact" />
+      <noscript>
+        <p>{pt.admin.noscript}</p>
+      </noscript>
+    </main>
+  </body>
+</html>
