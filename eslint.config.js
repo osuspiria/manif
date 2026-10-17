@@ -6,7 +6,17 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist/', '.astro/', '.wrangler/', 'node_modules/', 'data/geo/raw/', 'test-results/'],
+    ignores: [
+      'dist/',
+      '.astro/',
+      '.wrangler/',
+      'node_modules/',
+      'data/geo/raw/',
+      'test-results/',
+      '.design-sync/',
+      '.ds-sync/',
+      'ds-bundle/',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.strict,

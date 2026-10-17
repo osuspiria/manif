@@ -9,3 +9,8 @@ worker-configuration.d.ts
 SPEC.md
 CLAUDE.md
 public/map/
+
+# Claude Design sync tooling (see .design-sync/NOTES.md)
+.design-sync/
+.ds-sync/
+ds-bundle/

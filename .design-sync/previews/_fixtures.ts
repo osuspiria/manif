@@ -1,0 +1,96 @@
+// Shared, clearly fictional sample data for the preview cards (CLAUDE.md: never
+// real events or organizations). Times are local + UTC as the API returns them;
+// "now" is fixed so the cards render deterministically.
+import type { PublicEvent } from 'mobilizacao-pt-ui';
+
+export const NOW = new Date('2026-10-17T09:00:00Z');
+
+export const EVENTS: PublicEvent[] = [
+  {
+    id: '01EXEMPLO00000000000000001',
+    type: 'demonstration',
+    title: 'Marcha pelo clima (exemplo)',
+    description: 'Concentração na praça e desfile até à Assembleia. Traz cartazes e água.',
+    organizer: 'Coletivo Exemplo pelo Clima',
+    lat: 38.7076,
+    lng: -9.1365,
+    placeLabel: 'Praça do Comércio',
+    municipality: 'Lisboa',
+    district: 'Lisboa',
+    tz: 'Europe/Lisbon',
+    verified: true,
+    occurrences: [
+      { id: 'o1a', localDate: '2026-10-17', startTime: '15:00', endTime: '18:00', startsAt: '2026-10-17T14:00:00Z', endsAt: '2026-10-17T17:00:00Z', note: null, cancelled: false },
+      { id: 'o1b', localDate: '2026-10-24', startTime: '15:00', endTime: '18:00', startsAt: '2026-10-24T14:00:00Z', endsAt: '2026-10-24T17:00:00Z', note: 'Percurso alternativo', cancelled: false },
+    ],
+  },
+  {
+    id: '01EXEMPLO00000000000000002',
+    type: 'rally',
+    title: 'Concentração em defesa do SNS (exemplo)',
+    description: null,
+    organizer: 'Associação Fictícia de Utentes',
+    lat: 41.1496,
+    lng: -8.6109,
+    placeLabel: 'Avenida dos Aliados',
+    municipality: 'Porto',
+    district: 'Porto',
+    tz: 'Europe/Lisbon',
+    verified: false,
+    occurrences: [
+      { id: 'o2a', localDate: '2026-10-18', startTime: '11:00', endTime: '13:00', startsAt: '2026-10-18T10:00:00Z', endsAt: '2026-10-18T12:00:00Z', note: null, cancelled: false },
+    ],
+  },
+  {
+    id: '01EXEMPLO00000000000000003',
+    type: 'action',
+    title: 'Limpeza da praia (exemplo)',
+    description: 'Luvas e sacos fornecidos.',
+    organizer: null,
+    lat: 41.1823,
+    lng: -8.6896,
+    placeLabel: 'Praia de Matosinhos',
+    municipality: 'Matosinhos',
+    district: 'Porto',
+    tz: 'Europe/Lisbon',
+    verified: true,
+    occurrences: [
+      { id: 'o3a', localDate: '2026-10-18', startTime: null, endTime: null, startsAt: '2026-10-17T23:00:00Z', endsAt: '2026-10-18T23:00:00Z', note: null, cancelled: false },
+    ],
+  },
+  {
+    id: '01EXEMPLO00000000000000004',
+    type: 'assembly',
+    title: 'Assembleia aberta de moradores (exemplo)',
+    description: null,
+    organizer: 'Comissão de Moradores Exemplo',
+    lat: 37.7412,
+    lng: -25.6756,
+    placeLabel: null,
+    municipality: 'Ponta Delgada',
+    district: 'Açores',
+    tz: 'Atlantic/Azores',
+    verified: false,
+    occurrences: [
+      { id: 'o4a', localDate: '2026-10-20', startTime: '21:00', endTime: '23:00', startsAt: '2026-10-20T21:00:00Z', endsAt: '2026-10-20T23:00:00Z', note: null, cancelled: false },
+    ],
+  },
+  {
+    id: '01EXEMPLO00000000000000005',
+    type: 'other',
+    title: 'Sessão de esclarecimento (exemplo)',
+    description: null,
+    organizer: null,
+    lat: 32.6496,
+    lng: -16.9086,
+    placeLabel: 'Biblioteca Municipal',
+    municipality: 'Funchal',
+    district: 'Madeira',
+    tz: 'Atlantic/Madeira',
+    verified: true,
+    occurrences: [
+      { id: 'o5a', localDate: '2026-10-22', startTime: '18:30', endTime: '20:00', startsAt: '2026-10-22T17:30:00Z', endsAt: '2026-10-22T19:00:00Z', note: null, cancelled: false },
+      { id: 'o5b', localDate: '2026-10-29', startTime: '18:30', endTime: '20:00', startsAt: '2026-10-29T18:30:00Z', endsAt: '2026-10-29T20:00:00Z', note: null, cancelled: true },
+    ],
+  },
+];

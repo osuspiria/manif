@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "../..",
+    "declarationDir": "dist/types",
+    "types": [],
+    "skipLibCheck": true,
+    "paths": { "react": ["../../.ds-sync/node_modules/@types/react"] }
+  },
+  "include": ["index.ts", "css.d.ts"],
+  "exclude": []
+}
