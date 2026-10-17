@@ -3,6 +3,7 @@ import { pt } from '../../i18n/pt';
 import { nowIso } from '../../shared/dates';
 import { filterEvents, type WhenFilter } from '../../shared/event-filter';
 import { formatOccurrence } from '../../shared/event-view';
+import { detectPlatform, mapsAppUrl } from '../../shared/maps-links';
 import type { PublicEvent, PublicOccurrence } from '../../shared/schemas';
 import { ReportForm } from './ReportForm';
 import { TypeIcon } from './TypeIcon';
@@ -75,6 +76,10 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
   const url = `${window.location.origin}/mapa/e/${event.id}`;
   const osm = `https://www.openstreetmap.org/?mlat=${event.lat}&mlon=${event.lng}#map=17/${event.lat}/${event.lng}`;
   const directions = `https://www.openstreetmap.org/directions?route=%3B${event.lat}%2C${event.lng}`;
+  const mapsApp = mapsAppUrl(
+    { lat: event.lat, lng: event.lng, label: event.title },
+    detectPlatform(navigator.userAgent, navigator.maxTouchPoints),
+  );
 
   async function share() {
     const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
@@ -165,9 +170,12 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
         <button type="button" class="btn" onClick={() => void share()}>
           {pt.event.share}
         </button>
-        <a class="btn" href={`geo:${event.lat},${event.lng}`}>
-          {pt.event.openInApp}
-        </a>
+        {/* No maps app on desktop: "Como chegar" and OpenStreetMap cover it. */}
+        {mapsApp && (
+          <a class="btn" href={mapsApp}>
+            {pt.event.openInApp}
+          </a>
+        )}
         <a class="btn" href={osm} rel="noopener noreferrer" target="_blank">
           {pt.event.openInOsm}
         </a>

@@ -246,3 +246,8 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - O painel de filtros em telemóvel abre dentro de `.content`, logo por baixo da barra, em vez de usar `top: var(--topbar-h)` (a barra é mais alta do que 60 px e o painel tapava-lhe a parte de baixo).
     - Desktop: com a introdução, os filtros podem não caber em ecrãs baixos; a linha dos filtros encolhe e faz scroll, e a lista fica com pelo menos 200 px.
     - Concentração: o pictograma passa de chama a cartaz erguido, para não sugerir violência.
+72. **"Abrir na app de mapas" por plataforma** (estava avariado no iPhone): o link era sempre `geo:lat,lng`, que o iOS não suporta.
+    - iOS (incluindo o iPad que se apresenta como Mac, detetado pelo ecrã tátil): `https://maps.apple.com/?ll=…&q=<título>`, que abre a app Mapas com o pin e o nome.
+    - Android: `geo:lat,lng?q=lat,lng(<título>)`, que abre o seletor de apps com o pin e o nome (sem parênteses no título, porque delimitam o nome).
+    - Computador: o botão não aparece; "Como chegar" e "Ver no OpenStreetMap" já cobrem esse caso.
+    - Lógica pura em `src/shared/maps-links.ts` (recebe o user agent), com testes unitários; o e2e confirma o link para iPhone, Android e computador. Só se sai do site quando a pessoa toca no botão: nenhum pedido novo a terceiros.

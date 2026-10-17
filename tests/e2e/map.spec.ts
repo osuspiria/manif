@@ -159,6 +159,48 @@ test.describe('map page (/)', () => {
     await expect(page.locator('#filters')).toBeVisible();
   });
 
+  test('"Abrir na app de mapas": Apple Maps on iOS, geo: on Android, hidden on desktop', async ({
+    browser,
+    request,
+  }, info) => {
+    test.skip(info.project.name !== 'desktop', 'user agents are set per case');
+    const fc = (await (await request.get('/api/events.geojson')).json()) as {
+      features: { id: string; properties: { title: string } }[];
+    };
+    const event = fc.features[0];
+    const cases = [
+      {
+        userAgent:
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
+        mobile: true,
+        href: /^https:\/\/maps\.apple\.com\/\?ll=-?[\d.]+,-?[\d.]+&q=/,
+      },
+      {
+        userAgent:
+          'Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36',
+        mobile: true,
+        href: /^geo:-?[\d.]+,-?[\d.]+\?q=-?[\d.]+,-?[\d.]+\(.+\)$/,
+      },
+      { userAgent: undefined, mobile: false, href: null },
+    ];
+    for (const c of cases) {
+      const context = await browser.newContext({
+        userAgent: c.userAgent,
+        isMobile: c.mobile,
+        hasTouch: c.mobile,
+        viewport: c.mobile ? { width: 390, height: 844 } : { width: 1280, height: 720 },
+      });
+      const page = await context.newPage();
+      await page.goto(`/mapa/e/${event?.id ?? ''}`);
+      const sheet = page.getByRole('dialog');
+      await expect(sheet.getByRole('heading', { level: 2 })).toBeVisible();
+      const link = sheet.getByRole('link', { name: 'Abrir na app de mapas' });
+      if (c.href) await expect(link).toHaveAttribute('href', c.href);
+      else await expect(link).toHaveCount(0);
+      await context.close();
+    }
+  });
+
   test('URL state is restored on load', async ({ page }, info) => {
     await page.goto('/?quando=hoje&tipo=rally,assembly');
     if (isMobile(info.project.name)) await page.locator('#summary-button').click();

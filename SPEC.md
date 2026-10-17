@@ -212,7 +212,7 @@ Chips de escolha única, em scroll horizontal:
 
 ### 4.3 Popup / ficha do evento
 
-Título · tipo · local e concelho · data(s) e hora(s) · descrição · organizador (se indicado) · selo **"Confirmado"** se `verified` · botões: *Como chegar* (link `geo:` / OpenStreetMap), *Partilhar* (Web Share API, fallback copiar link), *Reportar*.
+Título · tipo · local e concelho · data(s) e hora(s) · descrição · organizador (se indicado) · selo **"Confirmado"** se `verified` · botões: *Como chegar* (direções no OpenStreetMap), *Abrir na app de mapas* (Apple Maps no iOS, link `geo:` no Android, escondido no computador), *Ver no OpenStreetMap*, *Partilhar* (Web Share API, fallback copiar link), *Reportar*.
 Cada evento tem URL próprio `/mapa/e/<id>` que abre o mapa centrado e a ficha aberta (com meta tags Open Graph para partilha).
 
 ### 4.4 Adicionar evento (`➕`)
