@@ -38,6 +38,27 @@ fieldset > legend {
   resize: vertical;
 }
 
+/* iOS Safari gives date/time inputs an intrinsic min-width (wider than a 390 px
+   screen inside a fieldset) and centres the value. Dropping the native
+   appearance keeps the native picker on tap but lets width: 100% apply. */
+.field input:is([type='date'], [type='time']) {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.field input::-webkit-date-and-time-value {
+  min-height: 1.4em;
+  text-align: left;
+}
+
+/* Grid items default to min-width: auto, which lets a wide input push the column out. */
+.time-pair > * {
+  min-width: 0;
+}
+
 [aria-invalid='true'] {
   border-color: var(--danger) !important;
   box-shadow: 0 0 0 1px var(--danger);
