@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-for (const path of ['/', '/mapa/']) {
+for (const path of ['/']) {
   test(`${path} renders in pt-PT without cookies or third-party requests`, async ({
     page,
     context,
@@ -27,7 +27,7 @@ for (const path of ['/', '/mapa/']) {
     expect(overflow).toBeLessThanOrEqual(0);
 
     await page.screenshot({
-      path: testInfo.outputPath(`${path === '/' ? 'home' : 'mapa'}.png`),
+      path: testInfo.outputPath('home.png'),
       fullPage: true,
     });
   });
@@ -48,7 +48,7 @@ test('switched-off features are not reachable or linked (launch configuration)',
     expect((await request.get('/api/signatures/stats')).status()).toBe(404);
     expect((await request.post('/api/signatures', { data: {} })).status()).toBe(404);
   }
-  for (const path of ['/', '/mapa?vista=lista', '/nao-existe']) {
+  for (const path of ['/', '/?vista=lista', '/nao-existe']) {
     await page.goto(path);
     for (const target of off) {
       await expect(page.locator(`a[href^="${target}"]`), `${path} → ${target}`).toHaveCount(0);

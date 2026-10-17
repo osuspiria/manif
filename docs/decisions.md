@@ -64,7 +64,7 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Cada evento leva as ocorrências que ainda não terminaram, incluindo as canceladas (com `cancelled: true`), para a ficha as poder mostrar riscadas.
     - Em produção fica 60 s na cache de edge (Cache API, `EDGE_CACHE=on`). No `wrangler dev` e nos testes está desligada, porque a cache local persiste em `.wrangler/` e devolvia dados de seeds antigos.
 18. **`GET /api/events/:id`** devolve um evento `published` mesmo que já tenha terminado, para que links partilhados continuem a abrir ("Este evento já terminou"). Os eventos `pending` e `hidden` dão 404.
-19. **Página de partilha `/mapa/e/:id`:** é o Worker que a serve. Pega na página estática `/mapa/` e injeta o `<title>` e as tags Open Graph com `HTMLRewriter`; o cliente lê o id a partir do caminho. Em dev, um middleware do Vite reescreve o caminho para `/mapa/`.
+19. **Página de partilha `/mapa/e/:id`:** é o Worker que a serve. Pega na página estática do mapa (`/`, antes `/mapa/`) e injeta o `<title>` e as tags Open Graph com `HTMLRewriter`; o cliente lê o id a partir do caminho. Em dev, um middleware do Vite reescreve o caminho para `/`.
 20. **Tiles:**
     - `/tiles/:file` serve o `.pmtiles` a partir do R2 (binding `TILES`), com suporte a `Range`.
     - Em dev usa-se `data/geo/dev.pmtiles`, um extrato de Portugal inteiro até z11 com 35 MB, carregado no R2 local com `npm run tiles:dev`. Acima de z11 o MapLibre faz overzoom.
@@ -239,3 +239,10 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Selecionado: 48 px, fundo laranja, borda e pictograma pretos, desenhado por cima dos vizinhos. Data-chave (`KEY_DATES`): barra laranja de 4 px no topo.
     - Grupos: quadrado branco com borda preta de 2 px (32/40/52 px). Só servimos glifos Noto Sans Medium; a contagem ganha peso com um halo da mesma cor, em vez de descarregar mais um conjunto de glifos.
     - `EVENT_TYPES[*].color` e `shape` foram removidos; `icon` escolhe o pictograma. Nas listas e chips, o `TypeIcon` é o mesmo pin sem ponta.
+71. **O mapa é a página principal** (handoff `tema-acido`): `/` mostra o mapa, com uma introdução curta por cima da barra (título + `pt.map.description`). A antiga página inicial (`pt.home.*`) foi removida.
+    - `/mapa` e `/mapa/` respondem 301 para `/` no Worker (`run_worker_first`), mantendo a query (`?quando=…`, `?vista=lista`); em dev, o middleware do Vite faz o mesmo. Os links de partilha `/mapa/e/<id>` não mudam, porque já foram partilhados.
+    - Em telemóvel a introdução esconde-se com os filtros ou a ficha abertos e os dois nunca se sobrepõem. Fica só visualmente escondida para a página manter o `h1`. No desktop não se esconde, para a lista não saltar ao escolher um evento.
+    - O esqueleto estático mostra a mesma introdução antes do JavaScript, com o título num `<p>` (o `h1` é da app, para não haver dois).
+    - O painel de filtros em telemóvel abre dentro de `.content`, logo por baixo da barra, em vez de usar `top: var(--topbar-h)` (a barra é mais alta do que 60 px e o painel tapava-lhe a parte de baixo).
+    - Desktop: com a introdução, os filtros podem não caber em ecrãs baixos; a linha dos filtros encolhe e faz scroll, e a lista fica com pelo menos 200 px.
+    - Concentração: o pictograma passa de chama a cartaz erguido, para não sugerir violência.

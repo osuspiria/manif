@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import municipalities from '../../data/geo/municipalities.geo.json';
 import { GEO_SNAP_METERS } from '../config/app';
 import { defaultDeps, type AppDeps } from './deps';
@@ -19,6 +19,10 @@ export const SECURITY_HEADERS: Record<string, string> = {
   'X-Frame-Options': 'DENY',
   'Content-Security-Policy': "frame-ancestors 'none'",
 };
+
+function toHome(c: Context) {
+  return c.redirect(`/${new URL(c.req.url).search}`, 301);
+}
 
 // Built once per isolate.
 const geo = createGeoService(municipalities as MunicipalityCollection, GEO_SNAP_METERS);
@@ -47,7 +51,10 @@ export function createApp(overrides: Partial<AppDeps> = {}) {
     .route('/api', api)
     .route('/tiles', tilesRoutes())
     .route('/map/fonts', glyphRoutes())
-    .route('/mapa/e', sharePageRoutes(clock));
+    .route('/mapa/e', sharePageRoutes(clock))
+    // The map moved to the home page; old links keep their filters.
+    .get('/mapa', toHome)
+    .get('/mapa/', toHome);
 
   app.notFound((c) => {
     if (new URL(c.req.url).pathname.startsWith('/api/')) {

@@ -146,7 +146,7 @@ CREATE TABLE signatures (
 | key | Rótulo | Pictograma |
 |---|---|---|
 | `demonstration` | Manifestação | megafone |
-| `rally` | Concentração | chama |
+| `rally` | Concentração | cartaz erguido |
 | `action` | Ação num local (posto, empresa, serviço público…) | bandeira |
 | `assembly` | Assembleia Popular | pessoas |
 | `camp` | Acampada | tenda |
@@ -158,10 +158,13 @@ Todos os tipos usam o mesmo pin quadrado preto; o tipo distingue-se pelo pictogr
 
 ## 4. Funcionalidade 1 — Mapa
 
-### 4.1 Página `/mapa`
+### 4.1 Página principal `/` (mapa)
+
+O mapa é a página de entrada. `/mapa` redireciona (301) para `/`, mantendo os filtros do URL; as fichas continuam em `/mapa/e/<id>`.
 
 Layout telemóvel (de cima para baixo):
-1. Barra fixa: título curto + **resumo do filtro ativo** ("23 eventos · Este fim de semana") — tocar abre o painel de filtros.
+0. Introdução: "Mobilização" + uma frase sobre a plataforma (`pt.map.description`). Esconde-se (só visualmente; o `h1` fica para leitores de ecrã) enquanto o painel de filtros ou a ficha de um evento estão abertos. Abrir os filtros fecha a ficha; escolher um evento fecha os filtros. No desktop fica sempre visível no topo do painel lateral.
+1. Barra fixa: **resumo do filtro ativo** ("23 eventos · Este fim de semana") — tocar abre o painel de filtros.
 2. Mapa em ecrã inteiro.
 3. Botões flutuantes: 📍 *Perto de mim* (geolocalização no browser; nada é enviado ao servidor), 🔍 *Procurar local*, ➕ *Adicionar evento*.
 4. Atalhos de enquadramento: **Continente · Madeira · Açores** (os arquipélagos ficam fora do ecrã por defeito).
@@ -197,7 +200,7 @@ Chips de escolha única, em scroll horizontal:
 - **Datas-chave** (opcional, config `KEY_DATES`): se a campanha tiver um "dia D", aparece como primeiro chip destacado ("🟡 25 nov"). Resolve 90% dos casos com um toque.
 - O filtro de **Tipo** é um segundo grupo de chips multi-seleção, por baixo. Não há mais filtros na v1.
 - **Botão "Limpar"** sempre visível quando há filtro diferente do defeito.
-- Estado do filtro no URL (`/mapa?quando=fds&tipo=rally,action` ou `?dia=2026-11-25`) para links partilháveis.
+- Estado do filtro no URL (`/?quando=fds&tipo=rally,action` ou `?dia=2026-11-25`) para links partilháveis.
 
 **Semântica:** um evento aparece se **pelo menos uma ocorrência** intersectar o intervalo. No popup/lista:
 - Mostra-se a **próxima ocorrência dentro do intervalo** em destaque.
@@ -359,7 +362,7 @@ Validação partilhada entre cliente e servidor com **Zod** (`src/shared/schemas
 
 ## 9. Requisitos não funcionais
 
-- Lighthouse mobile na página do mapa (excluindo o tile download): **vista Lista** (`/mapa?vista=lista`) ≥ 90 em Performance e Acessibilidade; **vista Mapa** ≥ 90 em Acessibilidade e ≥ 50 em Performance (o arranque do MapLibre domina o TBT; ver `docs/decisions.md` #25).
+- Lighthouse mobile na página do mapa (excluindo o tile download): **vista Lista** (`/?vista=lista`) ≥ 90 em Performance e Acessibilidade; **vista Mapa** ≥ 90 em Acessibilidade e ≥ 50 em Performance (o arranque do MapLibre domina o TBT; ver `docs/decisions.md` #25).
 - JS inicial da página do mapa ≤ 250 KB gzip. O motor do mapa (MapLibre, ~300 KB gzip + worker) carrega à parte, depois de o resumo, os filtros e a lista estarem utilizáveis, e só quando o mapa está visível. Nenhuma versão atual do MapLibre cabe sozinha em 250 KB (ver `docs/decisions.md` #25).
 - Alvos de toque ≥ 44 px; funciona em ecrã de 360 px de largura; sem scroll horizontal da página.
 - WCAG 2.1 AA: contraste, foco visível, lista de eventos como alternativa ao mapa, formulários com labels e erros anunciados.

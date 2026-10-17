@@ -95,6 +95,17 @@ describe('GET /api/events/:id', () => {
   });
 });
 
+describe('GET /mapa (old map address)', () => {
+  it.each(['/mapa', '/mapa/'])(
+    '%s redirects to the home page, keeping the filters',
+    async (path) => {
+      const res = await get(`${path}?quando=fds&tipo=rally`);
+      expect(res.status).toBe(301);
+      expect(res.headers.get('Location')).toBe('/?quando=fds&tipo=rally');
+    },
+  );
+});
+
 describe('GET /mapa/e/:id (share page)', () => {
   it('serves the map page with the event title and Open Graph tags', async () => {
     const res = await get(`/mapa/e/${IDS.a}`);

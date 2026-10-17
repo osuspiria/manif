@@ -86,7 +86,7 @@ O `npm run deploy` faz, por ordem:
 
 ## 8. Verificação
 
-- [ ] `/mapa` no telemóvel e no desktop: os tiles carregam, também na Madeira e nos Açores.
+- [ ] `/` (mapa) no telemóvel e no desktop: os tiles carregam, também na Madeira e nos Açores.
 - [ ] Criar um evento (o Turnstile passa), abrir o link de edição, cancelar uma data e reportar.
 - [ ] `/admin`: o email de entrada chega e dá para moderar e ocultar o evento de teste.
 - [ ] `/apoio/` e `/privacidade/` dão 404.

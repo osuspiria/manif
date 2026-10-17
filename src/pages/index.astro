@@ -1,17 +1,30 @@
 ---
-import Base from '../layouts/Base.astro';
-import { FEATURES } from '../config/app';
+import Head from '../components/Head.astro';
+import { MapApp } from '../components/map/MapApp';
+import { MapIntro } from '../components/map/MapIntro';
 import { pt } from '../i18n/pt';
+import '../styles/map.css';
 ---
 
-<Base>
-  <h1>{pt.home.heading}</h1>
-  <p>
-    <a href="/mapa">{pt.home.mapCta}</a>
-  </p>
-  {FEATURES.signatures && (
-    <p>
-      <a href="/apoio/">{pt.home.supportCta}</a>
-    </p>
-  )}
-</Base>
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <Head description={pt.map.description} />
+  </head>
+  <body class="map-page">
+    <div id="map-root">
+      <!-- Static shell: painted before any JS runs; hidden once the app mounts. -->
+      <div class="map-shell">
+        <MapIntro shell />
+        <div class="topbar">
+          <p class="summary-button shell-summary">{pt.map.loading}</p>
+        </div>
+      </div>
+      <MapApp client:only="preact" />
+    </div>
+    <noscript>
+      <h1 class="visually-hidden">{pt.site.title}</h1>
+      <p>{pt.map.noscript}</p>
+    </noscript>
+  </body>
+</html>

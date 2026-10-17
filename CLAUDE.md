@@ -42,7 +42,7 @@ Se algum destes comandos ainda não existir, cria-o quando criares a peça corre
 
 ```
 src/
-  pages/            # rotas Astro: /, /mapa, /mapa/e/[id], /apoio, /privacidade, /admin
+  pages/            # rotas Astro: / (mapa), /mapa/e/[id], /apoio, /privacidade, /admin; /mapa → /
   components/       # UI (Preact/Astro)
   map/              # setup MapLibre, camadas, clustering, popup
   shared/

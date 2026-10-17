@@ -41,14 +41,18 @@ export default defineConfig({
     },
     plugins: [
       {
-        // In dev, /mapa/e/<id> is served by the static /mapa/ page (in production
-        // the Worker does this and injects Open Graph tags).
+        // In dev, /mapa/e/<id> is served by the static map page (/) and /mapa
+        // redirects to it (in production the Worker does both, and injects Open
+        // Graph tags into event pages).
         name: 'dev-event-pages',
         configureServer(server) {
-          server.middlewares.use((req, _res, next) => {
+          server.middlewares.use((req, res, next) => {
+            const query = req.url?.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
             if (req.url?.startsWith('/mapa/e/')) {
-              const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
-              req.url = `/mapa/${query}`;
+              req.url = `/${query}`;
+            } else if (req.url && /^\/mapa\/?(\?|$)/.test(req.url)) {
+              res.writeHead(301, { Location: `/${query}` }).end();
+              return;
             }
             next();
           });

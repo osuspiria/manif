@@ -14,7 +14,7 @@ async function waitForMap(page: Page) {
 
 const isMobile = (name: string) => name === 'mobile-360';
 
-test.describe('/mapa', () => {
+test.describe('map page (/)', () => {
   test('default view: map, summary, no cookies, no third-party requests', async ({
     page,
     context,
@@ -27,7 +27,7 @@ test.describe('/mapa', () => {
       if (u.protocol.startsWith('http') && u.origin !== origin) thirdParty.push(r.url());
     });
 
-    await page.goto('/mapa/');
+    await page.goto('/');
     await expect(page.getByText(/\d+ eventos · Próximos/).first()).toBeVisible();
     await waitForMap(page);
     await shot(page, '01-mapa', info.project.name);
@@ -41,7 +41,7 @@ test.describe('/mapa', () => {
   });
 
   test('filters: Quando chips update summary and URL; Limpar resets', async ({ page }, info) => {
-    await page.goto('/mapa/');
+    await page.goto('/');
     await expect(page.getByText(/\d+ eventos · Próximos/).first()).toBeVisible();
     if (isMobile(info.project.name)) await page.locator('#summary-button').click();
 
@@ -62,7 +62,7 @@ test.describe('/mapa', () => {
   });
 
   test('"Escolher dia" opens the day strip; empty days are disabled', async ({ page }, info) => {
-    await page.goto('/mapa/');
+    await page.goto('/');
     await expect(page.getByText(/\d+ eventos · Próximos/).first()).toBeVisible();
     if (isMobile(info.project.name)) await page.locator('#summary-button').click();
 
@@ -80,7 +80,7 @@ test.describe('/mapa', () => {
   });
 
   test('list view groups by day and opens a multi-date event', async ({ page }, info) => {
-    await page.goto('/mapa/?vista=lista');
+    await page.goto('/?vista=lista');
     const list = page.locator('.event-list');
     await expect(list).toBeVisible();
     await expect(list.locator('h2').first()).toHaveText(/^\p{Lu}[\p{L}-]+, \d{1,2} \p{L}{3}$/u);
@@ -100,7 +100,7 @@ test.describe('/mapa', () => {
   });
 
   test('popup from the map view with several dates', async ({ page }, info) => {
-    await page.goto('/mapa/');
+    await page.goto('/');
     await waitForMap(page);
     // Open via the list on mobile is covered above; here use a deep link with the map visible.
     const res = await page.request.get('/api/events.geojson');
@@ -119,8 +119,45 @@ test.describe('/mapa', () => {
     await shot(page, '06-popup-mapa', info.project.name);
   });
 
+  test('the map is the home page; old /mapa links redirect with their filters', async ({
+    page,
+  }) => {
+    await page.goto('/mapa?quando=hoje');
+    await expect(page).toHaveURL(/\/\?quando=hoje$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Mobilização' })).toBeVisible();
+  });
+
+  test('the intro makes room for the filters and the event sheet on a phone', async ({
+    page,
+  }, info) => {
+    test.skip(!isMobile(info.project.name), 'phone layout only');
+    await page.goto('/?vista=lista');
+    const intro = page.locator('.map-app .map-intro');
+    await expect(intro).toBeVisible();
+    await expect(intro).toContainText('Manifestações, concentrações e assembleias');
+    await shot(page, '00-intro', info.project.name);
+
+    await page.locator('#summary-button').click();
+    await expect(page.locator('#filters')).toBeVisible();
+    await expect(intro).toBeHidden();
+    // The h1 stays for screen readers.
+    await expect(page.getByRole('heading', { level: 1, name: 'Mobilização' })).toBeAttached();
+
+    // Choosing an event closes the filters.
+    await page.getByRole('button', { name: 'Ver resultados' }).click();
+    await expect(intro).toBeVisible();
+    await page.locator('.event-card').first().click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(intro).toBeHidden();
+
+    // Opening the filters closes the event.
+    await page.locator('#summary-button').click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.locator('#filters')).toBeVisible();
+  });
+
   test('URL state is restored on load', async ({ page }, info) => {
-    await page.goto('/mapa/?quando=hoje&tipo=rally,assembly');
+    await page.goto('/?quando=hoje&tipo=rally,assembly');
     if (isMobile(info.project.name)) await page.locator('#summary-button').click();
     const panel = page.locator('#filters');
     await expect(panel.getByRole('button', { name: 'Hoje', exact: true })).toHaveAttribute(

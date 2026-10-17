@@ -24,7 +24,6 @@ const { title, description, secret = false } = Astro.props;
     <header>
       <nav aria-label={pt.nav.main}>
         <a href="/">{pt.site.title}</a>
-        <a href="/mapa">{pt.nav.map}</a>
         {FEATURES.signatures && <a href="/apoio/">{pt.nav.support}</a>}
       </nav>
     </header>
@@ -34,7 +33,7 @@ const { title, description, secret = false } = Astro.props;
     <footer class="site-footer">
       <nav aria-label={pt.nav.footer}>
         {FEATURES.privacyPage && <a href="/privacidade/">{pt.nav.privacy}</a>}
-        <a href="/mapa?vista=lista">{pt.nav.eventList}</a>
+        <a href="/?vista=lista">{pt.nav.eventList}</a>
       </nav>
     </footer>
   </body>

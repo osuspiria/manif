@@ -187,6 +187,16 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   },
   {
     method: 'GET',
+    route: '/mapa',
+    samples: [{ url: '/mapa?quando=hoje' }],
+  },
+  {
+    method: 'GET',
+    route: '/mapa/',
+    samples: [{ url: '/mapa/?vista=lista' }],
+  },
+  {
+    method: 'GET',
     route: '/mapa/e/:id',
     samples: [{ url: '/mapa/e/{eventId}' }, { url: '/mapa/e/{hiddenEventId}' }],
   },

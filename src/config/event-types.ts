@@ -20,7 +20,7 @@ export interface EventTypeConfig {
 
 export const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
   demonstration: { key: 'demonstration', icon: 'megaphone' },
-  rally: { key: 'rally', icon: 'flame' },
+  rally: { key: 'rally', icon: 'placard' },
   action: { key: 'action', icon: 'flag' },
   assembly: { key: 'assembly', icon: 'people' },
   camp: { key: 'camp', icon: 'tent' },

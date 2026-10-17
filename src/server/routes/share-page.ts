@@ -1,5 +1,5 @@
 /**
- * /mapa/e/:id — serves the static /mapa/ page with the event's title and
+ * /mapa/e/:id — serves the static map page (/) with the event's title and
  * Open Graph tags, so shared links get a proper preview. The client reads the
  * id from the path and opens the event sheet.
  */
@@ -44,7 +44,7 @@ export function sharePageRoutes(clock: Clock) {
       return new Response(notFound.body, { status: 404, headers: notFound.headers });
     }
 
-    const page = await c.env.ASSETS.fetch(new URL('/mapa/', c.req.url));
+    const page = await c.env.ASSETS.fetch(new URL('/', c.req.url));
     const title = `${event.title} · ${APP_NAME}`;
     const url = new URL(`/mapa/e/${event.id}`, c.req.url).toString();
     const description = describe(event, clock());

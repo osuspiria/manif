@@ -18,7 +18,7 @@ interface Fc {
 
 /** Opens the flow and fills steps 1–3; leaves the page on the last step ("Contacto" when the email is on). */
 async function fillUntilContact(page: Page, title: string, project: string, screens = false) {
-  await page.goto('/mapa/');
+  await page.goto('/');
   await page
     .getByRole('button', { name: /Adicionar evento/ })
     .first()
@@ -148,7 +148,7 @@ test.describe('Adicionar e editar evento', () => {
   });
 
   test('validation errors are shown next to the fields, focus on the first', async ({ page }) => {
-    await page.goto('/mapa/');
+    await page.goto('/');
     await page
       .getByRole('button', { name: /Adicionar evento/ })
       .first()

@@ -40,13 +40,12 @@ async function check(page: Page, thirdParty: string[], label: string) {
 }
 
 const ALL_PAGES: { path: string; ready: (page: Page) => Promise<void> }[] = [
-  { path: '/', ready: (p) => expect(p.locator('h1')).toBeVisible() },
   {
-    path: '/mapa?vista=lista',
+    path: '/?vista=lista',
     ready: (p) => expect(p.locator('.event-list li').first()).toBeVisible(),
   },
   {
-    path: '/mapa',
+    path: '/',
     ready: async (p) => {
       if ((p.viewportSize()?.width ?? 0) < 900) {
         await p.getByRole('button', { name: 'Mapa', exact: true }).click();
@@ -118,7 +117,7 @@ test.describe('Acessibilidade (axe), CSP e pedidos a terceiros', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
     await check(page, thirdParty, 'event sheet');
 
-    await page.goto('/mapa?vista=lista');
+    await page.goto('/?vista=lista');
     // On the phone the filters open from the summary button; on desktop they are always shown.
     const summary = page.locator('#summary-button');
     if ((page.viewportSize()?.width ?? 0) < 900) {
@@ -128,7 +127,7 @@ test.describe('Acessibilidade (axe), CSP e pedidos a terceiros', () => {
     await expect(page.getByRole('group', { name: 'Tipo' })).toBeVisible();
     await check(page, thirdParty, 'filters');
 
-    await page.goto('/mapa?vista=lista');
+    await page.goto('/?vista=lista');
     await page
       .getByRole('button', { name: /Adicionar evento/ })
       .first()

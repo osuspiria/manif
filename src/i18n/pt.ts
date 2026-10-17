@@ -13,16 +13,12 @@ export const pt = {
     footer: 'Informação',
     skip: 'Saltar para o conteúdo',
     eventList: 'Lista de eventos',
+    supportCta: 'Assinar o apelo',
   },
   privacy: {
     controller: 'Responsável pelo tratamento',
     contact: 'Contacto para questões de privacidade',
     updated: 'Última atualização',
-  },
-  home: {
-    heading: 'Junta-te à mobilização',
-    mapCta: 'Ver o mapa de eventos',
-    supportCta: 'Assinar o apelo',
   },
   map: {
     heading: 'Mapa de eventos',
@@ -501,7 +497,6 @@ export const pt = {
     serverErrorText:
       'Ocorreu um erro do nosso lado. Tenta de novo daqui a pouco; se o problema continuar, avisa-nos.',
     tryHere: 'Talvez procures:',
-    home: 'Página inicial',
     /** Validation codes from the shared schemas / API. */
     codes: {
       required: 'Campo obrigatório.',

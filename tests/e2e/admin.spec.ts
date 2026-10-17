@@ -109,7 +109,7 @@ test.describe('Administração', () => {
 
     await signIn(page, request, adminFor(info));
     // Only the admin API path carries the cookie; the public site has none.
-    expect(await context.cookies(new URL('/mapa/', page.url()).toString())).toEqual([]);
+    expect(await context.cookies(new URL('/', page.url()).toString())).toEqual([]);
     const [cookie] = await context.cookies(new URL('/api/admin/me', page.url()).toString());
     expect(cookie).toMatchObject({ name: 'admin_session', httpOnly: true, sameSite: 'Strict' });
 

@@ -1,5 +1,5 @@
 /**
- * /mapa island: loads all visible events once, filters them in the browser
+ * Map page island (/): loads all visible events once, filters them in the browser
  * (SPEC §4.2), keeps the filter in the URL, and shows them on the map and in
  * the equivalent list.
  */
@@ -32,6 +32,7 @@ import { EventList } from './EventList';
 import { EventSheet } from './EventSheet';
 import { FilterPanel } from './FilterPanel';
 import { MapCanvas, type MapCommand } from './MapCanvas';
+import { MapIntro } from './MapIntro';
 
 const DESKTOP_QUERY = '(min-width: 960px)';
 const EVENT_PATH = /^\/mapa\/e\/([0-9A-HJKMNP-TV-Z]{26})\/?$/;
@@ -125,7 +126,7 @@ export function MapApp() {
 
   // --- URL state -------------------------------------------------------------
   useEffect(() => {
-    const path = selectedId ? `/mapa/e/${selectedId}` : '/mapa/';
+    const path = selectedId ? `/mapa/e/${selectedId}` : '/';
     const next = path + serializeMapUrl(url);
     if (next !== window.location.pathname + window.location.search) {
       window.history.replaceState(null, '', next);
@@ -194,6 +195,8 @@ export function MapApp() {
   };
   const select = (id: string) => {
     setSelectedId(id);
+    // The filters and the event sheet never cover each other.
+    setPanelOpen(false);
     const e = events.find((x) => x.id === id);
     if (e && (isDesktop || url.view === 'map'))
       issue({ kind: 'focus', lng: e.lng, lat: e.lat, offset: sheetOffset() });
@@ -234,6 +237,8 @@ export function MapApp() {
   const showList = !adding && (isDesktop || url.view === 'list');
   const showMap = isDesktop || url.view === 'map' || adding;
   const overlay = !isDesktop && panelOpen && !adding;
+  // On a phone the intro makes room for the filters and the event sheet.
+  const showIntro = !adding && (isDesktop || (!panelOpen && !selectedId));
 
   const panel = (
     <FilterPanel
@@ -264,7 +269,7 @@ export function MapApp() {
       data-view={url.view}
       data-desktop={isDesktop}
     >
-      <h1 class="visually-hidden">{pt.map.heading}</h1>
+      <MapIntro hidden={!showIntro} />
 
       <div class="topbar">
         {isDesktop ? (
@@ -278,7 +283,10 @@ export function MapApp() {
             class="summary-button"
             aria-expanded={panelOpen}
             aria-controls="filters"
-            onClick={() => setPanelOpen((o) => !o)}
+            onClick={() => {
+              if (!panelOpen) setSelectedId(null);
+              setPanelOpen(!panelOpen);
+            }}
           >
             <span class="summary-label">
               <span class="summary-count">{summaryCount}</span>
@@ -326,9 +334,7 @@ export function MapApp() {
         </p>
       )}
 
-      {((isDesktop && !adding) || overlay) && (
-        <div class={overlay ? 'panel-overlay' : 'panel-side'}>{panel}</div>
-      )}
+      {isDesktop && !adding && <div class="panel-side">{panel}</div>}
 
       {adding && (
         <div class={`add-container${picking ? ' add-compact' : ''}`}>
@@ -360,6 +366,8 @@ export function MapApp() {
       )}
 
       <div class="content">
+        {/* Inside .content: it opens right under the top bar, whatever its height. */}
+        {overlay && <div class="panel-overlay">{panel}</div>}
         <div class="list-pane" hidden={!showList}>
           {load.state === 'loading' && <p class="empty">{pt.map.loading}</p>}
           {load.state === 'error' && (
