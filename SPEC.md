@@ -91,7 +91,7 @@ CREATE TABLE event_occurrences (
   start_time  TEXT,            -- 'HH:MM' (opcional: "todo o dia")
   end_time    TEXT,            -- 'HH:MM' opcional
   starts_at   TEXT NOT NULL,   -- UTC ISO, calculado (para ordenar/filtrar)
-  ends_at     TEXT NOT NULL,   -- UTC ISO, calculado (fim do dia se sem end_time)
+  ends_at     TEXT NOT NULL,   -- UTC ISO, calculado (06:00 do dia seguinte se sem end_time)
   note        TEXT,            -- ≤ 120 chars ("concentração às 14h, desfile às 15h")
   cancelled   INTEGER NOT NULL DEFAULT 0
 );
@@ -222,7 +222,7 @@ Fluxo em passos curtos (bottom sheet em telemóvel):
 1. **Onde** — o mapa entra em modo "escolher ponto": pin fixo ao centro, a pessoa arrasta o mapa por baixo. Alternativas: "Usar a minha localização" ou pesquisar morada/local. Mostra o concelho detetado ("Porto · Porto"). Opcional: nome do local.
 2. **O quê** — tipo (chips), título, descrição (opcional), organizador (opcional).
 3. **Quando** — lista de datas:
-   - Primeira linha: data + hora de início (opcional "todo o dia") + nota (opcional). Ao criar não se pede hora de fim (o evento conta até ao fim do dia); a página de edição mantém a hora de fim (opcional) dos eventos existentes.
+   - Primeira linha: data + hora de início (opcional "todo o dia") + nota (opcional). Ao criar não se pede hora de fim (o evento conta até às 06:00 do dia seguinte); a página de edição mantém a hora de fim (opcional) dos eventos existentes.
    - **"+ Adicionar outra data"** (copia a hora da linha anterior).
    - Atalho **"Repetir semanalmente até…"** → gera as linhas, que ficam editáveis/removíveis individualmente.
    - Inputs nativos `type="date"` e `type="time"` (são os melhores em telemóvel).

@@ -35,16 +35,16 @@ describe('toUtcRange', () => {
     ).toBe('2026-07-01T09:00:00Z');
   });
 
-  it('ends at the end of the local day when there is no end time', () => {
+  it('runs until 06:00 local on the next day when there is no end time', () => {
     expect(
       toUtcRange({ localDate: '2026-11-25', startTime: '14:00', endTime: null }, 'Europe/Lisbon'),
-    ).toEqual({ startsAt: '2026-11-25T14:00:00Z', endsAt: '2026-11-26T00:00:00Z' });
+    ).toEqual({ startsAt: '2026-11-25T14:00:00Z', endsAt: '2026-11-26T06:00:00Z' });
   });
 
-  it('handles an all-day occurrence (no start time)', () => {
+  it('handles an all-day occurrence (no start time): until 06:00 on the next day', () => {
     expect(
       toUtcRange({ localDate: '2026-07-01', startTime: null, endTime: null }, 'Europe/Lisbon'),
-    ).toEqual({ startsAt: '2026-06-30T23:00:00Z', endsAt: '2026-07-01T23:00:00Z' });
+    ).toEqual({ startsAt: '2026-06-30T23:00:00Z', endsAt: '2026-07-02T05:00:00Z' });
   });
 
   it('rolls the end over to the next day when the end time is before the start time', () => {
@@ -63,13 +63,13 @@ describe('toUtcRange', () => {
           { localDate: '2026-11-14', startTime: '23:30', endTime: null },
           'Atlantic/Azores',
         ),
-      ).toEqual({ startsAt: '2026-11-15T00:30:00Z', endsAt: '2026-11-15T01:00:00Z' });
+      ).toEqual({ startsAt: '2026-11-15T00:30:00Z', endsAt: '2026-11-15T07:00:00Z' });
     });
 
     it('starts an all-day occurrence at local midnight', () => {
       expect(
         toUtcRange({ localDate: '2026-11-14', startTime: null, endTime: null }, 'Atlantic/Azores'),
-      ).toEqual({ startsAt: '2026-11-14T01:00:00Z', endsAt: '2026-11-15T01:00:00Z' });
+      ).toEqual({ startsAt: '2026-11-14T01:00:00Z', endsAt: '2026-11-15T07:00:00Z' });
     });
   });
 
@@ -95,16 +95,31 @@ describe('toUtcRange', () => {
       ).toBe('2026-03-29T02:00:00Z');
     });
 
-    it('Lisbon: the all-day range is 23 hours long', () => {
+    it('Lisbon: an all-day occurrence on the DST Sunday ends at 06:00 on Monday (UTC+1)', () => {
       expect(
         toUtcRange({ localDate: '2026-03-29', startTime: null, endTime: null }, 'Europe/Lisbon'),
-      ).toEqual({ startsAt: '2026-03-29T00:00:00Z', endsAt: '2026-03-29T23:00:00Z' });
+      ).toEqual({ startsAt: '2026-03-29T00:00:00Z', endsAt: '2026-03-30T05:00:00Z' });
+    });
+
+    it('Lisbon: an open-ended Saturday evening runs until 06:00 summer time on Sunday', () => {
+      expect(
+        toUtcRange({ localDate: '2026-03-28', startTime: '22:00', endTime: null }, 'Europe/Lisbon'),
+      ).toEqual({ startsAt: '2026-03-28T22:00:00Z', endsAt: '2026-03-29T05:00:00Z' });
     });
 
     it('Azores: midnight does not exist, so the day starts at 01:00 local', () => {
       expect(
         toUtcRange({ localDate: '2026-03-29', startTime: null, endTime: null }, 'Atlantic/Azores'),
-      ).toEqual({ startsAt: '2026-03-29T01:00:00Z', endsAt: '2026-03-30T00:00:00Z' });
+      ).toEqual({ startsAt: '2026-03-29T01:00:00Z', endsAt: '2026-03-30T06:00:00Z' });
+    });
+
+    it('Azores: an open-ended Saturday 23:30 runs until 06:00 summer time on Sunday', () => {
+      expect(
+        toUtcRange(
+          { localDate: '2026-03-28', startTime: '23:30', endTime: null },
+          'Atlantic/Azores',
+        ),
+      ).toEqual({ startsAt: '2026-03-29T00:30:00Z', endsAt: '2026-03-29T06:00:00Z' });
     });
   });
 
@@ -116,10 +131,16 @@ describe('toUtcRange', () => {
       ).toBe('2026-10-25T00:30:00Z');
     });
 
-    it('Lisbon: the all-day range is 25 hours long', () => {
+    it('Lisbon: an all-day occurrence on the DST Sunday ends at 06:00 on Monday (UTC+0)', () => {
       expect(
         toUtcRange({ localDate: '2026-10-25', startTime: null, endTime: null }, 'Europe/Lisbon'),
-      ).toEqual({ startsAt: '2026-10-24T23:00:00Z', endsAt: '2026-10-26T00:00:00Z' });
+      ).toEqual({ startsAt: '2026-10-24T23:00:00Z', endsAt: '2026-10-26T06:00:00Z' });
+    });
+
+    it('Lisbon: an open-ended Saturday evening runs until 06:00 winter time on Sunday', () => {
+      expect(
+        toUtcRange({ localDate: '2026-10-24', startTime: '22:00', endTime: null }, 'Europe/Lisbon'),
+      ).toEqual({ startsAt: '2026-10-24T21:00:00Z', endsAt: '2026-10-25T06:00:00Z' });
     });
 
     it('Lisbon: an evening occurrence after the change is UTC+0', () => {
@@ -131,10 +152,10 @@ describe('toUtcRange', () => {
       ).toEqual({ startsAt: '2026-10-25T18:00:00Z', endsAt: '2026-10-25T20:00:00Z' });
     });
 
-    it('Azores: the all-day range is 25 hours long', () => {
+    it('Azores: an all-day occurrence on the DST Sunday ends at 06:00 on Monday (UTC−1)', () => {
       expect(
         toUtcRange({ localDate: '2026-10-25', startTime: null, endTime: null }, 'Atlantic/Azores'),
-      ).toEqual({ startsAt: '2026-10-25T00:00:00Z', endsAt: '2026-10-26T01:00:00Z' });
+      ).toEqual({ startsAt: '2026-10-25T00:00:00Z', endsAt: '2026-10-26T07:00:00Z' });
     });
   });
 });

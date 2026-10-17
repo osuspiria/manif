@@ -27,8 +27,8 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
    - de segunda a sábado, é o sábado e o domingo seguintes (ou correntes);
    - ao domingo, é só o resto desse domingo (não salta para o fim de semana seguinte).
 4. **Intervalos semiabertos** `[starts_at, ends_at)`:
-   - "Todo o dia" vai das 00:00 locais às 00:00 locais do dia seguinte.
-   - Sem `end_time`, termina no fim do dia local.
+   - "Todo o dia" começa às 00:00 locais e, como as ocorrências sem `end_time`, termina às 06:00 locais do dia seguinte (#73).
+   - Nos filtros por dia conta só para o seu dia (não aparece em "Amanhã").
 5. **Ocorrência que passa a meia-noite:** se `end_time ≤ start_time`, termina no dia seguinte. Conta para os dois dias nos filtros por dia, exceto se terminar exatamente às 00:00. `end_time` igual a `start_time` é rejeitado pelo schema.
 6. **Horas inexistentes ou repetidas na mudança de hora:** usa-se a desambiguação `compatible` do Temporal.
    - Em março, uma hora no "buraco" (01:30 em Lisboa) avança uma hora.
@@ -251,3 +251,7 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Android: `geo:lat,lng?q=lat,lng(<título>)`, que abre o seletor de apps com o pin e o nome (sem parênteses no título, porque delimitam o nome).
     - Computador: o botão não aparece; "Como chegar" e "Ver no OpenStreetMap" já cobrem esse caso.
     - Lógica pura em `src/shared/maps-links.ts` (recebe o user agent), com testes unitários; o e2e confirma o link para iPhone, Android e computador. Só se sai do site quando a pessoa toca no botão: nenhum pedido novo a terceiros.
+73. **Ocorrências sem hora de fim terminam às 06:00 do dia seguinte** (antes: à meia-noite). Um evento às 22:00 sem hora de fim desaparecia do mapa à meia-noite, quando muitas vezes ainda estava a decorrer.
+    - Aplica-se também a "todo o dia". Hora em `OPEN_END_TIME` (`src/shared/dates.ts`), na hora local do evento, com o Temporal a tratar a mudança de hora.
+    - Depois da meia-noite o evento continua em "Próximos" e no mapa, mas não em "Hoje" (que já é o dia seguinte) nem em "Amanhã" do dia anterior: nos filtros por dia conta só o seu `local_date`.
+    - A migração `0004_open_end_0600.sql` recalcula o `ends_at` guardado (+6 h, ou +5 h / +7 h quando o dia seguinte é o domingo da mudança de hora) e salta linhas já no novo formato.

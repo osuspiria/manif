@@ -7,6 +7,8 @@
  * - UTC instants are ISO strings ending in 'Z' (e.g. '2026-11-25T14:00:00Z');
  *   they compare correctly as strings.
  * - Ranges are half-open: [startsAt, endsAt).
+ * - Without an end time (or all day), an occurrence stays live until
+ *   OPEN_END_TIME on the next local day, so late events don't vanish at midnight.
  * - Calendar filters ("Hoje", "Fim de semana"…) use the Europe/Lisbon calendar.
  */
 import { Temporal } from 'temporal-polyfill';
@@ -17,11 +19,14 @@ export type Tz = (typeof TIME_ZONES)[number];
 
 export const CALENDAR_TZ: Tz = 'Europe/Lisbon';
 
+/** Local time on the next day at which an occurrence without an end time ends. */
+export const OPEN_END_TIME = '06:00';
+
 export interface LocalOccurrence {
   localDate: string;
   /** null = all day */
   startTime: string | null;
-  /** null = until the end of the local day. Earlier than startTime = ends the next day. */
+  /** null = until OPEN_END_TIME on the next day. Earlier than startTime = ends the next day. */
   endTime: string | null;
 }
 
@@ -62,7 +67,7 @@ export function toUtcRange(o: LocalOccurrence, tz: Tz): UtcRange {
 
   let end: Temporal.ZonedDateTime;
   if (o.startTime === null || o.endTime === null) {
-    end = startOfLocalDay(nextDay, tz);
+    end = atLocalTime(nextDay, OPEN_END_TIME, tz);
   } else if (crossesMidnight(o)) {
     end = atLocalTime(nextDay, o.endTime, tz);
   } else {

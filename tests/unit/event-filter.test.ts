@@ -120,6 +120,15 @@ describe('filterEvents — "Hoje" / "Amanhã"', () => {
     expect(ids(run(night, { kind: 'tomorrow' }, WED))).toEqual(['night']);
   });
 
+  it('an event without end time stays upcoming until 06:00 but is not "today" after midnight', () => {
+    const late = [ev('late', (tz) => [occ('2026-11-11', '22:00', null, tz)])];
+    const night = '2026-11-12T02:00:00Z';
+    expect(ids(run(late, { kind: 'upcoming' }, night))).toEqual(['late']);
+    expect(ids(run(late, { kind: 'today' }, night))).toEqual([]);
+    expect(ids(run(late, { kind: 'tomorrow' }, '2026-11-11T10:00:00Z'))).toEqual([]);
+    expect(ids(run(late, { kind: 'upcoming' }, '2026-11-12T06:00:00Z'))).toEqual([]);
+  });
+
   it('uses the Lisbon civil day, not UTC (summer)', () => {
     // 23:30 UTC on 30 June = 00:30 on 1 July in Lisbon.
     const summer = [
@@ -158,8 +167,9 @@ describe('filterEvents — Azores near midnight', () => {
   });
 
   it('is dropped once it has ended, in UTC terms', () => {
-    // ends at local midnight = 01:00 UTC on the 15th
-    expect(ids(run(azores, { kind: 'upcoming' }, '2026-11-15T01:00:00Z'))).toEqual([]);
+    // no end time: ends at 06:00 local on the 15th = 07:00 UTC
+    expect(ids(run(azores, { kind: 'upcoming' }, '2026-11-15T06:59:00Z'))).toEqual(['acores-2330']);
+    expect(ids(run(azores, { kind: 'upcoming' }, '2026-11-15T07:00:00Z'))).toEqual([]);
   });
 });
 
