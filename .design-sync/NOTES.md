@@ -48,7 +48,8 @@ Project: "Mobilização PT" — https://claude.ai/design/p/3efc90c0-1a6a-493f-81
 
 - **Prop types in `cfg.dtsPropsFor` are hand copies** of `PublicEvent`, `RowState`, `DetailsState`, `WhenFilter`, the
   event-type and tz enums. If `src/shared/schemas.ts`, `form-state.ts`, `event-filter.ts` or `config/event-types.ts`
-  change, update them — nothing fails automatically.
+  change, update them — nothing fails automatically. The event-type enum is also spelled out in `conventions.md`
+  (PublicEvent line): adding/removing a type means editing 7 places in `dtsPropsFor` plus that line.
 - `RadioChipsProps` in `bridge/index.ts` narrows option labels to strings (React nodes can't cross into Preact).
 - Islands wrap whole Preact components; if a synced component starts fetching on mount or reading globals (like
   `EventSheet` uses `window.location.origin`), its preview may change — recheck the sheet.
