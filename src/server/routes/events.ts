@@ -19,11 +19,13 @@ import {
   type SubmissionDeps,
 } from '../services/event-submission';
 import { createEventsService } from '../services/events-service';
-import { edgeCached } from './edge-cache';
+import { BROWSER_NO_CACHE, edgeCached, purgeEdgeCache } from './edge-cache';
 import { readJson, zodIssues, type C } from './http';
 
 const ID_RE = /^[0-9A-HJKMNP-TV-Z]{26}$/; // ULID
 const HOUR = 3600;
+/** Edge-cached list, dropped after every write (see purgeEdgeCache). */
+export const EVENTS_GEOJSON = '/api/events.geojson';
 const DAY = 86400;
 
 function respond<T>(c: C, result: ServiceResult<T>, okStatus: 200 | 201 = 200) {
@@ -68,7 +70,7 @@ export function eventsRoutes(geo: GeoService, deps: AppDeps) {
         if (!ID_RE.test(id)) return c.json({ error: 'not_found' }, 404);
         const event = await read(c.env).getPublic(id);
         if (!event) return c.json({ error: 'not_found' }, 404);
-        c.header('Cache-Control', 'public, max-age=60');
+        c.header('Cache-Control', BROWSER_NO_CACHE);
         return c.json(event);
       })
 
@@ -90,7 +92,9 @@ export function eventsRoutes(geo: GeoService, deps: AppDeps) {
         void turnstileToken;
         void website;
         const origin = new URL(c.req.url).origin;
-        return respond(c, await createEvent(input, origin, submission(c.env)), 201);
+        const created = await createEvent(input, origin, submission(c.env));
+        if (created.ok) await purgeEdgeCache(c, [EVENTS_GEOJSON]);
+        return respond(c, created, 201);
       })
 
       // --- owner (secret link; X-Edit-Token) ------------------------------------
@@ -109,7 +113,9 @@ export function eventsRoutes(geo: GeoService, deps: AppDeps) {
           return c.json({ error: 'invalid', issues: zodIssues(parsed.error) }, 400);
         }
         c.header('Cache-Control', 'no-store');
-        return respond(c, await editEvent(id, token(c), parsed.data, submission(c.env)));
+        const edited = await editEvent(id, token(c), parsed.data, submission(c.env));
+        if (edited.ok) await purgeEdgeCache(c, [EVENTS_GEOJSON]);
+        return respond(c, edited);
       })
 
       // --- report (SPEC §4.3, §4.5) ---------------------------------------------
@@ -127,7 +133,10 @@ export function eventsRoutes(geo: GeoService, deps: AppDeps) {
         const first = await deps
           .rateLimiter(c.env)
           .hit(`report-once:${id}:${key}`, 1, DAY, deps.clock());
-        return respond(c, await reportEvent(id, parsed.data, first, submission(c.env)), 201);
+        const reported = await reportEvent(id, parsed.data, first, submission(c.env));
+        // A report may hide the event (SPEC §4.5).
+        if (reported.ok && first) await purgeEdgeCache(c, [EVENTS_GEOJSON]);
+        return respond(c, reported, 201);
       })
   );
 }

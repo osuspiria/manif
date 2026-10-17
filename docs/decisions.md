@@ -226,3 +226,8 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
 66. **Recursos de produção** (conta Cloudflare do utilizador): D1 `mobilizacao-pt` e bucket R2 `mobilizacao-tiles`, ambos na Europa Ocidental (`weur`); KV `RATE_LIMIT`. Mapa base: extrato do build Protomaps `20261017` (zoom 0–15, 1,06 GB), carregado com `rclone`.
 67. **Turnstile em modo Managed** (escolha do utilizador): normalmente invisível; mostra uma caixa a confirmar só quando a Cloudflare tem dúvidas. O cliente já usa `appearance: 'interaction-only'`, por isso o widget só aparece nesses casos.
 68. **Administração:** para já, um único endereço em `ADMIN_EMAILS` (secret).
+69. **Cache do mapa** (erro encontrado em produção: um evento criado e aprovado não aparecia logo).
+    - O GeoJSON ficava 60 s em cache no browser e na edge, e o mapa voltava a pedir a lista e recebia a cópia antiga.
+    - Agora a cache de 60 s é só na edge. O browser recebe `max-age=0, must-revalidate`; o mesmo vale para `/api/events/:id` e para os contadores e a lista das assinaturas.
+    - Criar, editar, reportar ou moderar um evento apaga a cópia da edge no centro de dados de quem fez a alteração, e o mapa pede a lista sem cache depois de criar. Quem muda vê na hora; os outros visitantes, no máximo 60 s depois.
+    - `wrangler dev` passa a usar `--local-upstream`: com a rota `pedroduarte.eu` no `wrangler.toml`, os pedidos locais passariam a ter o URL de produção (links de email locais errados e a caixa de correio de dev bloqueada).

@@ -83,9 +83,10 @@ export function MapApp() {
     setCommand((c) => ({ seq: (c?.seq ?? 0) + 1, action }));
 
   // --- data ------------------------------------------------------------------
-  const fetchEvents = useCallback(() => {
+  /** `fresh`: after our own change, skip any cached copy. */
+  const fetchEvents = useCallback((fresh = false) => {
     setLoad({ state: 'loading' });
-    fetch('/api/events.geojson')
+    fetch('/api/events.geojson', { cache: fresh ? 'reload' : 'default' })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       // Our own API, validated by its tests: no Zod in the client bundle.
       .then((fc: PublicEventCollection) => {
@@ -94,7 +95,7 @@ export function MapApp() {
       .catch(() => setLoad({ state: 'error' }));
   }, []);
 
-  useEffect(fetchEvents, [fetchEvents]);
+  useEffect(() => fetchEvents(), [fetchEvents]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(currentTime()), 60_000);
@@ -345,7 +346,7 @@ export function MapApp() {
                 issue({ kind: 'jump', lng: -8.1, lat: 39.6, zoom: 9 })
               }
               onClose={stopAdding}
-              onCreated={fetchEvents}
+              onCreated={() => fetchEvents(true)}
               onView={(id) => {
                 stopAdding();
                 setSelectedId(id);
@@ -363,7 +364,7 @@ export function MapApp() {
           {load.state === 'error' && (
             <p class="empty">
               {pt.map.loadError}{' '}
-              <button type="button" class="btn-link" onClick={fetchEvents}>
+              <button type="button" class="btn-link" onClick={() => fetchEvents()}>
                 {pt.map.retry}
               </button>
             </p>

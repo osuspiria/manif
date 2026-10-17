@@ -471,7 +471,7 @@ describe('stats and public list', () => {
 
   it('counts confirmed individuals (public or not) and confirmed/approved organisations', async () => {
     const res = await get('/api/signatures/stats');
-    expect(res.headers.get('Cache-Control')).toBe('public, max-age=30');
+    expect(res.headers.get('Cache-Control')).toBe('public, max-age=0, must-revalidate');
     expect(SignatureStatsSchema.parse(await res.json())).toEqual({
       supporters: 3,
       organizations: 2,

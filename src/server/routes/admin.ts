@@ -43,6 +43,8 @@ import {
 } from '../services/admin-moderation';
 import { moderatorEditEvent } from '../services/event-submission';
 import type { GeoService } from '../services/geo-service';
+import { purgeEdgeCache } from './edge-cache';
+import { EVENTS_GEOJSON } from './events';
 import { readJson, zodIssues } from './http';
 
 export const ADMIN_COOKIE = 'admin_session';
@@ -194,6 +196,7 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
           return c.json({ error: 'invalid', issues: zodIssues(parsed.error) }, 400);
         }
         const item = id ? await moderateEvent(id, parsed.data.action, moderation(c.env)) : null;
+        if (item) await purgeEdgeCache(c, [EVENTS_GEOJSON]);
         return item ? c.json(item) : c.json({ error: 'not_found' }, 404);
       })
       .patch('/events/:id', requireSession, async (c) => {
@@ -205,6 +208,7 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
           return c.json({ error: 'invalid', issues: zodIssues(parsed.error) }, 400);
         }
         const result = await moderatorEditEvent(id, parsed.data, submission(c.env));
+        if (result.ok) await purgeEdgeCache(c, [EVENTS_GEOJSON]);
         if (!result.ok) {
           return c.json({ error: result.error, issues: result.issues }, result.status);
         }

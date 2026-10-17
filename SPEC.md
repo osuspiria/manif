@@ -325,7 +325,7 @@ Necessário para as duas funcionalidades, mantido mínimo:
 
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/api/events.geojson` | Todos os eventos visíveis + ocorrências futuras. Cache 60 s |
+| GET | `/api/events.geojson` | Todos os eventos visíveis + ocorrências futuras. Cache 60 s na edge (nunca no browser), apagada após cada escrita |
 | GET | `/api/events/:id` | Ficha de um evento |
 | POST | `/api/events` | Criar evento (Turnstile) → `{id, editUrl, status}` |
 | GET | `/api/events/:id/edit` | Dados para edição, com o estado de moderação (header `X-Edit-Token`) |

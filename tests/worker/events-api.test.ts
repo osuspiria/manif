@@ -47,7 +47,7 @@ describe('GET /api/events.geojson', () => {
     const res = await get('/api/events.geojson');
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toContain('application/geo+json');
-    expect(res.headers.get('Cache-Control')).toBe('public, max-age=60');
+    expect(res.headers.get('Cache-Control')).toBe('public, max-age=0, must-revalidate');
     const fc = PublicEventCollectionSchema.parse(await res.json());
     expect(fc.features.map((f) => f.id).sort()).toEqual([IDS.a, IDS.f]);
   });
