@@ -130,3 +130,27 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Usa o Resend quando `RESEND_API_KEY` e `MAIL_FROM` estão definidos; caso contrário, os emails são descartados sem registo.
     - Uma falha no envio não impede a criação do evento: o link aparece sempre no ecrã.
 36. **Armadilha do runtime Workers:** guardar o `fetch` global numa propriedade e chamá-lo como método (`this.fetchFn(...)`) dá "Illegal invocation". Os adaptadores usam `(input, init) => fetch(input, init)`.
+
+## Fase 5 — Assinaturas
+
+37. **Concelho guardado pelo código DICO** (não pelo nome): há dois concelhos "Lagoa" (Faro e Açores). O formulário usa um `<select>` nativo, agrupado por distrito, com as regiões autónomas no fim; a pesquisa por escrita é a do próprio select. A lista pública mostra o nome, com o distrito só quando há ambiguidade ("Lagoa (Açores)").
+38. **Formulário sem JavaScript:** são dois `<form>` normais que fazem POST para `/api/signatures`; a troca Individual/Organização é feita só com CSS (rádios + `:has`).
+    - Sem JS, o servidor responde em HTML: sucesso → `303` para `/apoio/confirma-email/`; erros → página que os lista, sem repetir o que foi escrito.
+    - O Turnstile precisa de JS, por isso uma assinatura sem JS chega até ao fim da validação e recebe a mensagem "a verificação anti-spam precisa de JavaScript" (é a exceção prevista no SPEC §9).
+    - Com JS, o script envia o mesmo formulário com `fetch` e `Accept: application/json`, e mostra os erros junto aos campos.
+    - O script do Turnstile carrega quando a pessoa começa a preencher o formulário (`focusin`), não ao abrir a página.
+39. **Um só token por assinatura**, para confirmar e para retirar (`confirm_token_hash`; 32 bytes, só o hash).
+    - Confirmar: `GET /api/signatures/confirm?token=` (como no SPEC), idempotente, com redirecionamento para `/apoio/obrigado/` ou `/apoio/link-invalido/`. Válido 7 dias desde a assinatura.
+    - Retirar: `/apoio/retirar/#t=<token>` (no fragmento, como o link de edição); a página só envia o token quando a pessoa carrega no botão. Apaga o registo.
+40. **Email repetido** (SPEC §5.3, passo 4): a resposta é sempre a mesma e nada do que foi escrito substitui os dados existentes.
+    - Não confirmada: novo link (o anterior deixa de funcionar) e os 7 dias recomeçam.
+    - Confirmada: email com um novo link para retirar.
+    - Organização rejeitada: não acontece nada.
+    - Máximo de 3 emails por endereço por dia (contador no KV com HMAC do endereço), para o formulário não servir para inundar a caixa de alguém.
+41. **Contador:** "apoios" = assinaturas individuais confirmadas (públicas ou não); "organizações" = organizações confirmadas, aprovadas ou à espera de moderação (não as rejeitadas). A lista pública só mostra organizações aprovadas.
+42. **Organizações:** a caixa "Publicar o nome da organização" é obrigatória (SPEC §5.2: "sim, por omissão marcado"). Há também uma caixa de consentimento para os dados de contacto, versionada com as restantes.
+43. **Consentimento e idade:** a declaração "tenho 13 anos ou mais" vai no texto da caixa de consentimento individual, em vez de numa caixa à parte. A versão dos textos é `CONSENT_TEXT_VERSION` em `src/config/signatures.ts`.
+44. **Sem contactos em campos públicos:** nome, apelido, pseudónimo, atividade e nome da organização rejeitam texto com um email ou com 9 ou mais algarismos seguidos (`contact_in_public_field`).
+45. **Caixa de correio de dev:** com `DEV_MAILBOX=on` (só em `npm run dev` e nos e2e), os emails ficam no KV durante uma hora e podem ser lidos em `/api/dev/mailbox?to=…`. A rota responde 404 se a variável não estiver ativa ou se o pedido não vier de `localhost`/`127.0.0.1`.
+46. **E2E isolados do dev:** o Playwright usa a porta 8788 e estado local próprio (`.wrangler/e2e`, recriado a cada arranque), para nunca reaproveitar nem estragar o `npm run dev` (porta 8787).
+47. **Página `/apoio`:** o texto do apelo vem de `content/apelo.md` (por agora um texto de exemplo, assinalado como tal); `content/primeiros-subscritores.md` só aparece se existir. O link para a política de privacidade aponta para `/privacidade/`, que só existe na Fase 7.

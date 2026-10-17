@@ -25,6 +25,10 @@ export interface EventFixture {
 export const SENTINELS = {
   contactEmail: 'segredo.organizacao@exemplo.pt',
   editTokenHash: 'e'.repeat(64),
+  signatureEmail: 'segredo.assinante@exemplo.pt',
+  signaturePhone: '939 876 543',
+  contactName: 'Responsável Secreto Sentinela',
+  confirmTokenHash: 'c'.repeat(64),
 };
 
 let occSeq = 0;
@@ -97,3 +101,59 @@ export const IDS = {
   e: '01JC0000000000000000000EEE',
   f: '01JC0000000000000000000FFF',
 } as const;
+
+export interface SignatureFixture {
+  id: string;
+  kind?: 'individual' | 'organization';
+  status?: 'unconfirmed' | 'confirmed' | 'approved' | 'rejected';
+  isPublic?: boolean;
+  firstName?: string | null;
+  lastName?: string | null;
+  pseudonym?: string | null;
+  activity?: string | null;
+  orgName?: string | null;
+  municipality?: string;
+  email?: string;
+  createdAt?: string;
+  confirmedAt?: string | null;
+  tokenHash?: string;
+}
+
+/** Inserts a signature carrying a sentinel email, phone and contact name (never public). */
+export async function insertSignature(f: SignatureFixture): Promise<void> {
+  const org = f.kind === 'organization';
+  const status = f.status ?? 'confirmed';
+  const confirmedAt =
+    f.confirmedAt !== undefined
+      ? f.confirmedAt
+      : status === 'unconfirmed'
+        ? null
+        : '2026-11-02T00:00:00Z';
+  await env.DB.prepare(
+    `INSERT INTO signatures (id, kind, first_name, last_name, pseudonym, activity, org_name,
+       org_type, contact_name, website, email, municipality, phone, is_public, can_contact,
+       status, confirm_token_hash, consent_text_version, created_at, confirmed_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'test', ?, ?)`,
+  )
+    .bind(
+      f.id,
+      org ? 'organization' : 'individual',
+      org ? null : f.firstName === undefined ? 'Nome' : f.firstName,
+      org ? null : f.lastName === undefined ? `Fictício ${f.id.slice(-3)}` : f.lastName,
+      org ? null : (f.pseudonym ?? null),
+      org ? null : f.activity === undefined ? 'Profissão fictícia' : f.activity,
+      org ? (f.orgName ?? `Coletivo Fictício ${f.id.slice(-3)}`) : null,
+      org ? 'collective' : null,
+      org ? SENTINELS.contactName : null,
+      org ? 'https://exemplo.pt/' : null,
+      f.email ?? `${f.id.toLowerCase()}.${SENTINELS.signatureEmail}`,
+      f.municipality ?? '1312',
+      SENTINELS.signaturePhone,
+      f.isPublic === false ? 0 : 1,
+      status,
+      f.tokenHash ?? `${SENTINELS.confirmTokenHash.slice(0, 54)}${f.id.slice(-10).toLowerCase()}`,
+      f.createdAt ?? '2026-11-01T00:00:00Z',
+      confirmedAt,
+    )
+    .run();
+}

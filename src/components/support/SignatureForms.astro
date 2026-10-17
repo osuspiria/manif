@@ -1,0 +1,214 @@
+---
+/**
+ * The two signature forms (SPEC §5.2). Plain HTML forms that POST to
+ * /api/signatures, so they work without JavaScript (SPEC §9); the switch
+ * between them is CSS-only (radios + :has). src/scripts/signature-form.ts
+ * enhances them: Turnstile, inline errors, focus on the first error.
+ */
+import { ORG_TYPES, SIGNATURE_LIMITS } from '../../config/signatures';
+import { pt } from '../../i18n/pt';
+import CheckField from './CheckField.astro';
+import Field from './Field.astro';
+import MunicipalitySelect from './MunicipalitySelect.astro';
+
+const f = pt.support.fields;
+const L = SIGNATURE_LIMITS;
+---
+
+<div class="sign">
+  <fieldset class="sign-kind">
+    <legend>{pt.support.signAs}</legend>
+    <div class="chips chips-wrap">
+      <label class="chip chip-radio">
+        <input type="radio" name="sign-kind" id="kind-individual" value="individual" checked />
+        {pt.support.kindIndividual}
+      </label>
+      <label class="chip chip-radio">
+        <input type="radio" name="sign-kind" id="kind-organization" value="organization" />
+        {pt.support.kindOrganization}
+      </label>
+    </div>
+  </fieldset>
+
+  <form
+    class="sign-form form-individual"
+    method="post"
+    action="/api/signatures"
+    data-prefix="ind"
+    data-signature-form
+  >
+    <input type="hidden" name="kind" value="individual" />
+    <p class="hint" id="ind-name-rule">
+      {pt.support.nameRule}
+    </p>
+    <div class="name-pair">
+      <Field
+        prefix="ind"
+        name="firstName"
+        label={f.firstName}
+        autocomplete="given-name"
+        maxlength={L.nameMax}
+      />
+      <Field
+        prefix="ind"
+        name="lastName"
+        label={f.lastName}
+        autocomplete="family-name"
+        maxlength={L.nameMax}
+      />
+    </div>
+    <Field
+      prefix="ind"
+      name="pseudonym"
+      label={f.pseudonym}
+      autocomplete="nickname"
+      maxlength={L.nameMax}
+    />
+    <Field
+      prefix="ind"
+      name="email"
+      type="email"
+      label={f.email}
+      hint={f.emailHint}
+      autocomplete="email"
+      inputmode="email"
+      maxlength={254}
+      required
+    />
+    <MunicipalitySelect prefix="ind" label={f.municipality} />
+    <Field
+      prefix="ind"
+      name="phone"
+      type="tel"
+      label={f.phone}
+      hint={f.phoneHint}
+      autocomplete="tel"
+      maxlength={L.phoneMax}
+    />
+    <Field
+      prefix="ind"
+      name="activity"
+      label={f.activity}
+      hint={f.activityHint}
+      maxlength={L.activityMax}
+    />
+
+    <CheckField prefix="ind" name="isPublic" label={pt.support.isPublicIndividual} />
+    <CheckField prefix="ind" name="canContact" label={pt.support.canContact} />
+    <CheckField prefix="ind" name="consent" label={pt.support.consentIndividual} required />
+    <p class="hint">
+      <a href="/privacidade/">{pt.support.privacyLink}</a>
+    </p>
+
+    <div class="hp" aria-hidden="true">
+      <label for="ind-website">{f.honeypot}</label>
+      <input id="ind-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+    </div>
+    <div class="captcha" data-captcha></div>
+    <p class="form-error" role="alert" data-form-error></p>
+    <div class="sign-actions">
+      <button type="submit" class="btn-primary" data-label={pt.support.submit}>
+        {pt.support.submit}
+      </button>
+    </div>
+  </form>
+
+  <form
+    class="sign-form form-organization"
+    method="post"
+    action="/api/signatures"
+    data-prefix="org"
+    data-signature-form
+  >
+    <input type="hidden" name="kind" value="organization" />
+    <Field
+      prefix="org"
+      name="orgName"
+      label={f.orgName}
+      autocomplete="organization"
+      maxlength={L.orgNameMax}
+      required
+    />
+    <fieldset class="field radio-chips" id="org-orgType-group">
+      <legend>{f.orgType}</legend>
+      <div class="chips chips-wrap">
+        {ORG_TYPES.map((t) => (
+          <label class="chip chip-radio">
+            <input type="radio" name="orgType" value={t} required />
+            {pt.support.orgTypes[t]}
+          </label>
+        ))}
+      </div>
+      <p class="field-error" id="org-orgType-error" hidden></p>
+    </fieldset>
+    <MunicipalitySelect prefix="org" label={f.municipalityOrg} />
+    <Field
+      prefix="org"
+      name="site"
+      label={f.site}
+      autocomplete="url"
+      maxlength={L.websiteMax}
+      inputmode="text"
+    />
+    <Field
+      prefix="org"
+      name="contactName"
+      label={f.contactName}
+      hint={f.contactNameHint}
+      autocomplete="name"
+      maxlength={L.orgNameMax}
+      required
+    />
+    <Field
+      prefix="org"
+      name="email"
+      type="email"
+      label={f.orgEmail}
+      hint={f.orgEmailHint}
+      autocomplete="email"
+      inputmode="email"
+      maxlength={254}
+      required
+    />
+    <Field
+      prefix="org"
+      name="phone"
+      type="tel"
+      label={f.phone}
+      hint={f.orgPhoneHint}
+      autocomplete="tel"
+      maxlength={L.phoneMax}
+    />
+
+    <CheckField prefix="org" name="legitimacy" label={pt.support.legitimacy} required />
+    <CheckField
+      prefix="org"
+      name="isPublic"
+      label={pt.support.isPublicOrganization}
+      checked
+      required
+    />
+    <CheckField prefix="org" name="canContact" label={pt.support.canContactOrganization} />
+    <CheckField prefix="org" name="consent" label={pt.support.consentOrganization} required />
+    <p class="hint">
+      <a href="/privacidade/">{pt.support.privacyLink}</a>
+    </p>
+
+    <div class="hp" aria-hidden="true">
+      <label for="org-website">{f.honeypot}</label>
+      <input id="org-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+    </div>
+    <div class="captcha" data-captcha></div>
+    <p class="form-error" role="alert" data-form-error></p>
+    <div class="sign-actions">
+      <button type="submit" class="btn-primary" data-label={pt.support.submitOrganization}>
+        {pt.support.submitOrganization}
+      </button>
+    </div>
+  </form>
+
+  <p class="hint">{pt.support.captchaNote}</p>
+  <noscript>
+    <p class="hint">{pt.support.noscript}</p>
+  </noscript>
+</div>

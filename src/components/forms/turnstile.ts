@@ -70,3 +70,10 @@ export async function getTurnstileToken(container: HTMLElement): Promise<string>
     ts.execute(id);
   });
 }
+
+/** Starts loading the script early (e.g. when the person starts filling a form). */
+export function preloadTurnstile(): void {
+  load().catch(() => {
+    // Retried on submit.
+  });
+}

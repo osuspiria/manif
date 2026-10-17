@@ -20,6 +20,38 @@ const json = (body: unknown, headers: Record<string, string> = {}): RequestInit 
   body: JSON.stringify(body),
 });
 
+/** HTML form POST (the signature form without JavaScript). */
+const form = (fields: Record<string, string>): RequestInit => ({
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams(fields).toString(),
+});
+
+const NEW_SIGNATURE = {
+  kind: 'individual',
+  firstName: 'Ana',
+  lastName: 'Exemplo',
+  email: 'ana.assina@exemplo.pt',
+  municipality: '1312',
+  phone: '912 000 111',
+  isPublic: true,
+  canContact: true,
+  consent: true,
+  turnstileToken: 'token',
+};
+
+const NEW_ORG_SIGNATURE = {
+  kind: 'organization',
+  orgName: 'Associação Fictícia de Teste',
+  orgType: 'association',
+  contactName: 'Pessoa Responsável Fictícia',
+  email: 'geral@associacao-ficticia.pt',
+  municipality: '1106',
+  legitimacy: true,
+  isPublic: true,
+  consent: true,
+  turnstileToken: 'token',
+};
+
 const NEW_EVENT = {
   type: 'rally',
   title: 'Concentração de teste',
@@ -31,6 +63,55 @@ const NEW_EVENT = {
 };
 
 export const PUBLIC_ROUTES: PublicRoute[] = [
+  {
+    method: 'POST',
+    route: '/api/signatures',
+    samples: [
+      { url: '/api/signatures', init: json(NEW_SIGNATURE) },
+      { url: '/api/signatures', init: json(NEW_ORG_SIGNATURE) },
+      { url: '/api/signatures', init: json({ ...NEW_SIGNATURE, municipality: 'x' }) },
+      // Without JavaScript: HTML answers (validation errors; missing Turnstile token).
+      {
+        url: '/api/signatures',
+        init: form({ kind: 'individual', email: 'sem.js@exemplo.pt', phone: '912000111' }),
+      },
+      {
+        url: '/api/signatures',
+        init: form({
+          kind: 'individual',
+          pseudonym: 'Sem JS',
+          email: 'sem.js@exemplo.pt',
+          municipality: '1312',
+          consent: 'on',
+        }),
+      },
+    ],
+  },
+  {
+    method: 'GET',
+    route: '/api/signatures/confirm',
+    samples: [{ url: '/api/signatures/confirm?token=nope' }],
+  },
+  {
+    method: 'POST',
+    route: '/api/signatures/withdraw',
+    samples: [{ url: '/api/signatures/withdraw', init: json({ token: 'x'.repeat(43) }) }],
+  },
+  {
+    method: 'GET',
+    route: '/api/signatures/stats',
+    samples: [{ url: '/api/signatures/stats' }],
+  },
+  {
+    method: 'GET',
+    route: '/api/signatures/public',
+    samples: [
+      { url: '/api/signatures/public' },
+      { url: '/api/signatures/public?municipality=1312' },
+      { url: '/api/signatures/public?page=2' },
+      { url: '/api/signatures/public?municipality=nope' },
+    ],
+  },
   {
     method: 'GET',
     route: '/api/geo/reverse',

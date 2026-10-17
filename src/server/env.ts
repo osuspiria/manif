@@ -13,4 +13,6 @@ export interface Env {
   RATE_LIMIT_SECRET?: string;
   RESEND_API_KEY?: string;
   MAIL_FROM?: string;
+  /** 'on' (local dev and e2e only): emails go to a KV mailbox readable at /api/dev/mailbox from localhost. */
+  DEV_MAILBOX?: string;
 }

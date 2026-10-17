@@ -53,3 +53,25 @@ export class ResendMailer implements Mailer {
     if (!res.ok) throw new Error(`resend ${res.status}`);
   }
 }
+
+/**
+ * Local development and e2e only (DEV_MAILBOX=on): keeps the last messages per
+ * address in KV for an hour, readable at /api/dev/mailbox from localhost.
+ */
+export class KvDevMailbox implements Mailer {
+  constructor(private readonly kv: KVNamespace) {}
+
+  static key(to: string): string {
+    return `dev-mailbox:${to.toLowerCase()}`;
+  }
+
+  async send(m: MailMessage): Promise<void> {
+    const key = KvDevMailbox.key(m.to);
+    const previous: MailMessage[] = (await this.kv.get(key, 'json')) ?? [];
+    await this.kv.put(key, JSON.stringify([...previous, m].slice(-10)), { expirationTtl: 3600 });
+  }
+
+  async read(to: string): Promise<MailMessage[]> {
+    return (await this.kv.get(KvDevMailbox.key(to), 'json')) ?? [];
+  }
+}

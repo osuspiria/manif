@@ -1,0 +1,177 @@
+/* Support appeal pages (/apoio/…). Mobile-first; tokens from base.css (via forms.css). */
+
+.support {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 48px;
+}
+
+.support h1 {
+  margin: 16px 0 8px;
+  font-size: 1.625rem;
+  line-height: 1.25;
+}
+
+.support-section {
+  margin-top: 32px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.support-section h2 {
+  font-size: 1.25rem;
+}
+
+.stats {
+  margin: 8px 0 16px;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.stats-loading {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.appeal blockquote {
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border-left: 4px solid var(--key);
+  background: #fffbea;
+}
+
+/* Kind switch: CSS-only, so it works without JavaScript. */
+.sign-kind {
+  margin-bottom: 8px;
+}
+
+.sign:has(#kind-individual:checked) .form-organization,
+.sign:has(#kind-organization:checked) .form-individual {
+  display: none;
+}
+
+.sign-form .field select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid #8a9096;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.name-pair {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 12px;
+}
+
+@media (min-width: 480px) {
+  .name-pair {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.field-check-wrap {
+  margin: 8px 0;
+}
+
+.field-check-wrap .field-check {
+  align-items: flex-start;
+  margin: 0;
+}
+
+.field-check-wrap .field-check input {
+  flex: 0 0 auto;
+  margin-top: 11px;
+}
+
+.field-check-wrap .field-check label {
+  padding: 10px 0;
+}
+
+.field-check-wrap .field-error {
+  margin-left: 32px;
+}
+
+.sign-actions {
+  margin: 16px 0 8px;
+}
+
+.sign-actions .btn-primary {
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .sign-actions .btn-primary {
+    width: auto;
+  }
+}
+
+/* Public list */
+.sig-list select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid #8a9096;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.sig-list h3 {
+  margin: 24px 0 8px;
+  font-size: 1.0625rem;
+}
+
+.sig-orgs,
+.sig-people {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sig-orgs li,
+.sig-people li {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.sig-orgs a {
+  color: var(--accent);
+}
+
+.sig-meta {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+/* Message pages (check email, thanks, invalid link, withdraw) */
+.support-message p {
+  max-width: 60ch;
+}
+
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.share-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.share-status:empty {
+  display: none;
+}

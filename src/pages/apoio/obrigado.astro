@@ -1,0 +1,84 @@
+---
+import { pt } from '../../i18n/pt';
+import Base from '../../layouts/Base.astro';
+import '../../styles/forms.css';
+import '../../styles/support.css';
+
+const t = pt.support.thanks;
+// Plain links: nothing is requested from these sites unless the person clicks.
+const networks = [
+  { name: 'WhatsApp', href: 'https://wa.me/?text={text}%20{url}' },
+  { name: 'Telegram', href: 'https://t.me/share/url?url={url}&text={text}' },
+  { name: 'Facebook', href: 'https://www.facebook.com/sharer/sharer.php?u={url}' },
+  { name: 'X', href: 'https://x.com/intent/post?text={text}&url={url}' },
+  { name: t.email, href: 'mailto:?subject={text}&body={url}' },
+];
+---
+
+<Base title={t.title} secret>
+  <article class="support support-message">
+    <h1>{t.title}</h1>
+    <p>{t.text}</p>
+    <div class="share" data-share data-text={t.shareText} hidden>
+      <div class="share-actions">
+        <button type="button" class="btn-primary" data-native-share hidden>
+          {t.share}
+        </button>
+        <button type="button" class="btn" data-copy data-copied={t.copied}>
+          {t.copy}
+        </button>
+      </div>
+      <p class="share-status" role="status" data-copy-status></p>
+      <nav aria-label={t.shareVia}>
+        <ul class="share-links">
+          {networks.map((n) => (
+            <li>
+              <a class="btn" data-template={n.href} rel="noopener noreferrer" target="_blank">
+                {n.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+    <p class="hint">{t.orgNote}</p>
+    <p>
+      <a href="/apoio/">{t.back}</a>
+    </p>
+  </article>
+</Base>
+
+<script>
+  const box = document.querySelector<HTMLElement>('[data-share]');
+  if (box) {
+    const url = `${window.location.origin}/apoio/`;
+    const text = box.dataset.text ?? '';
+    for (const a of box.querySelectorAll<HTMLAnchorElement>('a[data-template]')) {
+      a.href = (a.dataset.template ?? '')
+        .replace('{url}', encodeURIComponent(url))
+        .replace('{text}', encodeURIComponent(text));
+    }
+    const native = box.querySelector<HTMLButtonElement>('[data-native-share]');
+    if (native && 'share' in navigator) {
+      native.hidden = false;
+      native.addEventListener('click', () => {
+        navigator.share({ text, url }).catch(() => {
+          // Cancelled by the person.
+        });
+      });
+    }
+    const copy = box.querySelector<HTMLButtonElement>('[data-copy]');
+    const status = box.querySelector<HTMLElement>('[data-copy-status]');
+    copy?.addEventListener('click', () => {
+      navigator.clipboard
+        .writeText(url)
+        .then(() => {
+          if (status) status.textContent = copy.dataset.copied ?? '';
+        })
+        .catch(() => {
+          if (status) status.textContent = url;
+        });
+    });
+    box.hidden = false;
+  }
+</script>

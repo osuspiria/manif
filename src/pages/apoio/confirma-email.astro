@@ -1,0 +1,21 @@
+---
+import { pt } from '../../i18n/pt';
+import Base from '../../layouts/Base.astro';
+import '../../styles/forms.css';
+import '../../styles/support.css';
+
+const t = pt.support.checkEmail;
+---
+
+<Base title={t.title}>
+  <article class="support support-message">
+    <h1>{t.title}</h1>
+    <p>{t.text}</p>
+    <p>{t.spam}</p>
+    <p>
+      <a class="btn" href="/apoio/">
+        {t.back}
+      </a>
+    </p>
+  </article>
+</Base>

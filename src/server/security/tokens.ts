@@ -49,3 +49,8 @@ export async function clientKey(ip: string, secret: string, day: string): Promis
   const salt = await hmac(secret, `ip-salt:${day}`);
   return (await hmac(salt, ip)).slice(0, 32);
 }
+
+/** Pseudonymous key for an email address (per-address throttles in KV); never the address itself. */
+export async function emailKey(email: string, secret: string): Promise<string> {
+  return (await hmac(secret, `email:${email}`)).slice(0, 32);
+}

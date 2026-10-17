@@ -144,3 +144,17 @@ export function formatDayChip(date: string): { weekday: string; day: string } {
   // ICU's pt-PT "short" weekday is the full name, so the abbreviations live in i18n.
   return { weekday: pt.weekdaysShort[d.dayOfWeek - 1] ?? '', day: String(d.day) };
 }
+
+/** An ISO instant + N civil days in Europe/Lisbon (DST-aware), as a UTC ISO instant. */
+export function addCivilDaysToIso(iso: string, days: number): string {
+  return instantToIso(
+    Temporal.Instant.from(iso).toZonedDateTimeISO(CALENDAR_TZ).add({ days }).toInstant(),
+  );
+}
+
+/** E.g. '24 de outubro de 2026, 18:05' (Lisbon time), for emails. */
+export function formatLisbonDateTime(iso: string): string {
+  const z = Temporal.Instant.from(iso).toZonedDateTimeISO(CALENDAR_TZ);
+  const hm = `${String(z.hour).padStart(2, '0')}:${String(z.minute).padStart(2, '0')}`;
+  return `${z.day} de ${pt.monthsLong[z.month - 1] ?? ''} de ${z.year}, ${hm}`;
+}

@@ -280,11 +280,14 @@ Não se pede nome nem morada de quem submete.
 
 ### 5.3 Fluxo
 
-1. Submeter → validação + Turnstile → grava `unconfirmed` → email com link de confirmação (válido 7 dias).
+1. Submeter → validação + Turnstile → grava `unconfirmed` → email com link de confirmação (válido 7 dias) e link para retirar.
 2. Clique no link → `confirmed` → ecrã de agradecimento com botões de partilha.
 3. Organizações → aparecem na fila do `/admin` para `approved`/`rejected`.
 4. Email repetido: não cria duplicado; reenvia o link de confirmação (sem revelar se o email já existia — mensagem neutra).
-5. Cada email de confirmação inclui link para **retirar a assinatura** (apaga o registo).
+5. Cada email de confirmação inclui link para **retirar a assinatura** (apaga o registo): `/apoio/retirar/#t=<token>`, com o token no fragmento. O mesmo token serve para confirmar e para retirar.
+6. Sem JavaScript, o formulário é um POST normal: o servidor redireciona para `/apoio/confirma-email/` ou devolve uma página HTML com os erros. O Turnstile precisa de JavaScript (ver `docs/decisions.md` #38).
+
+O concelho é guardado pelo código DICO da CAOP (há nomes repetidos, como "Lagoa"). O contador mostra assinaturas individuais confirmadas e organizações confirmadas (incluindo as que aguardam moderação).
 
 ---
 
@@ -327,11 +330,11 @@ Necessário para as duas funcionalidades, mantido mínimo:
 | POST | `/api/events/:id/report` | Reportar |
 | GET | `/api/geo/search?q=` | Proxy de pesquisa de locais (só PT, cache) |
 | GET | `/api/geo/reverse?lat&lng` | Concelho/distrito/tz via CAOP local |
-| POST | `/api/signatures` | Assinar (Turnstile) |
-| GET | `/api/signatures/confirm?token=` | Confirmar |
-| POST | `/api/signatures/withdraw` | Retirar (token) |
+| POST | `/api/signatures` | Assinar (Turnstile): JSON → `202 {status:"check_email"}`; formulário HTML → `303` ou página de erro |
+| GET | `/api/signatures/confirm?token=` | Confirmar → `303` para `/apoio/obrigado/` ou `/apoio/link-invalido/` |
+| POST | `/api/signatures/withdraw` | Retirar: corpo `{token}`; apaga o registo |
 | GET | `/api/signatures/stats` | Contadores (cache 30 s) |
-| GET | `/api/signatures/public?page&municipality` | Lista pública |
+| GET | `/api/signatures/public?page&municipality` | Lista pública (cache 30 s): organizações aprovadas (só na página 1) e indivíduos públicos, 50 por página; `municipality` = código DICO |
 | * | `/api/admin/*` | Moderação (sessão admin) |
 
 Validação partilhada entre cliente e servidor com **Zod** (`src/shared/schemas.ts`). Rate limits: criar evento 5/h/IP; assinar 10/h/IP; report 10/h/IP.

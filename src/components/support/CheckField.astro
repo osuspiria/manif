@@ -1,0 +1,22 @@
+---
+interface Props {
+  prefix: string;
+  name: string;
+  label: string;
+  checked?: boolean;
+  required?: boolean;
+}
+const { prefix, name, label, checked, required } = Astro.props;
+const id = `${prefix}-${name}`;
+---
+
+<div class="field-check-wrap">
+  <div class="field field-check">
+    <input id={id} name={name} type="checkbox" checked={checked} required={required} />
+    <label for={id}>
+      {label}
+      <slot />
+    </label>
+  </div>
+  <p class="field-error" id={`${id}-error`} hidden></p>
+</div>

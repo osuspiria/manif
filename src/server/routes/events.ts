@@ -1,10 +1,9 @@
-import { Hono, type Context } from 'hono';
+import { Hono } from 'hono';
 import { RATE_LIMITS } from '../../config/app';
 import {
   CreateEventRequestSchema,
   editRequestSchema,
   ReportRequestSchema,
-  type ApiIssue,
 } from '../../shared/schemas';
 import { moderationMode, requestClientKey, type AppDeps } from '../deps';
 import type { Env } from '../env';
@@ -21,27 +20,11 @@ import {
 } from '../services/event-submission';
 import { createEventsService } from '../services/events-service';
 import { edgeCached } from './edge-cache';
+import { readJson, zodIssues, type C } from './http';
 
 const ID_RE = /^[0-9A-HJKMNP-TV-Z]{26}$/; // ULID
 const HOUR = 3600;
 const DAY = 86400;
-
-type C = Context<{ Bindings: Env }>;
-
-function zodIssues(error: { issues: { path: PropertyKey[]; message: string }[] }): ApiIssue[] {
-  return error.issues.map((i) => ({
-    path: i.path.filter((p): p is string | number => typeof p !== 'symbol'),
-    code: i.message,
-  }));
-}
-
-async function readJson(c: C): Promise<unknown> {
-  try {
-    return await c.req.json();
-  } catch {
-    return null;
-  }
-}
 
 function respond<T>(c: C, result: ServiceResult<T>, okStatus: 200 | 201 = 200) {
   if (result.ok) return c.json(result.value, okStatus);

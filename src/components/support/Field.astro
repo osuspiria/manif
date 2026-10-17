@@ -1,0 +1,51 @@
+---
+/**
+ * Text field for the signature form, rendered as static HTML so the form works
+ * without JavaScript. The error paragraph is filled in by the enhancement
+ * script (src/scripts/signature-form.ts), which also links it with
+ * aria-describedby.
+ */
+interface Props {
+  prefix: string;
+  name: string;
+  label: string;
+  type?: 'text' | 'email' | 'tel';
+  hint?: string;
+  autocomplete?: string;
+  maxlength?: number;
+  required?: boolean;
+  inputmode?: 'email' | 'tel' | 'text';
+}
+const {
+  prefix,
+  name,
+  label,
+  type = 'text',
+  hint,
+  autocomplete,
+  maxlength,
+  required,
+  inputmode,
+} = Astro.props;
+const id = `${prefix}-${name}`;
+---
+
+<div class="field">
+  <label for={id}>{label}</label>
+  <input
+    id={id}
+    name={name}
+    type={type}
+    autocomplete={autocomplete ?? 'off'}
+    maxlength={maxlength}
+    required={required}
+    inputmode={inputmode}
+    aria-describedby={hint ? `${id}-hint` : undefined}
+  />
+  {hint && (
+    <p class="hint" id={`${id}-hint`}>
+      {hint}
+    </p>
+  )}
+  <p class="field-error" id={`${id}-error`} hidden></p>
+</div>

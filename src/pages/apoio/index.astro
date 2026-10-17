@@ -1,0 +1,57 @@
+---
+/** SPEC §5.1: appeal text, counter, signature forms, public list. */
+import type { MarkdownInstance } from 'astro';
+import { Content as Appeal, frontmatter } from '../../../content/apelo.md';
+import SignatureForms from '../../components/support/SignatureForms.astro';
+import { SignatureList } from '../../components/support/SignatureList';
+import { SignatureStats } from '../../components/support/SignatureStats';
+import { pt } from '../../i18n/pt';
+import Base from '../../layouts/Base.astro';
+import '../../styles/forms.css';
+import '../../styles/support.css';
+
+// Optional, managed by hand (SPEC §5.1): shown only if the file exists.
+const optional = import.meta.glob<MarkdownInstance<Record<string, unknown>>>(
+  '../../../content/primeiros-subscritores.md',
+  { eager: true },
+);
+const FirstSignatories = Object.values(optional)[0]?.Content;
+const title = (frontmatter as { title?: string }).title ?? pt.support.heading;
+---
+
+<Base title={title}>
+  <article class="support">
+    <h1>{title}</h1>
+    <SignatureStats client:load />
+    <noscript>
+      <p class="hint">{pt.support.statsNote}</p>
+    </noscript>
+    <div class="appeal">
+      <Appeal />
+    </div>
+
+    <section id="assinar" aria-labelledby="sign-heading" class="support-section">
+      <h2 id="sign-heading">{pt.support.signHeading}</h2>
+      <SignatureForms />
+    </section>
+
+    {FirstSignatories && (
+      <section class="support-section" aria-labelledby="first-heading">
+        <h2 id="first-heading">{pt.support.firstSignatories}</h2>
+        <FirstSignatories />
+      </section>
+    )}
+
+    <section class="support-section" aria-labelledby="list-heading">
+      <h2 id="list-heading">{pt.support.listHeading}</h2>
+      <SignatureList client:visible />
+      <noscript>
+        <p class="hint">{pt.support.listNoscript}</p>
+      </noscript>
+    </section>
+  </article>
+</Base>
+
+<script>
+  import '../../scripts/signature-form';
+</script>

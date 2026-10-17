@@ -3,7 +3,8 @@
  * "[Exemplo]"), relative to today: single and multi-date events, weekly
  * series, all-day and overnight occurrences, cancelled occurrences, a past +
  * future mix, Madeira and the Azores, a cluster in Lisbon, plus one pending
- * and one hidden event (which must not appear on the map).
+ * and one hidden event (which must not appear on the map). Also ~25 clearly
+ * fictional signatures ("de exemplo"), in every status.
  *
  * Usage: npm run db:seed   (writes .wrangler/seed.sql, then applies it to the
  * local D1 only; wipes events first)
@@ -502,6 +503,7 @@ const sql: string[] = [
   'DELETE FROM event_reports;',
   'DELETE FROM event_occurrences;',
   'DELETE FROM events;',
+  'DELETE FROM signatures;',
 ];
 
 for (const s of SEEDS) {
@@ -555,9 +557,62 @@ for (const s of SEEDS) {
   }
 }
 
+// --- signatures (fictional; emails on the reserved .invalid domain) ------------------
+const MUNICIPALITY_CODES = ['1312', '1106', '0303', '3103', '4201', '0806', '1105', '0603'];
+const ACTIVITIES = ['Professora', 'Enfermeiro', 'Estudante', null, 'Reformada', 'Carpinteiro'];
+const ORGS: { name: string; type: string; status: string }[] = [
+  { name: 'Associação de Moradores do Bairro de Exemplo', type: 'committee', status: 'approved' },
+  { name: 'Sindicato Fictício dos Trabalhadores de Teste', type: 'union', status: 'approved' },
+  { name: 'Coletivo Imaginário da Ribeira', type: 'collective', status: 'approved' },
+  { name: 'ONG de Exemplo (por aprovar)', type: 'ngo', status: 'confirmed' },
+];
+let sigs = 0;
+const signature = (cols: Record<string, string | number | null>) => {
+  sigs++;
+  const at = new Date(now.getTime() - sigs * 3_600_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  const row: Record<string, string | number | null> = {
+    id: ulid(),
+    email: `exemplo-${sigs}@exemplo.invalid`,
+    can_contact: sigs % 2,
+    confirm_token_hash: createHash('sha256').update(randomBytes(32)).digest('hex'),
+    consent_text_version: 'seed',
+    created_at: at,
+    confirmed_at: cols.status === 'unconfirmed' ? null : at,
+    ...cols,
+  };
+  const keys = Object.keys(row);
+  sql.push(
+    `INSERT INTO signatures (${keys.join(', ')}) VALUES (${keys.map((k) => q(row[k])).join(', ')});`,
+  );
+};
+for (let i = 1; i <= 22; i++) {
+  signature({
+    kind: 'individual',
+    first_name: i % 4 === 0 ? null : 'Pessoa',
+    last_name: i % 4 === 0 ? null : `de Exemplo ${i}`,
+    pseudonym: i % 4 === 0 ? `Pseudónimo de exemplo ${i}` : null,
+    activity: ACTIVITIES[i % ACTIVITIES.length] ?? null,
+    municipality: MUNICIPALITY_CODES[i % MUNICIPALITY_CODES.length] ?? '1312',
+    is_public: i % 5 === 0 ? 0 : 1,
+    status: i % 7 === 0 ? 'unconfirmed' : 'confirmed',
+  });
+}
+for (const [i, o] of ORGS.entries()) {
+  signature({
+    kind: 'organization',
+    org_name: o.name,
+    org_type: o.type,
+    contact_name: 'Pessoa Responsável de Exemplo',
+    website: i === 0 ? 'https://exemplo.invalid/' : null,
+    municipality: MUNICIPALITY_CODES[i] ?? '1312',
+    is_public: 1,
+    status: o.status,
+  });
+}
+
 const dir = join(ROOT, '.wrangler');
 mkdirSync(dir, { recursive: true });
 const file = join(dir, 'seed.sql');
 writeFileSync(file, sql.join('\n') + '\n');
 
-console.log(`Wrote ${SEEDS.length} events to ${file} (today = ${today}).`);
+console.log(`Wrote ${SEEDS.length} events and ${sigs} signatures to ${file} (today = ${today}).`);

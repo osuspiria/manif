@@ -21,9 +21,9 @@ A especificação completa está em `SPEC.md`. **Lê-a antes de qualquer tarefa 
 
 ```bash
 npm run setup        # cria .dev.vars a partir de .dev.vars.example (chaves de teste do Turnstile)
-npm run dev          # Astro + Worker + D1 local
+npm run dev          # Astro + Worker + D1 local; emails em http://127.0.0.1:8787/api/dev/mailbox?to=…
 npm run test         # Vitest
-npm run test:e2e     # Playwright
+npm run test:e2e     # Playwright (servidor próprio na porta 8788, estado em .wrangler/e2e)
 npm run lint         # ESLint + Prettier check
 npm run typecheck    # tsc --noEmit + astro check
 npm run db:migrate   # aplica migrations ao D1 local

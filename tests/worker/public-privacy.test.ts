@@ -10,7 +10,7 @@ import { FakeMailer } from '../../src/server/mailer';
 import { PUBLIC_ROUTES } from '../../src/server/public-routes';
 import { FakeCaptcha } from '../../src/server/security/captcha';
 import { MemoryRateLimiter } from '../../src/server/security/rate-limit';
-import { IDS, insertEvent, resetDb, SENTINELS } from './fixtures';
+import { IDS, insertEvent, insertSignature, resetDb, SENTINELS } from './fixtures';
 
 const fixedApp = createApp({
   clock: () => new Date('2026-11-11T10:00:00Z'),
@@ -76,7 +76,12 @@ describe('public API privacy', () => {
   it('every public route registered in Hono is listed in PUBLIC_ROUTES', () => {
     const registered = new Set(
       app.routes
-        .filter((r) => r.method !== 'ALL' && !r.path.startsWith('/api/admin'))
+        .filter(
+          (r) =>
+            r.method !== 'ALL' &&
+            !r.path.startsWith('/api/admin') &&
+            !r.path.startsWith('/api/dev'),
+        )
         .map((r) => `${r.method} ${r.path}`),
     );
     const listed = new Set(PUBLIC_ROUTES.map((r) => `${r.method} ${r.route}`));
@@ -109,6 +114,13 @@ describe('public API privacy', () => {
       status: 'pending',
       occurrences: [{ localDate: '2026-11-18', startTime: '18:00' }],
     });
+    // Signatures in every state, all carrying a sentinel email, phone and contact name.
+    await insertSignature({ id: IDS.a });
+    await insertSignature({ id: IDS.b, pseudonym: 'Pseudónimo Público' });
+    await insertSignature({ id: IDS.c, isPublic: false });
+    await insertSignature({ id: IDS.d, status: 'unconfirmed' });
+    await insertSignature({ id: IDS.e, kind: 'organization', status: 'approved' });
+    await insertSignature({ id: IDS.f, kind: 'organization', status: 'confirmed' });
   });
 
   it.each(samples)('$name leaks no personal data and sets no cookie', async (s) => {
@@ -127,5 +139,25 @@ describe('public API privacy', () => {
     } else {
       expect(EMAIL_RE.test(body), 'email-like text in non-JSON body').toBe(false);
     }
+  });
+});
+
+describe('dev mailbox', () => {
+  const url = (host: string) => `http://${host}/api/dev/mailbox?to=ana@exemplo.pt`;
+
+  it('is not reachable unless DEV_MAILBOX=on', async () => {
+    const res = await app.request(url('localhost'), {}, { ...env, DEV_MAILBOX: undefined });
+    expect(res.status).toBe(404);
+  });
+
+  it('is not reachable through a public host name, even with DEV_MAILBOX=on', async () => {
+    const res = await app.request(url('exemplo.pt'), {}, { ...env, DEV_MAILBOX: 'on' });
+    expect(res.status).toBe(404);
+  });
+
+  it('answers on localhost with DEV_MAILBOX=on', async () => {
+    const res = await app.request(url('localhost'), {}, { ...env, DEV_MAILBOX: 'on' });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ messages: [] });
   });
 });

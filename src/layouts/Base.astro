@@ -3,8 +3,10 @@ import { pt } from '../i18n/pt';
 
 interface Props {
   title?: string;
+  /** Pages reached from secret links: not indexed, no Referer. */
+  secret?: boolean;
 }
-const { title } = Astro.props;
+const { title, secret = false } = Astro.props;
 const fullTitle = title ? `${title} · ${pt.site.title}` : pt.site.title;
 ---
 
@@ -14,7 +16,8 @@ const fullTitle = title ? `${title} · ${pt.site.title}` : pt.site.title;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={pt.site.tagline} />
-    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="referrer" content={secret ? 'no-referrer' : 'strict-origin-when-cross-origin'} />
+    {secret && <meta name="robots" content="noindex, nofollow" />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{fullTitle}</title>
   </head>
@@ -23,6 +26,7 @@ const fullTitle = title ? `${title} · ${pt.site.title}` : pt.site.title;
       <nav aria-label={pt.site.title}>
         <a href="/">{pt.site.title}</a>
         <a href="/mapa">{pt.nav.map}</a>
+        <a href="/apoio/">{pt.nav.support}</a>
       </nav>
     </header>
     <main>

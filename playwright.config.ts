@@ -6,11 +6,12 @@ const launchOptions = { args: ['--use-angle=swiftshader', '--enable-unsafe-swift
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60_000,
-  use: { baseURL: 'http://127.0.0.1:8787', launchOptions },
+  use: { baseURL: 'http://127.0.0.1:8788', launchOptions },
   webServer: {
-    // Builds, migrates and seeds the LOCAL D1, loads dev tiles into local R2.
+    // Its own port and local state (.wrangler/e2e), rebuilt on every start: builds,
+    // migrates and seeds D1, loads the dev tiles into R2. Never touches `npm run dev`.
     command: 'npm run e2e:server',
-    url: 'http://127.0.0.1:8787',
+    url: 'http://127.0.0.1:8788',
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

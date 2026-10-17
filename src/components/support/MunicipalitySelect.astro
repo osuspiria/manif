@@ -1,0 +1,28 @@
+---
+/** Native select with the 308 municipalities grouped by district (type-ahead works natively). */
+import { pt } from '../../i18n/pt';
+import { municipalitiesByDistrict } from '../../shared/municipalities';
+
+interface Props {
+  prefix: string;
+  label: string;
+}
+const { prefix, label } = Astro.props;
+const id = `${prefix}-municipality`;
+const groups = municipalitiesByDistrict();
+---
+
+<div class="field">
+  <label for={id}>{label}</label>
+  <select id={id} name="municipality" required autocomplete="off">
+    <option value="">{pt.support.fields.municipalityPlaceholder}</option>
+    {groups.map((g) => (
+      <optgroup label={g.district}>
+        {g.items.map((m) => (
+          <option value={m.code}>{m.name}</option>
+        ))}
+      </optgroup>
+    ))}
+  </select>
+  <p class="field-error" id={`${id}-error`} hidden></p>
+</div>

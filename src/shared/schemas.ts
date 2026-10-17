@@ -6,7 +6,9 @@ import { z } from 'zod';
 import { LIMITS } from '../config/app';
 import { EVENT_TYPE_KEYS } from '../config/event-types';
 import { REPORT_REASONS } from '../config/reports';
+import { ORG_TYPES, SIGNATURE_LIMITS } from '../config/signatures';
 import { TIME_ZONES } from './dates';
+import { isMunicipalityCode } from './municipalities';
 
 export const TzSchema = z.enum(TIME_ZONES);
 
@@ -156,6 +158,166 @@ export const PlaceResultSchema = z.object({
   lng: z.number(),
 });
 export type PlaceResult = z.infer<typeof PlaceResultSchema>;
+
+// --- Signatures (SPEC §5) -------------------------------------------------------
+
+/** Contact details typed into a field that gets published (name, activity…). */
+const CONTACT_IN_TEXT = [/[^\s@]+@[^\s@]+\.[a-z]{2,}/i, /(?:\+?\d[\s().-]?){9,}/];
+const hasContact = (v: string | null) => v !== null && CONTACT_IN_TEXT.some((re) => re.test(v));
+
+/** Optional text that may be published: must not contain an email or a phone number. */
+const PublicText = (max: number) =>
+  OptionalText(max).refine((v) => !hasContact(v), 'contact_in_public_field');
+
+const RequiredText = (max: number) =>
+  z.string('required').trim().min(1, 'required').max(max, 'too_long');
+
+const RequiredEmail = z
+  .string('required')
+  .trim()
+  .toLowerCase()
+  .min(1, 'required')
+  .max(254, 'too_long')
+  .pipe(z.email('invalid_email'));
+
+const Phone = OptionalText(SIGNATURE_LIMITS.phoneMax).refine(
+  (v) => v === null || (/^\+?[\d\s().-]+$/.test(v) && v.replace(/\D/g, '').length >= 9),
+  'invalid_phone',
+);
+
+const Municipality = z.string('required').refine(isMunicipalityCode, 'required');
+
+/** Checkbox: JSON booleans, or HTML form values ("on"); absent = false. */
+const Flag = z
+  .union([z.boolean(), z.string()])
+  .optional()
+  .transform((v) => v === true || v === 'on' || v === 'true' || v === '1');
+const RequiredFlag = Flag.refine((v) => v, 'required');
+
+/** "Site ou rede social": scheme optional on input, stored as an http(s) URL. */
+const Website = OptionalText(SIGNATURE_LIMITS.websiteMax).transform((v, ctx) => {
+  if (!v) return null;
+  try {
+    const url = new URL(/^https?:\/\//i.test(v) ? v : `https://${v}`);
+    if (!/^https?:$/.test(url.protocol) || !url.hostname.includes('.')) throw new Error();
+    return url.toString();
+  } catch {
+    ctx.addIssue({ code: 'custom', message: 'invalid_url' });
+    return z.NEVER;
+  }
+});
+
+const SignatureCommon = {
+  email: RequiredEmail,
+  municipality: Municipality,
+  phone: Phone,
+  canContact: Flag,
+  consent: RequiredFlag,
+  /** Missing without JavaScript; the route answers captcha_failed after validation. */
+  turnstileToken: z.string().max(4096).optional(),
+  /** Honeypot: must stay empty. */
+  website: z.string().max(500).optional(),
+};
+
+export const IndividualSignatureSchema = z
+  .object({
+    kind: z.literal('individual', 'required'),
+    firstName: PublicText(SIGNATURE_LIMITS.nameMax),
+    lastName: PublicText(SIGNATURE_LIMITS.nameMax),
+    pseudonym: PublicText(SIGNATURE_LIMITS.nameMax),
+    activity: PublicText(SIGNATURE_LIMITS.activityMax),
+    isPublic: Flag,
+    ...SignatureCommon,
+  })
+  .superRefine((s, ctx) => {
+    // SPEC §5.2: first name + last name, or a pseudonym.
+    if (s.pseudonym) return;
+    if (!s.firstName)
+      ctx.addIssue({ code: 'custom', path: ['firstName'], message: 'name_or_pseudonym' });
+    if (!s.lastName)
+      ctx.addIssue({ code: 'custom', path: ['lastName'], message: 'name_or_pseudonym' });
+  });
+
+export const OrganizationSignatureSchema = z.object({
+  kind: z.literal('organization', 'required'),
+  orgName: RequiredText(SIGNATURE_LIMITS.orgNameMax).refine(
+    (v) => !hasContact(v),
+    'contact_in_public_field',
+  ),
+  orgType: z.enum(ORG_TYPES, 'required'),
+  site: Website,
+  contactName: RequiredText(SIGNATURE_LIMITS.orgNameMax),
+  legitimacy: RequiredFlag,
+  /** SPEC §5.2: required for organisations (publishing the name is the point). */
+  isPublic: RequiredFlag,
+  ...SignatureCommon,
+});
+
+/** Picks the schema by `kind` explicitly: a Zod union would hide the per-field errors. */
+export function signatureRequestSchema(body: unknown) {
+  return body && typeof body === 'object' && 'kind' in body && body.kind === 'organization'
+    ? OrganizationSignatureSchema
+    : IndividualSignatureSchema;
+}
+export type IndividualSignature = z.output<typeof IndividualSignatureSchema>;
+export type OrganizationSignature = z.output<typeof OrganizationSignatureSchema>;
+export type SignatureInput = IndividualSignature | OrganizationSignature;
+
+/** HTML form fields → request body (the Turnstile widget names its field cf-turnstile-response). */
+export function signatureFormToBody(form: Record<string, unknown>): Record<string, unknown> {
+  const body: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(form)) if (typeof v === 'string') body[k] = v;
+  const token = body['cf-turnstile-response'];
+  delete body['cf-turnstile-response'];
+  if (typeof token === 'string' && token && !body.turnstileToken) body.turnstileToken = token;
+  return body;
+}
+
+export const SignResponseSchema = z.object({ status: z.literal('check_email') });
+
+export const WithdrawRequestSchema = z.object({ token: z.string().min(20).max(100) });
+
+export const PublicSignaturesQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(10_000).catch(1),
+  municipality: z
+    .string()
+    .optional()
+    .transform((v) => v || null)
+    .refine((v) => v === null || isMunicipalityCode(v), 'invalid_municipality'),
+});
+
+export const SignatureStatsSchema = z.object({
+  /** Confirmed individual signatures. */
+  supporters: z.number().int(),
+  /** Confirmed organisations (approved or awaiting moderation). */
+  organizations: z.number().int(),
+});
+export type SignatureStats = z.infer<typeof SignatureStatsSchema>;
+
+// Whitelists of what the public list shows. Never add email, phone or contact name.
+export const PublicIndividualSchema = z.object({
+  name: z.string(),
+  activity: z.string().nullable(),
+  municipality: z.string(),
+});
+export const PublicOrganizationSchema = z.object({
+  name: z.string(),
+  type: z.enum(ORG_TYPES),
+  municipality: z.string(),
+  website: z.string().nullable(),
+});
+export const PublicSignaturesSchema = z.object({
+  /** Approved organisations (all of them, first page only). */
+  organizations: z.array(PublicOrganizationSchema),
+  individuals: z.array(PublicIndividualSchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  /** Public individuals matching the filter. */
+  total: z.number().int(),
+});
+export type PublicSignatures = z.infer<typeof PublicSignaturesSchema>;
+export type PublicIndividual = z.infer<typeof PublicIndividualSchema>;
+export type PublicOrganization = z.infer<typeof PublicOrganizationSchema>;
 
 // --- Public event (API output) ------------------------------------------------
 // Whitelist of fields that may leave the public API. Never add contact_email,

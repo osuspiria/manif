@@ -207,6 +207,137 @@ export const pt = {
       'Mudar o texto ou as datas volta a pôr o evento como "Não confirmado" até a moderação o rever. Cancelar datas não.',
     viewOnMap: 'Ver no mapa',
   },
+  support: {
+    heading: 'Apelo',
+    statsLoading: 'A contar apoios…',
+    supportersOne: '1 apoio',
+    supporters: (n: string) => `${n} apoios`,
+    orgsOne: '1 organização',
+    orgs: (n: string) => `${n} organizações`,
+    statsNote: 'Só contam as assinaturas confirmadas por email.',
+    signHeading: 'Assinar o apelo',
+    signAs: 'Assino',
+    kindIndividual: 'Em meu nome',
+    kindOrganization: 'Por uma organização',
+    nameRule: 'Nome próprio e apelido, ou só um pseudónimo.',
+    fields: {
+      firstName: 'Nome próprio',
+      lastName: 'Apelido',
+      pseudonym: 'Pseudónimo',
+      email: 'Email',
+      emailHint: 'Para confirmares a assinatura. Nunca é publicado.',
+      municipality: 'Concelho',
+      municipalityOrg: 'Concelho (sede)',
+      municipalityPlaceholder: 'Escolhe o concelho',
+      phone: 'Telefone (opcional)',
+      phoneHint: 'Nunca é publicado.',
+      activity: 'Atividade / profissão / organização (opcional)',
+      activityHint: 'Por exemplo: professora, Braga. Aparece na lista se a assinatura for pública.',
+      orgName: 'Nome da organização',
+      orgType: 'Tipo de organização',
+      site: 'Site ou rede social (opcional)',
+      contactName: 'Nome da pessoa responsável',
+      contactNameHint: 'Não é publicado.',
+      orgEmail: 'Email de contacto',
+      orgEmailHint: 'Para confirmar a assinatura. Não é publicado.',
+      orgPhoneHint: 'Não é publicado.',
+      honeypot: 'Não preenchas este campo',
+      // Short names used in the no-JavaScript error page.
+      consent: 'Consentimento',
+      legitimacy: 'Legitimidade para assinar',
+      isPublic: 'Publicação do nome',
+      kind: 'Tipo de assinatura',
+    },
+    isPublicIndividual:
+      'Aceito que o meu nome ou pseudónimo, concelho e atividade sejam publicados.',
+    isPublicOrganization: 'Publicar o nome da organização.',
+    canContact: 'Aceito ser recontactado/a pela organização desta campanha.',
+    canContactOrganization: 'Aceitamos ser recontactados pela organização desta campanha.',
+    legitimacy: 'Declaro ter legitimidade para assinar em nome desta organização.',
+    // Consent texts: changing them requires bumping CONSENT_TEXT_VERSION (src/config/signatures.ts).
+    consentIndividual:
+      'Dou o meu consentimento explícito para o tratamento destes dados, que revelam o meu apoio a este apelo, nos termos da política de privacidade. Declaro ter 13 anos ou mais.',
+    consentOrganization:
+      'Dou o meu consentimento explícito para o tratamento dos dados de contacto indicados, nos termos da política de privacidade.',
+    privacyLink: 'Ler a política de privacidade',
+    submit: 'Assinar',
+    submitOrganization: 'Assinar pela organização',
+    submitting: 'A enviar…',
+    captchaNote:
+      'Ao enviar, é feita uma verificação anti-spam da Cloudflare (Turnstile), sem cookies.',
+    noscript:
+      'Podes preencher o formulário sem JavaScript, mas a verificação anti-spam (Cloudflare Turnstile) precisa dele para a assinatura ser aceite.',
+    listHeading: 'Quem já assinou',
+    orgsHeading: 'Organizações signatárias',
+    peopleHeading: 'Pessoas',
+    filterMunicipality: 'Filtrar por concelho',
+    allMunicipalities: 'Todos os concelhos',
+    noOrgs: 'Ainda não há organizações na lista.',
+    noPeople: 'Ainda não há assinaturas públicas para este filtro.',
+    loadMore: 'Mostrar mais',
+    listLoading: 'A carregar…',
+    listError: 'Não foi possível carregar a lista.',
+    listNoscript: 'A lista de assinaturas precisa de JavaScript.',
+    showing: (shown: number, total: number) => `A mostrar ${shown} de ${total}`,
+    firstSignatories: 'Primeiros subscritores',
+    orgTypes: {
+      association: 'Associação',
+      union: 'Sindicato',
+      collective: 'Coletivo',
+      committee: 'Comissão de moradores / trabalhadores',
+      ngo: 'ONG',
+      other: 'Outro',
+    },
+    checkEmail: {
+      title: 'Verifica o teu email',
+      text: 'Enviámos um email com um link para confirmar a assinatura. O link é válido durante 7 dias.',
+      spam: 'Se não o encontrares, procura na pasta de spam. A assinatura só conta depois de confirmada.',
+      back: 'Voltar ao apelo',
+    },
+    thanks: {
+      title: 'Obrigado! A assinatura está confirmada',
+      text: 'Ajuda a espalhar o apelo: partilha-o com quem conheces.',
+      orgNote:
+        'Se assinaste por uma organização, ela aparece na lista pública depois de validada pela moderação.',
+      share: 'Partilhar',
+      shareText: 'Assinei este apelo. Junta-te:',
+      copy: 'Copiar link',
+      copied: 'Link copiado',
+      email: 'Email',
+      shareVia: 'Partilhar por',
+      back: 'Voltar ao apelo',
+    },
+    invalidLink: {
+      title: 'Este link não é válido',
+      text: 'O link de confirmação expirou (é válido durante 7 dias) ou já não existe. Podes assinar de novo.',
+      back: 'Assinar o apelo',
+    },
+    withdraw: {
+      title: 'Retirar a assinatura',
+      text: 'A assinatura e os dados associados são apagados. Esta ação não pode ser desfeita.',
+      button: 'Retirar a minha assinatura',
+      working: 'A retirar…',
+      done: 'A assinatura foi retirada e os dados foram apagados.',
+      invalid: 'Este link não é válido ou a assinatura já foi retirada.',
+      error: 'Não foi possível retirar a assinatura. Tenta mais tarde.',
+      noscript:
+        'Para retirar a assinatura por este link é preciso JavaScript. Em alternativa, pede o apagamento por email (ver a política de privacidade).',
+    },
+    errors: {
+      fix: 'Corrige os campos assinalados.',
+      rate_limited:
+        'Foram enviadas várias assinaturas a partir desta ligação na última hora. Tenta mais tarde.',
+      captcha_failed: 'Não foi possível confirmar que és uma pessoa. Tenta de novo.',
+      captcha_missing:
+        'A verificação anti-spam não foi feita. Precisa de JavaScript: ativa-o e tenta de novo.',
+      rejected: 'Não foi possível enviar a assinatura.',
+      network: 'Sem ligação. Verifica a rede e tenta de novo.',
+      generic: 'Algo correu mal. Tenta de novo.',
+      pageTitle: 'Não foi possível enviar a assinatura',
+      backHint: 'Usa o botão Voltar do navegador para corrigires sem perderes o que escreveste.',
+      back: 'Voltar ao formulário',
+    },
+  },
   eventTypes: {
     demonstration: 'Manifestação / desfile',
     rally: 'Concentração / vigília',
@@ -272,9 +403,47 @@ export const pt = {
       outside_portugal: 'O local tem de ser em Portugal.',
       unknown_occurrence: 'Data desconhecida.',
       captcha_required: 'Confirmação em falta.',
+      name_or_pseudonym: 'Indica o nome próprio e o apelido, ou um pseudónimo.',
+      contact_in_public_field: 'Este campo é público: não incluas emails nem telefones.',
+      invalid_phone: 'Telefone inválido.',
+      invalid_url: 'Endereço inválido.',
     } as Record<string, string>,
   },
   email: {
+    confirmSubject: 'Confirma a tua assinatura do apelo',
+    confirmText: (p: {
+      organization: string | null;
+      confirmUrl: string;
+      withdrawUrl: string;
+      until: string;
+    }) =>
+      [
+        p.organization
+          ? `Recebemos a assinatura do apelo em nome de "${p.organization}".`
+          : 'Recebemos a tua assinatura do apelo.',
+        '',
+        `Para a confirmar, abre este link (válido até ${p.until}):`,
+        p.confirmUrl,
+        '',
+        'A assinatura só conta depois de confirmada.',
+        '',
+        'Se mudares de ideias, podes retirá-la a qualquer momento (os dados são apagados):',
+        p.withdrawUrl,
+        '',
+        'Se não foste tu, ignora esta mensagem: sem confirmação, os dados são apagados ao fim de 7 dias.',
+      ].join('\n'),
+    alreadySubject: 'A tua assinatura do apelo',
+    alreadyText: (p: { organization: string | null; withdrawUrl: string }) =>
+      [
+        p.organization
+          ? `Já existe uma assinatura confirmada do apelo em nome de "${p.organization}" com este email.`
+          : 'A tua assinatura do apelo já está confirmada. Obrigado!',
+        '',
+        'Se quiseres retirá-la (os dados são apagados), usa este link:',
+        p.withdrawUrl,
+        '',
+        'Se não foste tu que pediste este email, podes ignorá-lo.',
+      ].join('\n'),
     editLinkSubject: (title: string) => `O teu link de edição: ${title}`,
     editLinkText: (title: string, url: string) =>
       [

@@ -1,0 +1,81 @@
+---
+/**
+ * Withdraw a signature (SPEC §5.3 step 5): the link from the email is
+ * /apoio/retirar/#t=<token>. The token stays in the fragment (never sent with
+ * the page request) and is posted to the API only when the person confirms.
+ */
+import { pt } from '../../i18n/pt';
+import Base from '../../layouts/Base.astro';
+import '../../styles/forms.css';
+import '../../styles/support.css';
+
+const t = pt.support.withdraw;
+---
+
+<Base title={t.title} secret>
+  <article class="support support-message">
+    <h1>{t.title}</h1>
+    <div data-withdraw hidden>
+      <p>{t.text}</p>
+      <button type="button" class="btn btn-danger" data-label={t.button} data-working={t.working}>
+        {t.button}
+      </button>
+    </div>
+    <p
+      role="status"
+      data-withdraw-status
+      data-done={t.done}
+      data-invalid={t.invalid}
+      data-error={t.error}
+    ></p>
+    <noscript>
+      <p>{t.noscript}</p>
+    </noscript>
+    <p>
+      <a href="/apoio/">{pt.support.thanks.back}</a>
+    </p>
+  </article>
+</Base>
+
+<script>
+  const box = document.querySelector<HTMLElement>('[data-withdraw]');
+  const status = document.querySelector<HTMLElement>('[data-withdraw-status]');
+  const token = new URLSearchParams(window.location.hash.slice(1)).get('t') ?? '';
+  // Keep the token out of the address bar (and of anything copied from it).
+  if (window.location.hash) history.replaceState(null, '', window.location.pathname);
+
+  if (box && status) {
+    const say = (key: 'done' | 'invalid' | 'error') => {
+      status.textContent = status.dataset[key] ?? '';
+    };
+    if (!token) say('invalid');
+    else {
+      box.hidden = false;
+      const button = box.querySelector<HTMLButtonElement>('button');
+      button?.addEventListener('click', () => {
+        button.disabled = true;
+        button.textContent = button.dataset.working ?? '';
+        fetch('/api/signatures/withdraw', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        })
+          .then((res) => {
+            if (res.ok || res.status === 404) {
+              box.hidden = true;
+              say(res.ok ? 'done' : 'invalid');
+              return;
+            }
+            button.disabled = false;
+            button.textContent = button.dataset.label ?? '';
+            say('error');
+          })
+          .catch(() => {
+            button.disabled = false;
+            button.textContent = button.dataset.label ?? '';
+            say('error');
+          });
+      });
+    }
+  }
+</script>
