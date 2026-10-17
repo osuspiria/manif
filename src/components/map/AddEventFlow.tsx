@@ -4,7 +4,7 @@
  * the first load of /mapa.
  */
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { LIMITS } from '../../config/app';
+import { FEATURES, LIMITS } from '../../config/app';
 import { pt } from '../../i18n/pt';
 import { addMonths, lisbonToday, todayIn } from '../../shared/dates';
 import { checkOccurrences } from '../../shared/occurrence-rules';
@@ -33,8 +33,13 @@ import { PlaceSearchBox } from '../forms/PlaceSearchBox';
 import { getTurnstileToken } from '../forms/turnstile';
 import '../../styles/forms.css';
 
-const STEPS = ['where', 'what', 'when', 'contact'] as const;
-type Step = (typeof STEPS)[number];
+const ALL_STEPS = ['where', 'what', 'when', 'contact'] as const;
+type Step = (typeof ALL_STEPS)[number];
+/** "Contacto" only holds the optional email: no step at all while that is switched off. */
+const STEPS: readonly Step[] = FEATURES.eventContactEmail
+  ? ALL_STEPS
+  : ALL_STEPS.filter((s) => s !== 'contact');
+const LAST_STEP: Step = STEPS[STEPS.length - 1] ?? 'when';
 
 /** Which top-level fields each step owns (to route server errors back). */
 const STEP_FIELDS: Record<Step, string[]> = {
@@ -46,7 +51,7 @@ const STEP_FIELDS: Record<Step, string[]> = {
 
 function stepOf(issue: ApiIssue): Step {
   const head = String(issue.path[0] ?? '');
-  return STEPS.find((s) => STEP_FIELDS[s].includes(head)) ?? 'contact';
+  return STEPS.find((s) => STEP_FIELDS[s].includes(head)) ?? LAST_STEP;
 }
 
 export interface AddEventFlowProps {
@@ -119,7 +124,7 @@ export function AddEventFlow(p: AddEventFlowProps) {
     ...detailsToInput(details),
     lat: p.center?.[1] ?? 0,
     lng: p.center?.[0] ?? 0,
-    contactEmail: email,
+    contactEmail: FEATURES.eventContactEmail ? email : null,
     occurrences: rows.map(rowToOccurrence),
   });
 
@@ -180,7 +185,7 @@ export function AddEventFlow(p: AddEventFlowProps) {
         issues?: ApiIssue[];
       };
       if (res.ok) {
-        setDone({ ...body, emailed: email.trim() !== '' });
+        setDone({ ...body, emailed: FEATURES.eventContactEmail && email.trim() !== '' });
         p.onCreated(body);
       } else if (body.issues?.[0]) {
         setStep(stepOf(body.issues[0]));
@@ -343,6 +348,11 @@ export function AddEventFlow(p: AddEventFlowProps) {
             onValue={setEmail}
             error={errors.contactEmail}
           />
+        </div>
+      )}
+
+      {step === LAST_STEP && (
+        <>
           {/* Honeypot: hidden from people and assistive tech; bots fill it in. */}
           <div class="hp" aria-hidden="true">
             <label for="website">{pt.add.contact.honeypot}</label>
@@ -357,7 +367,7 @@ export function AddEventFlow(p: AddEventFlowProps) {
             />
           </div>
           <div ref={captchaRef} class="captcha" />
-        </div>
+        </>
       )}
 
       <p class="form-error" role="alert">
@@ -370,7 +380,7 @@ export function AddEventFlow(p: AddEventFlowProps) {
             {pt.add.back}
           </button>
         )}
-        {step !== 'contact' ? (
+        {step !== LAST_STEP ? (
           <button type="button" class="btn-primary" onClick={next}>
             {pt.add.next}
           </button>

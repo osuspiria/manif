@@ -5,7 +5,7 @@
  */
 import type { ComponentType } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
-import { LIMITS } from '../../config/app';
+import { FEATURES, LIMITS } from '../../config/app';
 import type { EventType } from '../../config/event-types';
 import { pt } from '../../i18n/pt';
 import { currentTime } from '../../map/clock';
@@ -375,6 +375,12 @@ export function MapApp() {
           )}
           {load.state === 'ok' && (
             <EventList results={results} selectedId={selectedId} onSelect={select} />
+          )}
+          {(FEATURES.signatures || FEATURES.privacyPage) && (
+            <nav class="list-footer" aria-label={pt.nav.footer}>
+              {FEATURES.signatures && <a href="/apoio/">{pt.nav.support}</a>}
+              {FEATURES.privacyPage && <a href="/privacidade/">{pt.nav.privacy}</a>}
+            </nav>
           )}
         </div>
 

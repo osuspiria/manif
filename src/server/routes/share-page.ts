@@ -47,12 +47,17 @@ export function sharePageRoutes(clock: Clock) {
     const page = await c.env.ASSETS.fetch(new URL('/mapa/', c.req.url));
     const title = `${event.title} · ${APP_NAME}`;
     const url = new URL(`/mapa/e/${event.id}`, c.req.url).toString();
+    const description = describe(event, clock());
     const meta = [
       ['og:type', 'website'],
-      ['og:title', event.title],
-      ['og:description', describe(event, clock())],
-      ['og:url', url],
       ['og:site_name', APP_NAME],
+      ['og:locale', 'pt_PT'],
+      ['og:title', event.title],
+      ['og:description', description],
+      ['og:url', url],
+      ['og:image', new URL('/og.png', c.req.url).toString()],
+      ['og:image:width', '1200'],
+      ['og:image:height', '630'],
     ]
       .map(([p, v]) => `<meta property="${p}" content="${escapeAttr(v ?? '')}">`)
       .join('');
@@ -61,6 +66,17 @@ export function sharePageRoutes(clock: Clock) {
       .on('title', {
         element(el) {
           el.setInnerContent(title);
+        },
+      })
+      // The static page's own preview tags are replaced by the event's.
+      .on('meta[property^="og:"]', {
+        element(el) {
+          el.remove();
+        },
+      })
+      .on('meta[name="description"]', {
+        element(el) {
+          el.setAttribute('content', description);
         },
       })
       .on('head', {

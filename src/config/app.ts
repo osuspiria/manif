@@ -9,6 +9,27 @@ export const DATA_CONTROLLER = {
   contactEmail: '[A DEFINIR]',
 } as const;
 
+/**
+ * Optional features, all on by default. Switching one off unregisters its API
+ * routes and hides its links; its pages must also be renamed with a leading
+ * "_" (Astro does not build those).
+ */
+export interface Features {
+  signatures: boolean;
+  privacyPage: boolean;
+  /**
+   * Optional contact email in "Adicionar evento". Personal data: switch it on
+   * only together with the privacy page (GDPR art. 13). While off, the field is
+   * not shown and the API ignores the value (nothing is stored or emailed).
+   */
+  eventContactEmail: boolean;
+}
+export const FEATURES: Features = {
+  signatures: true,
+  privacyPage: true,
+  eventContactEmail: true,
+};
+
 /** D3 — 'pre': new events wait for approval; 'post': published immediately as "não confirmado". */
 export type ModerationMode = 'pre' | 'post';
 export const MODERATION_MODE: ModerationMode = 'post';

@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { FEATURES } from '../../src/config/app';
 
 /**
  * /admin (SPEC §6). The e2e server runs with DEV_MAILBOX=on and an ADMIN_EMAILS
@@ -150,6 +151,7 @@ test.describe('Administração', () => {
     page,
     request,
   }, info) => {
+    test.skip(!FEATURES.signatures, 'signatures are switched off');
     const id = unique(info);
     const orgName = `Coletivo Admin ${id}`;
     const orgEmail = `org-${id}@exemplo.invalid`;

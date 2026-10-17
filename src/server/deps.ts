@@ -3,7 +3,7 @@
  * in-memory rate limiter, fixed clock); routes and services only see interfaces.
  */
 import { ulid } from 'ulidx';
-import { MODERATION_MODE, type ModerationMode } from '../config/app';
+import { FEATURES, MODERATION_MODE, type Features, type ModerationMode } from '../config/app';
 import { lisbonToday } from '../shared/dates';
 import { systemClock, type Clock } from './clock';
 import type { Env } from './env';
@@ -23,6 +23,8 @@ export interface AppDeps {
   rateLimiter: (env: Env) => RateLimiter;
   placeSearch: (env: Env) => PlaceSearch;
   newId: () => string;
+  /** Which optional features are mounted (FEATURES; tests switch them on). */
+  features: Features;
 }
 
 export const defaultDeps: AppDeps = {
@@ -37,6 +39,7 @@ export const defaultDeps: AppDeps = {
   rateLimiter: (env) => new KvRateLimiter(env.RATE_LIMIT),
   placeSearch: () => new PhotonSearch(),
   newId: () => ulid(),
+  features: FEATURES,
 };
 
 export function devMailboxEnabled(env: Env): boolean {

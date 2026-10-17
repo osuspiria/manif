@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import { FEATURES } from '../config/app';
 import { pt } from '../i18n/pt';
 ---
 
@@ -8,7 +9,9 @@ import { pt } from '../i18n/pt';
   <p>
     <a href="/mapa">{pt.home.mapCta}</a>
   </p>
-  <p>
-    <a href="/apoio/">{pt.home.supportCta}</a>
-  </p>
+  {FEATURES.signatures && (
+    <p>
+      <a href="/apoio/">{pt.home.supportCta}</a>
+    </p>
+  )}
 </Base>

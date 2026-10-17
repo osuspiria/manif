@@ -314,7 +314,8 @@ Necessário para as duas funcionalidades, mantido mínimo:
 - Direitos: retirar assinatura por link; pedidos de acesso/apagamento por email.
 - **Sem cookies** no site público; nada de analytics de terceiros. Se forem precisas métricas: contadores agregados no servidor, sem IP.
 - IPs: usados só para rate limit, guardados como hash com sal diário, nunca persistidos em BD.
-- Página `/privacidade` gerada a partir de `content/privacidade.md`.
+- Página `/privacidade` gerada a partir de `content/privacidade.md`; responsável e contacto vêm de `DATA_CONTROLLER` (`src/config/app.ts`). Ligada a partir do rodapé de todas as páginas e do fim da vista Lista.
+- Content-Security-Policy em todas as páginas: só pedidos ao próprio site e ao Turnstile (`challenges.cloudflare.com`).
 
 ---
 
@@ -361,6 +362,7 @@ Validação partilhada entre cliente e servidor com **Zod** (`src/shared/schemas
 - WCAG 2.1 AA: contraste, foco visível, lista de eventos como alternativa ao mapa, formulários com labels e erros anunciados.
 - Funciona sem geolocalização e com JS lento; o formulário de assinatura funciona sem JS (POST normal) exceto Turnstile.
 - Todas as datas mostradas em PT-PT (`Intl.DateTimeFormat('pt-PT')`).
+- Pré-visualização de links: Open Graph em todas as páginas públicas, imagem `public/og.png` (1200×630, `npm run og:image`); URLs absolutos com `PUBLIC_SITE_URL` no build. Páginas de erro 404 e 500 em PT-PT.
 
 ---
 

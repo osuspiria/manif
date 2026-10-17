@@ -1,9 +1,27 @@
 ---
-import Base from '../layouts/Base.astro';
+import { FEATURES } from '../config/app';
 import { pt } from '../i18n/pt';
+import Base from '../layouts/Base.astro';
+import '../styles/prose.css';
 ---
 
-<Base title="404">
-  <h1>404</h1>
-  <p>{pt.errors.notFound}</p>
+<Base title={pt.errors.notFoundTitle} secret>
+  <article class="prose error-page">
+    <h1>{pt.errors.notFoundTitle}</h1>
+    <p>{pt.errors.notFoundText}</p>
+    <p>{pt.errors.tryHere}</p>
+    <ul>
+      <li>
+        <a href="/mapa">{pt.map.heading}</a>
+      </li>
+      {FEATURES.signatures && (
+        <li>
+          <a href="/apoio/">{pt.home.supportCta}</a>
+        </li>
+      )}
+      <li>
+        <a href="/">{pt.errors.home}</a>
+      </li>
+    </ul>
+  </article>
 </Base>

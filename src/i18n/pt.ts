@@ -3,11 +3,21 @@ export const pt = {
   site: {
     title: 'Mobilização',
     tagline: 'Mapa de mobilizações e apelo de apoio',
+    ogImageAlt: 'Mobilização: mapa de eventos e apelo de apoio',
   },
   nav: {
     map: 'Mapa',
     support: 'Apoiar',
     privacy: 'Privacidade',
+    main: 'Navegação principal',
+    footer: 'Informação',
+    skip: 'Saltar para o conteúdo',
+    eventList: 'Lista de eventos',
+  },
+  privacy: {
+    controller: 'Responsável pelo tratamento',
+    contact: 'Contacto para questões de privacidade',
+    updated: 'Última atualização',
   },
   home: {
     heading: 'Junta-te à mobilização',
@@ -16,6 +26,8 @@ export const pt = {
   },
   map: {
     heading: 'Mapa de eventos',
+    description:
+      'Manifestações, concentrações e assembleias em todo o país, do continente às ilhas. Filtra por dia e tipo, ou adiciona um evento.',
     noscript:
       'O mapa e a lista de eventos precisam de JavaScript. Ativa o JavaScript no teu browser para os veres.',
     loading: 'A carregar eventos…',
@@ -482,6 +494,13 @@ export const pt = {
   },
   errors: {
     notFound: 'Página não encontrada.',
+    notFoundTitle: 'Página não encontrada',
+    notFoundText: 'O endereço pode estar errado, ou a página foi removida.',
+    serverErrorTitle: 'Algo correu mal',
+    serverErrorText:
+      'Ocorreu um erro do nosso lado. Tenta de novo daqui a pouco; se o problema continuar, avisa-nos.',
+    tryHere: 'Talvez procures:',
+    home: 'Página inicial',
     /** Validation codes from the shared schemas / API. */
     codes: {
       required: 'Campo obrigatório.',

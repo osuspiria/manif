@@ -26,6 +26,7 @@ function makeApp(overrides: Partial<AppDeps> = {}) {
     mailer: () => mailer,
     rateLimiter: () => limiter,
     newId: () => `01JD${String(++ids).padStart(22, '0')}`,
+    features: { signatures: true, privacyPage: true, eventContactEmail: true },
     ...overrides,
   });
 }

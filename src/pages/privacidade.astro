@@ -1,0 +1,38 @@
+---
+/** SPEC §7: privacy policy from content/privacidade.md; controller from config (D8). */
+import { Content, frontmatter } from '../../content/privacidade.md';
+import { DATA_CONTROLLER } from '../config/app';
+import { pt } from '../i18n/pt';
+import { formatDateWithYear } from '../shared/dates';
+import Base from '../layouts/Base.astro';
+import '../styles/prose.css';
+
+const fm = frontmatter as { title?: string; updated?: string };
+const title = fm.title ?? pt.nav.privacy;
+const updated = fm.updated ? formatDateWithYear(fm.updated) : null;
+---
+
+<Base title={title}>
+  <article class="prose">
+    <h1>{title}</h1>
+    <dl class="controller">
+      <dt>{pt.privacy.controller}</dt>
+      <dd>{DATA_CONTROLLER.name}</dd>
+      <dt>{pt.privacy.contact}</dt>
+      <dd>
+        {DATA_CONTROLLER.contactEmail.includes('@') ? (
+          <a href={`mailto:${DATA_CONTROLLER.contactEmail}`}>{DATA_CONTROLLER.contactEmail}</a>
+        ) : (
+          DATA_CONTROLLER.contactEmail
+        )}
+      </dd>
+      {updated && (
+        <>
+          <dt>{pt.privacy.updated}</dt>
+          <dd>{updated}</dd>
+        </>
+      )}
+    </dl>
+    <Content />
+  </article>
+</Base>

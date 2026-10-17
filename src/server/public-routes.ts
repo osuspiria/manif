@@ -1,3 +1,5 @@
+import type { Features } from '../config/app';
+
 /**
  * Every public (non-admin) endpoint, with sample requests. The privacy test
  * (tests/worker/public-privacy.test.ts) calls each sample against fixture data
@@ -13,6 +15,13 @@ export interface PublicRoute {
   route: string;
   /** Concrete requests exercising the route (success and error paths). */
   samples: { url: string; init?: RequestInit }[];
+  /** Registered only when this feature is on (FEATURES). */
+  feature?: keyof Features;
+}
+
+/** The public routes registered with the given features. */
+export function publicRoutes(features: Features): PublicRoute[] {
+  return PUBLIC_ROUTES.filter((r) => !r.feature || features[r.feature]);
 }
 
 const json = (body: unknown, headers: Record<string, string> = {}): RequestInit => ({
@@ -66,6 +75,7 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   {
     method: 'POST',
     route: '/api/signatures',
+    feature: 'signatures',
     samples: [
       { url: '/api/signatures', init: json(NEW_SIGNATURE) },
       { url: '/api/signatures', init: json(NEW_ORG_SIGNATURE) },
@@ -90,21 +100,25 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   {
     method: 'GET',
     route: '/api/signatures/confirm',
+    feature: 'signatures',
     samples: [{ url: '/api/signatures/confirm?token=nope' }],
   },
   {
     method: 'POST',
     route: '/api/signatures/withdraw',
+    feature: 'signatures',
     samples: [{ url: '/api/signatures/withdraw', init: json({ token: 'x'.repeat(43) }) }],
   },
   {
     method: 'GET',
     route: '/api/signatures/stats',
+    feature: 'signatures',
     samples: [{ url: '/api/signatures/stats' }],
   },
   {
     method: 'GET',
     route: '/api/signatures/public',
+    feature: 'signatures',
     samples: [
       { url: '/api/signatures/public' },
       { url: '/api/signatures/public?municipality=1312' },

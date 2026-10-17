@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { FEATURES } from '../../src/config/app';
 
 /** Local date (Europe/Lisbon ≈ test machine) N days from today, 'YYYY-MM-DD'. */
 function dayFromNow(n: number): string {
@@ -15,7 +16,7 @@ interface Fc {
   features: { id: string; properties: { title: string; occurrences: { cancelled: boolean }[] } }[];
 }
 
-/** Opens the flow and fills steps 1–3; leaves the page on "Contacto". */
+/** Opens the flow and fills steps 1–3; leaves the page on the last step ("Contacto" when the email is on). */
 async function fillUntilContact(page: Page, title: string, project: string, screens = false) {
   await page.goto('/mapa/');
   await page
@@ -51,9 +52,14 @@ async function fillUntilContact(page: Page, title: string, project: string, scre
   await dates.nth(2).fill(dayFromNow(17));
   await expect(flow.getByLabel('Hora de início').nth(2)).toHaveValue('18:00');
   if (screens) await shot(page, '12-adicionar-quando', project);
-  await flow.getByRole('button', { name: 'Seguinte' }).click();
-
-  await expect(flow.getByRole('heading', { name: 'Contacto' })).toBeVisible();
+  if (FEATURES.eventContactEmail) {
+    await flow.getByRole('button', { name: 'Seguinte' }).click();
+    await expect(flow.getByRole('heading', { name: 'Contacto' })).toBeVisible();
+  } else {
+    // Launch: no email step; "Quando" is the last one (3 of 3).
+    await expect(flow.getByText('Passo 3 de 3')).toBeVisible();
+    await expect(flow.getByLabel('Email (opcional)')).toHaveCount(0);
+  }
   return flow;
 }
 
@@ -64,7 +70,9 @@ test.describe('Adicionar e editar evento', () => {
   }, info) => {
     const title = `[Teste] Três datas ${info.project.name} ${Date.now()}`;
     const flow = await fillUntilContact(page, title, info.project.name, true);
-    await flow.getByLabel('Email (opcional)').fill('pessoa@exemplo.pt');
+    if (FEATURES.eventContactEmail) {
+      await flow.getByLabel('Email (opcional)').fill('pessoa@exemplo.pt');
+    }
     await flow.getByRole('button', { name: 'Enviar evento' }).click();
 
     // Turnstile test key (always passes), then the final screen.

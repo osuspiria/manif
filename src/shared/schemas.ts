@@ -10,6 +10,10 @@ import { ORG_TYPES, SIGNATURE_LIMITS } from '../config/signatures';
 import { TIME_ZONES } from './dates';
 import { isMunicipalityCode } from './municipalities';
 
+// No runtime code generation: Zod would otherwise probe `new Function`, which the
+// Content-Security-Policy forbids (it reports a violation, then falls back anyway).
+z.config({ jitless: true });
+
 export const TzSchema = z.enum(TIME_ZONES);
 
 const LocalDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'invalid_date');

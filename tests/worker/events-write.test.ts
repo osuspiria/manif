@@ -27,6 +27,8 @@ function makeApp(overrides: Partial<AppDeps> = {}) {
     placeSearch: () => ({
       search: (q: string) => Promise.resolve([{ label: `Resultado ${q}`, lat: 38.71, lng: -9.14 }]),
     }),
+    // The contact email is off at launch (FEATURES); these tests cover it switched on.
+    features: { signatures: false, privacyPage: false, eventContactEmail: true },
     ...overrides,
   });
 }
@@ -123,6 +125,18 @@ describe('POST /api/events', () => {
 
   it('sends no email without a contact email', async () => {
     await create({ contactEmail: '' });
+    expect(mailer.sent).toHaveLength(0);
+  });
+
+  it('with the contact email switched off (launch): nothing stored, nothing emailed', async () => {
+    const app = makeApp({
+      features: { signatures: false, privacyPage: false, eventContactEmail: false },
+    });
+    const { id } = await create({ contactEmail: 'pessoa@exemplo.pt' }, app);
+    const row = await env.DB.prepare('SELECT contact_email FROM events WHERE id = ?')
+      .bind(id)
+      .first<{ contact_email: string | null }>();
+    expect(row?.contact_email).toBeNull();
     expect(mailer.sent).toHaveLength(0);
   });
 

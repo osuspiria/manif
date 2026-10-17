@@ -1,4 +1,8 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { FEATURES } from '../../src/config/app';
+
+// Switched off at launch (src/config/app.ts › FEATURES).
+test.skip(!FEATURES.signatures, 'signatures are switched off');
 
 /**
  * Signatures (SPEC §5) with the fake mailer: the e2e server runs with

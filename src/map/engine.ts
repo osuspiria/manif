@@ -14,8 +14,10 @@ import {
   type LngLatBoundsLike,
   type StyleSpecification,
 } from 'maplibre-gl';
-// Injected when the engine loads, so it never blocks the first paint.
-import maplibreCss from 'maplibre-gl/dist/maplibre-gl.css?inline';
+// Linked when the engine loads, so it never blocks the first paint. A file of
+// our own (not an inline <style>), so the Content-Security-Policy needs no
+// 'unsafe-inline'.
+import maplibreCssUrl from 'maplibre-gl/dist/maplibre-gl.css?url';
 // The worker is a separate file; Vite copies it and gives us its URL.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { Protocol } from 'pmtiles';
@@ -109,9 +111,10 @@ export function createMapEngine(
   },
 ): MapEngine {
   if (!protocolRegistered) {
-    const style = document.createElement('style');
-    style.textContent = maplibreCss;
-    document.head.append(style);
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = maplibreCssUrl;
+    document.head.append(link);
     setWorkerUrl(workerUrl);
     addProtocol('pmtiles', new Protocol().tile);
     protocolRegistered = true;

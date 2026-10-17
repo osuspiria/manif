@@ -43,6 +43,7 @@ export function eventsRoutes(geo: GeoService, deps: AppDeps) {
       moderation: moderationMode(env),
       newId: deps.newId,
       now: deps.clock(),
+      storeContactEmail: deps.features.eventContactEmail,
     };
   };
   const limited = async (c: C, action: string, limit: number) => {

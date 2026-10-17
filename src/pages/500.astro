@@ -1,0 +1,21 @@
+---
+/** Served by the Worker (with status 500) when a page it renders fails. */
+import { pt } from '../i18n/pt';
+import Base from '../layouts/Base.astro';
+import '../styles/prose.css';
+---
+
+<Base title={pt.errors.serverErrorTitle} secret>
+  <article class="prose error-page">
+    <h1>{pt.errors.serverErrorTitle}</h1>
+    <p>{pt.errors.serverErrorText}</p>
+    <ul>
+      <li>
+        <a href="/mapa">{pt.map.heading}</a>
+      </li>
+      <li>
+        <a href="/">{pt.errors.home}</a>
+      </li>
+    </ul>
+  </article>
+</Base>

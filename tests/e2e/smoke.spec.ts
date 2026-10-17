@@ -32,3 +32,26 @@ for (const path of ['/', '/mapa/']) {
     });
   });
 }
+
+test('switched-off features are not reachable or linked (launch configuration)', async ({
+  page,
+  request,
+}) => {
+  const { FEATURES } = await import('../../src/config/app');
+  test.skip(FEATURES.signatures && FEATURES.privacyPage, 'every feature is on');
+  const off = [
+    ...(FEATURES.signatures ? [] : ['/apoio/', '/apoio/obrigado/', '/apoio/retirar/']),
+    ...(FEATURES.privacyPage ? [] : ['/privacidade/']),
+  ];
+  for (const path of off) expect((await request.get(path)).status(), path).toBe(404);
+  if (!FEATURES.signatures) {
+    expect((await request.get('/api/signatures/stats')).status()).toBe(404);
+    expect((await request.post('/api/signatures', { data: {} })).status()).toBe(404);
+  }
+  for (const path of ['/', '/mapa?vista=lista', '/nao-existe']) {
+    await page.goto(path);
+    for (const target of off) {
+      await expect(page.locator(`a[href^="${target}"]`), `${path} → ${target}`).toHaveCount(0);
+    }
+  }
+});

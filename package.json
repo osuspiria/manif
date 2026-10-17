@@ -23,7 +23,8 @@
     "tiles:dev": "wrangler r2 object put mobilizacao-tiles/pt.pmtiles --local --file data/geo/dev.pmtiles",
     "geo:build": "tsx data/geo/scripts/build-municipalities.ts",
     "map:assets": "tsx data/geo/scripts/fetch-map-assets.ts",
-    "ci": "npm run lint && npm run typecheck && npm run test"
+    "ci": "npm run lint && npm run typecheck && npm run test",
+    "og:image": "tsx scripts/og-image.ts"
   },
   "dependencies": {
     "@protomaps/basemaps": "^5.7.2",
@@ -38,6 +39,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@astrojs/preact": "^6.1.0",
+    "@axe-core/playwright": "^4.14.0",
     "@cloudflare/vitest-plugin": "^1.4.4",
     "@cloudflare/workers-types": "^5.20261016.1",
     "@eslint/js": "^10.0.1",

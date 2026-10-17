@@ -170,3 +170,9 @@ export function formatInstantShort(iso: string): string {
   const hm = `${String(z.hour).padStart(2, '0')}:${String(z.minute).padStart(2, '0')}`;
   return `${pt.weekdaysShort[z.dayOfWeek - 1] ?? ''} ${z.day} ${pt.monthsShort[z.month - 1] ?? ''} ${z.year}, ${hm}`;
 }
+
+/** '2026-10-17' → '17 de outubro de 2026'. */
+export function formatDateWithYear(date: string): string {
+  const d = Temporal.PlainDate.from(date);
+  return `${d.day} de ${pt.monthsLong[d.month - 1] ?? ''} de ${d.year}`;
+}

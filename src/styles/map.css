@@ -647,3 +647,18 @@ body.map-page {
     scroll-behavior: auto !important;
   }
 }
+
+/* Links at the end of the list (the map page has no site footer). */
+.list-footer {
+  display: flex;
+  gap: 16px;
+  padding: 8px 12px 24px;
+  font-size: 0.9375rem;
+}
+
+.list-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--accent);
+}

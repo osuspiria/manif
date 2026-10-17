@@ -7,7 +7,8 @@ import { env } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { app, createApp } from '../../src/server/app';
 import { FakeMailer } from '../../src/server/mailer';
-import { PUBLIC_ROUTES } from '../../src/server/public-routes';
+import { FEATURES } from '../../src/config/app';
+import { PUBLIC_ROUTES, publicRoutes } from '../../src/server/public-routes';
 import { FakeCaptcha } from '../../src/server/security/captcha';
 import { MemoryRateLimiter } from '../../src/server/security/rate-limit';
 import { IDS, insertEvent, insertSignature, resetDb, SENTINELS } from './fixtures';
@@ -20,6 +21,8 @@ const fixedApp = createApp({
   placeSearch: () => ({
     search: () => Promise.resolve([{ label: 'Rossio, Lisboa', lat: 38.71, lng: -9.14 }]),
   }),
+  // Every feature on, so every public route (even those off at launch) is checked.
+  features: { signatures: true, privacyPage: true, eventContactEmail: true },
 });
 
 /** Keys that must never appear in a public response, at any depth. */
@@ -73,9 +76,9 @@ describe('leak detector self-check', () => {
 });
 
 describe('public API privacy', () => {
-  it('every public route registered in Hono is listed in PUBLIC_ROUTES', () => {
-    const registered = new Set(
-      app.routes
+  const registered = (a: typeof app) =>
+    new Set(
+      a.routes
         .filter(
           (r) =>
             r.method !== 'ALL' &&
@@ -84,9 +87,21 @@ describe('public API privacy', () => {
         )
         .map((r) => `${r.method} ${r.path}`),
     );
-    const listed = new Set(PUBLIC_ROUTES.map((r) => `${r.method} ${r.route}`));
-    expect([...registered].filter((r) => !listed.has(r))).toEqual([]);
-    expect([...listed].filter((r) => !registered.has(r))).toEqual([]);
+  const listed = (routes: typeof PUBLIC_ROUTES) =>
+    new Set(routes.map((r) => `${r.method} ${r.route}`));
+
+  it('every public route registered in Hono is listed in PUBLIC_ROUTES (all features on)', () => {
+    const reg = registered(fixedApp);
+    const list = listed(PUBLIC_ROUTES);
+    expect([...reg].filter((r) => !list.has(r))).toEqual([]);
+    expect([...list].filter((r) => !reg.has(r))).toEqual([]);
+  });
+
+  it('the deployed app registers exactly the routes of its features', () => {
+    const reg = registered(app);
+    const list = listed(publicRoutes(FEATURES));
+    expect([...reg].filter((r) => !list.has(r))).toEqual([]);
+    expect([...list].filter((r) => !reg.has(r))).toEqual([]);
   });
 
   it('every listed route has at least one sample', () => {

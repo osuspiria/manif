@@ -29,6 +29,7 @@ const app = () =>
     captcha: () => new FakeCaptcha(true),
     mailer: () => mailer,
     rateLimiter: () => limiter,
+    features: { signatures: true, privacyPage: true, eventContactEmail: true },
   });
 
 interface Req {
@@ -127,7 +128,9 @@ describe('admin sign-in (magic link)', () => {
 
   it('sessions end on logout, after 24 hours, or when the address leaves ADMIN_EMAILS', async () => {
     const cookie = await signIn();
-    expect(await (await call('/api/admin/me', { cookie })).json()).toEqual({ email: ADMIN_EMAIL });
+    expect(await (await call('/api/admin/me', { cookie })).json()).toMatchObject({
+      email: ADMIN_EMAIL,
+    });
     expect(
       (await call('/api/admin/me', { cookie, env: { ...adminEnv, ADMIN_EMAILS: 'x@y.pt' } }))
         .status,
@@ -463,5 +466,37 @@ describe('csvCell', () => {
     expect(csvCell('linha\nnova')).toBe('"linha\nnova"');
     expect(csvCell('+351 912')).toBe("'+351 912");
     expect(csvCell('@SUM(A1)')).toBe("'@SUM(A1)");
+  });
+});
+
+describe('signatures switched off (FEATURES)', () => {
+  it('admin signature routes do not exist, and /me says so', async () => {
+    const launch = createApp({
+      clock: () => clockNow,
+      mailer: () => mailer,
+      rateLimiter: () => limiter,
+      features: { signatures: false, privacyPage: false, eventContactEmail: false },
+    });
+    const req = (path: string, init: RequestInit = {}) =>
+      launch.request(`http://localhost${path}`, init, adminEnv);
+    await req('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Request': '1' },
+      body: JSON.stringify({ email: ADMIN_EMAIL }),
+    });
+    const session = await req('/api/admin/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Request': '1' },
+      body: JSON.stringify({ token: tokenFromMail() }),
+    });
+    const cookie = /admin_session=([^;]+)/.exec(session.headers.get('Set-Cookie') ?? '')?.[1];
+    const headers = { Cookie: `admin_session=${cookie ?? ''}` };
+    expect(await (await req('/api/admin/me', { headers })).json()).toEqual({
+      email: ADMIN_EMAIL,
+      features: { signatures: false, privacyPage: false, eventContactEmail: false },
+    });
+    expect((await req('/api/admin/signatures', { headers })).status).toBe(404);
+    expect((await req('/api/admin/signatures/export.csv', { headers })).status).toBe(404);
+    expect((await req('/api/admin/events', { headers })).status).toBe(200);
   });
 });

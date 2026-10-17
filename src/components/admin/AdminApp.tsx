@@ -11,7 +11,9 @@ import { AdminLogin } from './AdminLogin';
 import { AdminSignatures } from './AdminSignatures';
 
 type Auth =
-  { state: 'checking' } | { state: 'out'; expired?: boolean } | { state: 'in'; email: string };
+  | { state: 'checking' }
+  | { state: 'out'; expired?: boolean }
+  | { state: 'in'; email: string; signatures: boolean };
 
 type Route = { tab: 'events'; eventId?: string } | { tab: 'signatures' };
 
@@ -27,9 +29,13 @@ export function AdminApp() {
 
   useEffect(() => {
     setUnauthorizedHandler(() => setAuth({ state: 'out', expired: true }));
-    adminApi<{ email?: string }>('/me')
+    adminApi<{ email?: string; features?: { signatures?: boolean } }>('/me')
       .then((r) =>
-        setAuth(r.ok && r.data.email ? { state: 'in', email: r.data.email } : { state: 'out' }),
+        setAuth(
+          r.ok && r.data.email
+            ? { state: 'in', email: r.data.email, signatures: r.data.features?.signatures === true }
+            : { state: 'out' },
+        ),
       )
       .catch(() => setAuth({ state: 'out' }));
     const onHash = () => setRoute(parseRoute(window.location.hash));
@@ -54,20 +60,26 @@ export function AdminApp() {
         </button>
       </div>
       <nav class="admin-tabs" aria-label={pt.admin.title}>
-        <a class="chip" href="#eventos" aria-current={route.tab === 'events' ? 'page' : undefined}>
-          {pt.admin.tabs.events}
-        </a>
         <a
           class="chip"
-          href="#assinaturas"
-          aria-current={route.tab === 'signatures' ? 'page' : undefined}
+          href="#eventos"
+          aria-current={route.tab === 'signatures' && auth.signatures ? undefined : 'page'}
         >
-          {pt.admin.tabs.signatures}
+          {pt.admin.tabs.events}
         </a>
+        {auth.signatures && (
+          <a
+            class="chip"
+            href="#assinaturas"
+            aria-current={route.tab === 'signatures' ? 'page' : undefined}
+          >
+            {pt.admin.tabs.signatures}
+          </a>
+        )}
       </nav>
-      {route.tab === 'signatures' ? (
+      {route.tab === 'signatures' && auth.signatures ? (
         <AdminSignatures />
-      ) : route.eventId ? (
+      ) : route.tab === 'events' && route.eventId ? (
         <AdminEventDetail id={route.eventId} />
       ) : (
         <AdminEvents />

@@ -1,0 +1,47 @@
+---
+/**
+ * Common <head> content: title, description, icons and Open Graph / Twitter
+ * tags for link previews. Absolute URLs come from `site` (PUBLIC_SITE_URL at
+ * build time); without it, og:url is left out and og:image is a path.
+ * Pages reached through secret links (`secret`) are not indexed, send no
+ * Referer and get no preview tags.
+ */
+import { pt } from '../i18n/pt';
+
+interface Props {
+  title?: string;
+  description?: string;
+  secret?: boolean;
+}
+const { title, description = pt.site.tagline, secret = false } = Astro.props;
+const fullTitle = title ? `${title} · ${pt.site.title}` : pt.site.title;
+const abs = (path: string) => (Astro.site ? new URL(path, Astro.site).toString() : path);
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<meta name="theme-color" content="#c62828" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+{secret ? (
+  <>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+  </>
+) : (
+  <>
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={pt.site.title} />
+    <meta property="og:locale" content="pt_PT" />
+    <meta property="og:title" content={title ?? pt.site.title} />
+    <meta property="og:description" content={description} />
+    {Astro.site && <meta property="og:url" content={abs(Astro.url.pathname)} />}
+    <meta property="og:image" content={abs('/og.png')} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={pt.site.ogImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+  </>
+)}

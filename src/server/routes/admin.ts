@@ -90,6 +90,7 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
       moderation: moderationMode(env),
       newId: deps.newId,
       now: deps.clock(),
+      storeContactEmail: deps.features.eventContactEmail,
     };
   };
 
@@ -126,9 +127,17 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
     return ID_RE.test(id) ? id : null;
   };
 
+  /** Signature moderation exists only while the appeal is switched on. */
+  const signaturesOn: MiddlewareHandler<AdminEnv> = async (c, next) => {
+    if (!deps.features.signatures) return c.json({ error: 'not_found' }, 404);
+    await next();
+  };
+
   return (
     new Hono<AdminEnv>()
       .use('*', noStore, csrf)
+      .use('/signatures', signaturesOn)
+      .use('/signatures/*', signaturesOn)
 
       // --- sign in (SPEC §6: magic link to ADMIN_EMAILS) ---------------------------------
       .post('/login', async (c) => {
@@ -164,7 +173,9 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
         deleteCookie(c, ADMIN_COOKIE, { path: ADMIN_PATH, secure: true });
         return c.json({ ok: true });
       })
-      .get('/me', requireSession, (c) => c.json({ email: c.get('adminEmail') }))
+      .get('/me', requireSession, (c) =>
+        c.json({ email: c.get('adminEmail'), features: deps.features }),
+      )
 
       // --- events ------------------------------------------------------------------------
       .get('/events', requireSession, async (c) => {

@@ -5,7 +5,32 @@ import preact from '@astrojs/preact';
 // Static site. The API is served by the Worker in src/server; in dev, Vite proxies /api to it.
 export default defineConfig({
   output: 'static',
+  // Absolute URLs for link previews (og:url, og:image). Set PUBLIC_SITE_URL when building
+  // for production, e.g. https://exemplo.pt (decision D2).
+  site: process.env.PUBLIC_SITE_URL || undefined,
   integrations: [preact()],
+  // No code blocks in our Markdown; Shiki's inline styles would need 'unsafe-inline'.
+  markdown: { syntaxHighlight: false },
+  // Content-Security-Policy as a <meta> on every page, with hashes of Astro's own
+  // inline scripts/styles. Enforces "no third-party requests except Turnstile"
+  // (CLAUDE.md › Privacidade). frame-ancestors goes in public/_headers (not
+  // allowed in a <meta>).
+  security: {
+    csp: {
+      directives: [
+        "default-src 'self'",
+        "img-src 'self' data: blob:",
+        "connect-src 'self'",
+        "worker-src 'self' blob:",
+        'frame-src https://challenges.cloudflare.com',
+        "form-action 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+      ],
+      scriptDirective: { resources: ["'self'", 'https://challenges.cloudflare.com'] },
+      styleDirective: { resources: ["'self'"] },
+    },
+  },
   build: { format: 'directory' },
   vite: {
     server: {

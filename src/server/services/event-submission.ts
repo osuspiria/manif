@@ -40,6 +40,8 @@ export interface SubmissionDeps {
   moderation: ModerationMode;
   newId: () => string;
   now: Date;
+  /** FEATURES.eventContactEmail: when false, a contact email is neither stored nor used. */
+  storeContactEmail: boolean;
 }
 
 const fail = (status: 400 | 404 | 422, error: string, issues?: ApiIssue[]) =>
@@ -90,6 +92,7 @@ export async function createEvent(
 
   const id = d.newId();
   const token = newToken();
+  const contactEmail = d.storeContactEmail ? input.contactEmail : null;
   const status = d.moderation === 'pre' ? 'pending' : 'published';
   const at = nowIso(d.now);
 
@@ -107,7 +110,7 @@ export async function createEvent(
       district: place.district,
       tz: place.tz,
       status,
-      contact_email: input.contactEmail,
+      contact_email: contactEmail,
       edit_token_hash: await hashToken(token),
       created_at: at,
     },
@@ -115,10 +118,10 @@ export async function createEvent(
   );
 
   const url = editUrl(origin, id, token);
-  if (input.contactEmail) {
+  if (contactEmail) {
     try {
       await d.mailer.send({
-        to: input.contactEmail,
+        to: contactEmail,
         subject: pt.email.editLinkSubject(input.title),
         text: pt.email.editLinkText(input.title, url),
       });

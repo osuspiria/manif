@@ -109,6 +109,26 @@ describe('GET /mapa/e/:id (share page)', () => {
   it('404s for an event that is not published', async () => {
     expect((await get(`/mapa/e/${IDS.c}`)).status).toBe(404);
   });
+
+  it("replaces the page's own preview tags: one of each, absolute image", async () => {
+    const html = await (await get(`/mapa/e/${IDS.a}`)).text();
+    expect(html.match(/property="og:title"/g)).toHaveLength(1);
+    expect(html.match(/property="og:image"/g)).toHaveLength(1);
+    expect(html).toContain('<meta property="og:image" content="http://localhost/og.png">');
+    expect(html).toMatch(/<meta name="description" content="qua, 18 nov · 18:00–20:00/);
+  });
+
+  it('a failure while rendering answers with the HTML error page (500)', async () => {
+    const broken = createApp({
+      clock: () => {
+        throw new Error('boom');
+      },
+    });
+    const res = await broken.request(`http://localhost/mapa/e/${IDS.a}`, {}, env);
+    expect(res.status).toBe(500);
+    expect(res.headers.get('Content-Type')).toContain('text/html');
+    expect(await res.text()).toContain('Algo correu mal');
+  });
 });
 
 describe('GET /tiles/:file', () => {
@@ -136,5 +156,16 @@ describe('GET /tiles/:file', () => {
     expect((await get('/tiles/missing.pmtiles')).status).toBe(404);
     expect((await get('/tiles/..%2Fsecret')).status).toBe(404);
     expect((await get('/tiles/test.json')).status).toBe(404);
+  });
+});
+
+describe('security headers', () => {
+  it('are set on API responses and on pages the Worker renders', async () => {
+    for (const path of ['/api/events.geojson', `/mapa/e/${IDS.a}`, '/api/nope']) {
+      const res = await get(path);
+      expect(res.headers.get('X-Content-Type-Options'), path).toBe('nosniff');
+      expect(res.headers.get('X-Frame-Options'), path).toBe('DENY');
+      expect(res.headers.get('Content-Security-Policy'), path).toBe("frame-ancestors 'none'");
+    }
   });
 });

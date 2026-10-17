@@ -178,3 +178,28 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - links de login e sessões expirados.
     - O job regista só contagens.
 55. **E2E do admin:** cada projeto do Playwright usa o seu endereço de admin (`admin-<projeto>@exemplo.invalid`), porque correm em paralelo e partilhariam a caixa de correio de dev.
+
+## Fase 7 — Privacidade, acessibilidade, performance, OG, erros
+
+56. **Página `/privacidade`:** texto em `content/privacidade.md`; o responsável pelo tratamento e o contacto vêm de `DATA_CONTROLLER` (`src/config/app.ts`), que continua `[A DEFINIR]` (D8). O texto descreve o que o código faz hoje (dados, prazos, serviços: Cloudflare, Turnstile, Resend, Photon) e **deve ser revisto por alguém da área jurídica** antes do lançamento (SPEC §7). O prazo das assinaturas depois do fim da campanha fica por indicar enquanto `CAMPAIGN_END` for `null`.
+57. **Link para a privacidade** em todas as páginas: rodapé do layout base e fim da vista Lista no mapa (a página do mapa não tem rodapé). O layout base ganhou também um link "Saltar para o conteúdo".
+58. **OG tags:** componente `src/components/Head.astro`, usado pelo layout base e pelo mapa (título, descrição, `og:*`, `twitter:card`). A imagem `public/og.png` (1200×630) é gerada por `npm run og:image` a partir do nome e da descrição em `pt.ts`; voltar a gerá-la quando o nome for decidido (D2).
+    - URLs absolutos (`og:url`, `og:image`) precisam de `PUBLIC_SITE_URL` no build (domínio, D2); sem ele, `og:url` fica de fora e `og:image` é um caminho relativo.
+    - `/mapa/e/:id` (Worker) substitui as tags da página do mapa pelas do evento, com `og:image` absoluto a partir do pedido.
+    - Páginas de links secretos e de erro não têm tags de pré-visualização.
+59. **Páginas de erro:** `404.astro` (servida pelos static assets) e `500.astro`, que o Worker devolve com estado 500 quando uma página que ele próprio gera falha (as rotas `/api` continuam a responder JSON).
+60. **Content-Security-Policy:** gerada pelo Astro (`security.csp`) como `<meta>` em todas as páginas, com hashes dos scripts e estilos inline do próprio Astro: `default-src 'self'`; scripts e frames só de nós e de `challenges.cloudflare.com` (Turnstile); `connect-src 'self'`; `img-src 'self' data: blob:`; `form-action 'self'`; sem `'unsafe-inline'` nem `'unsafe-eval'`. Isto torna a regra "nenhum pedido a terceiros exceto Turnstile" verificável pelo browser.
+    - Para isso, o CSS do MapLibre passou a ser um ficheiro nosso ligado com `<link>` (antes era um `<style>` inline), o Shiki está desligado e o Zod corre em modo `jitless` (sem sondar `new Function`).
+    - `frame-ancestors 'none'` e os restantes cabeçalhos (`X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options`) vêm de `public/_headers` para os ficheiros estáticos e de um middleware para as respostas do Worker.
+61. **Testes de aceitação da fase:** `tests/e2e/a11y.spec.ts` corre o axe (WCAG 2.1 A/AA) em todas as páginas e nos estados principais (ficha do evento, filtros, passos do "Adicionar", formulário de organização), a 360 px e em desktop, e falha também com qualquer violação da CSP ou pedido a terceiros. Nova dependência de desenvolvimento: `@axe-core/playwright`.
+62. **Lighthouse (mobile, local, 17/10/2026):**
+
+    | Página               | Performance | Acessibilidade | Boas práticas | SEO |
+    | -------------------- | ----------- | -------------- | ------------- | --- |
+    | `/`                  | 100         | 100            | 81            | 100 |
+    | `/mapa?vista=lista`  | 91          | 100            | 81            | 100 |
+    | `/mapa` (vista Mapa) | 62          | 100            | 81            | 100 |
+    | `/apoio/`            | 99          | 100            | 81            | 100 |
+    | `/privacidade/`      | 100         | 100            | 81            | 100 |
+
+    As "boas práticas" só perdem pontos por "Does not use HTTPS", que se deve ao servidor local em `http` e ao script injetado pelo antivírus da máquina; em produção, com HTTPS, desaparece. Os alvos do SPEC §9 cumprem-se.
