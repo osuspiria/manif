@@ -690,9 +690,9 @@ body.map-page {
 
   .map-app {
     display: grid;
-    grid-template-columns: 400px 1fr;
-    /* On short screens the filters scroll so that the list keeps some room. */
-    grid-template-rows: auto auto minmax(0, max-content) minmax(200px, 1fr);
+    /* The list gets the room: wide side column, compact filters capped at 30vh. */
+    grid-template-columns: clamp(400px, 36vw, 540px) 1fr;
+    grid-template-rows: auto auto minmax(0, auto) minmax(0, 1fr);
   }
 
   .map-intro {
@@ -719,9 +719,19 @@ body.map-page {
   .panel-side {
     grid-column: 1;
     grid-row: 3;
+    max-height: 30vh;
     overflow-y: auto;
     border-right: 2px solid var(--line);
     border-bottom: 2px solid var(--line);
+  }
+
+  .panel-side .filter-panel {
+    padding: 2px 16px 10px;
+  }
+
+  .panel-side .filter-panel h2 {
+    font-size: 0.9375rem;
+    margin: 6px 0 4px;
   }
 
   .content {
@@ -732,7 +742,7 @@ body.map-page {
     grid-column: 1;
     grid-row: 4;
     border-right: 2px solid var(--line);
-    padding-bottom: 24px;
+    padding: 0 16px 24px;
   }
 
   .map-pane {
