@@ -11,6 +11,7 @@ import {
   formatDayHeading,
   formatLongDate,
   formatOccurrence,
+  formatOngoing,
   formatShortDate,
   groupByDay,
   showsDayLabels,
@@ -69,6 +70,10 @@ describe('date labels', () => {
 
   it('formatLongDate', () => {
     expect(formatLongDate('2026-11-28')).toBe('sábado, 28 de novembro');
+  });
+
+  it('formatOngoing', () => {
+    expect(formatOngoing('2026-10-12')).toBe('Todos os dias desde seg, 12 out');
   });
 });
 

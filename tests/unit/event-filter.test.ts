@@ -323,3 +323,92 @@ describe('countByDay', () => {
     ]);
   });
 });
+
+describe('ongoing events ("sem fim")', () => {
+  const ongoing = (
+    id: string,
+    since: string,
+    occurrences: (tz: Tz) => FilterableOccurrence[],
+    tz: Tz = 'Europe/Lisbon',
+  ): FilterableEvent => ({ ...ev(id, occurrences, { tz }), ongoingSince: since });
+
+  it('shows up every day after its last date has passed, as "todo o dia"', () => {
+    const events = [
+      ongoing('camp', '2026-10-12', (tz) => [occ('2026-10-12', '18:00', null, tz)]),
+      ev('normal', (tz) => [occ('2026-10-12', '18:00', null, tz)]),
+    ];
+    for (const when of [
+      { kind: 'upcoming' },
+      { kind: 'today' },
+      { kind: 'tomorrow' },
+      { kind: 'weekend' },
+      { kind: 'next7' },
+      { kind: 'day', date: '2026-12-01' },
+    ] as WhenFilter[]) {
+      expect(ids(run(events, when, WED))).toEqual(['camp']);
+    }
+    const [r] = run(events, { kind: 'today' }, WED);
+    expect(r?.highlight).toMatchObject({ localDate: '2026-11-11', startTime: null });
+  });
+
+  it('is counted on every day of the strip', () => {
+    const events = [ongoing('camp', '2026-10-12', (tz) => [occ('2026-10-12', null, null, tz)])];
+    expect(countByDay(events, [], new Date(WED), 3).map((d) => d.count)).toEqual([1, 1, 1]);
+  });
+
+  it('does not show up before its first date', () => {
+    const events = [ongoing('later', '2026-11-13', (tz) => [occ('2026-11-13', '18:00', null, tz)])];
+    expect(ids(run(events, { kind: 'today' }, WED))).toEqual([]);
+    expect(ids(run(events, { kind: 'tomorrow' }, WED))).toEqual([]);
+    expect(ids(run(events, { kind: 'day', date: '2026-11-14' }, WED))).toEqual(['later']);
+    expect(countByDay(events, [], new Date(WED), 4).map((d) => d.count)).toEqual([0, 0, 1, 1]);
+  });
+
+  it('keeps a real future date with its own time, and a cancelled date stays cancelled', () => {
+    const events = [
+      ongoing('camp', '2026-10-12', (tz) => [
+        occ('2026-10-12', null, null, tz),
+        occ('2026-11-12', '18:00', '20:00', tz),
+        occ('2026-11-13', '18:00', null, tz, true),
+      ]),
+    ];
+    const [tomorrow] = run(events, { kind: 'tomorrow' }, WED);
+    expect(tomorrow?.highlight).toMatchObject({ localDate: '2026-11-12', startTime: '18:00' });
+    expect(ids(run(events, { kind: 'day', date: '2026-11-13' }, WED))).toEqual([]);
+  });
+
+  it('Azores: each day is the local day, also near midnight', () => {
+    // 23:30 Azores on Wed 11 Nov = 00:30 Thu in Lisbon.
+    const now = '2026-11-12T00:30:00Z';
+    const events = [
+      ongoing('az', '2026-10-01', (tz) => [occ('2026-10-01', null, null, tz)], 'Atlantic/Azores'),
+    ];
+    const [r] = run(events, { kind: 'upcoming' }, now);
+    expect(r?.highlight.localDate).toBe('2026-11-11');
+    expect(ids(run(events, { kind: 'today' }, now))).toEqual(['az']);
+    const [today] = run(events, { kind: 'today' }, now);
+    expect(today?.highlight.localDate).toBe('2026-11-12');
+  });
+
+  it('across the DST changes, each day still starts at local midnight', () => {
+    const events = [ongoing('camp', '2026-01-10', (tz) => [occ('2026-01-10', null, null, tz)])];
+    // Sunday 25 Oct 2026 (back to UTC+0) and Sunday 28 Mar 2027 (to UTC+1).
+    const [oct] = run(events, { kind: 'day', date: '2026-10-25' }, '2026-10-24T12:00:00Z');
+    expect(oct?.highlight).toMatchObject({
+      startsAt: '2026-10-24T23:00:00Z',
+      endsAt: '2026-10-26T06:00:00Z',
+    });
+    const [mar] = run(events, { kind: 'day', date: '2027-03-28' }, '2027-03-27T12:00:00Z');
+    expect(mar?.highlight).toMatchObject({
+      startsAt: '2027-03-28T00:00:00Z',
+      endsAt: '2027-03-29T05:00:00Z',
+    });
+  });
+
+  it('a normal event (ongoingSince null) is unchanged', () => {
+    const events = [
+      { ...ev('n', (tz) => [occ('2026-10-12', null, null, tz)]), ongoingSince: null },
+    ];
+    expect(ids(run(events, { kind: 'upcoming' }, WED))).toEqual([]);
+  });
+});

@@ -14,6 +14,8 @@ export interface EventRow {
   district: string;
   tz: string;
   verified: number;
+  /** Ongoing ("sem fim"): first non-cancelled local date; null for normal events. */
+  ongoing_since: string | null;
 }
 
 export interface OccurrenceRow {
@@ -29,13 +31,15 @@ export interface OccurrenceRow {
 }
 
 const EVENT_COLUMNS = `e.id, e.type, e.title, e.description, e.organizer, e.lat, e.lng,
-  e.place_label, e.municipality, e.district, e.tz, e.verified`;
+  e.place_label, e.municipality, e.district, e.tz, e.verified,
+  CASE WHEN e.ongoing = 1 THEN (SELECT MIN(oo.local_date) FROM event_occurrences oo
+    WHERE oo.event_id = e.id AND oo.cancelled = 0) END AS ongoing_since`;
 
 const OCC_COLUMNS = `o.id, o.event_id, o.local_date, o.start_time, o.end_time,
   o.starts_at, o.ends_at, o.note, o.cancelled`;
 
 export interface EventsRepo {
-  /** Published events having at least one non-cancelled occurrence ending after `nowIso`. */
+  /** Published events that are ongoing or have a non-cancelled occurrence ending after `nowIso`. */
   listPublishedLive(nowIso: string): Promise<EventRow[]>;
   /** Occurrences ending after `nowIso` (cancelled included) for published events. */
   listOccurrencesEndingAfter(nowIso: string): Promise<OccurrenceRow[]>;
@@ -49,8 +53,8 @@ export function eventsRepo(db: Db): EventsRepo {
       return db.all<EventRow>(
         `SELECT ${EVENT_COLUMNS} FROM events e
          WHERE e.status = 'published'
-           AND EXISTS (SELECT 1 FROM event_occurrences o
-                       WHERE o.event_id = e.id AND o.cancelled = 0 AND o.ends_at > ?)`,
+           AND (e.ongoing = 1 OR EXISTS (SELECT 1 FROM event_occurrences o
+                       WHERE o.event_id = e.id AND o.cancelled = 0 AND o.ends_at > ?))`,
         [nowIso],
       );
     },

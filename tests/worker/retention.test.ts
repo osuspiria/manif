@@ -69,6 +69,22 @@ describe('retention job (SPEC §7)', () => {
     expect(orphans?.n).toBe(0);
   });
 
+  it('keeps ongoing ("sem fim") events, whatever their dates', async () => {
+    await insertEvent({
+      id: IDS.a,
+      ongoing: true,
+      occurrences: [{ localDate: '2026-01-15', startTime: null }],
+    });
+    await insertEvent({
+      id: IDS.b,
+      ongoing: true,
+      status: 'hidden',
+      occurrences: [{ localDate: '2026-01-15', startTime: null }],
+    });
+    expect((await runRetention(repo(), NOW, null)).events).toBe(0);
+    expect(await ids('events')).toEqual([IDS.a, IDS.b]);
+  });
+
   it('keeps signatures until N months after CAMPAIGN_END, then deletes them all', async () => {
     await insertSignature({ id: 's1' });
     await insertSignature({ id: 's2', kind: 'organization', status: 'approved' });

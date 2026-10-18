@@ -54,6 +54,11 @@ export function formatOccurrence(o: LocalOccurrence, tz: Tz): string {
   return `${day} · ${time}${suffix}`;
 }
 
+/** 'Todos os dias desde seg, 12 out' — ongoing ("sem fim") events. */
+export function formatOngoing(since: string): string {
+  return pt.event.ongoing(formatShortDayLabel(since));
+}
+
 export function formatCount(n: number): string {
   return n === 1 ? pt.count.one : pt.count.many(n);
 }

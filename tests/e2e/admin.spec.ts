@@ -147,6 +147,57 @@ test.describe('Administração', () => {
     expect(await onMap()).toBe(false);
   });
 
+  test('marks an event as ongoing ("sem fim"): on the map every day', async ({
+    page,
+    request,
+  }, info) => {
+    const title = `[Teste] Sem fim ${unique(info)}`;
+    const created = await request.post('/api/events', {
+      headers: { 'CF-Connecting-IP': randomIp() },
+      data: {
+        type: 'camp',
+        title,
+        lat: 38.7139,
+        lng: -9.1394,
+        occurrences: [{ localDate: dayFromNow(1), startTime: '18:00', endTime: null, note: null }],
+        turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+      },
+    });
+    expect(created.status()).toBe(201);
+    const { id } = (await created.json()) as { id: string };
+
+    // An ongoing event fills every day of the strip: hide it once done, so it
+    // does not leak into the other specs (empty days in "Escolher dia").
+    try {
+      await signIn(page, request, adminFor(info));
+      await page.getByRole('button', { name: 'Todos', exact: true }).click();
+      await page.getByLabel('Pesquisar por título ou concelho').fill(title);
+      await page.getByRole('button', { name: 'Pesquisar', exact: true }).click();
+      const card = page.locator(`[data-event-id="${id}"]`);
+      // Moderation may be on: approve first when needed.
+      const approve = card.getByRole('button', { name: 'Aprovar' });
+      if (await approve.isVisible()) await approve.click();
+      await card.getByRole('button', { name: 'Marcar como sem fim' }).click();
+      await expect(card.getByRole('button', { name: 'Tirar "Sem fim"' })).toBeVisible();
+      await expect(card.locator('.admin-badges')).toContainText('Sem fim');
+      await shot(page, '32-admin-sem-fim', info.project.name);
+
+      // Ten days later it is still on the map, as "todo o dia".
+      await page.goto(`/?dia=${dayFromNow(10)}&vista=lista`);
+      const item = page.locator('.event-card', { hasText: title });
+      await expect(item).toBeVisible();
+      await expect(item).toContainText('Todos os dias desde');
+      await shot(page, '33-lista-sem-fim', info.project.name);
+      await item.click();
+      await expect(page.locator('.occ-highlight')).toContainText('Todos os dias desde');
+    } finally {
+      await page.request.post(`/api/admin/events/${id}/moderate`, {
+        headers: { 'X-Admin-Request': '1' },
+        data: { action: 'hide' },
+      });
+    }
+  });
+
   test('approves an organisation, deletes a signature, exports CSV', async ({
     page,
     request,

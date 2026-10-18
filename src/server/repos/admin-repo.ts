@@ -51,6 +51,7 @@ export interface AdminEventRow {
   title: string;
   status: 'pending' | 'published' | 'hidden';
   verified: number;
+  ongoing: number;
   municipality: string;
   district: string;
   created_at: string;
@@ -65,7 +66,8 @@ export interface AdminReportRow {
 }
 
 export function adminEventsRepo(db: Db) {
-  const select = `SELECT e.id, e.type, e.title, e.status, e.verified, e.municipality, e.district,
+  const select = `SELECT e.id, e.type, e.title, e.status, e.verified, e.ongoing, e.municipality,
+      e.district,
       e.created_at,
       (SELECT COUNT(*) FROM event_reports r WHERE r.event_id = e.id) AS reports,
       (SELECT MIN(o.starts_at) FROM event_occurrences o
@@ -100,8 +102,8 @@ export function adminEventsRepo(db: Db) {
     },
     async contact(
       id: string,
-    ): Promise<{ contact_email: string | null; created_at: string } | null> {
-      return db.first('SELECT contact_email, created_at FROM events WHERE id = ?', [id]);
+    ): Promise<{ contact_email: string | null; created_at: string; ongoing: number } | null> {
+      return db.first('SELECT contact_email, created_at, ongoing FROM events WHERE id = ?', [id]);
     },
     async reports(id: string): Promise<AdminReportRow[]> {
       return db.all<AdminReportRow>(
@@ -112,6 +114,13 @@ export function adminEventsRepo(db: Db) {
     async setVerified(id: string, verified: boolean, nowIso: string) {
       await db.run('UPDATE events SET verified = ?, updated_at = ? WHERE id = ?', [
         verified ? 1 : 0,
+        nowIso,
+        id,
+      ]);
+    },
+    async setOngoing(id: string, ongoing: boolean, nowIso: string) {
+      await db.run('UPDATE events SET ongoing = ?, updated_at = ? WHERE id = ?', [
+        ongoing ? 1 : 0,
         nowIso,
         id,
       ]);
@@ -207,9 +216,12 @@ export function retentionRepo(db: Db) {
       if (n) await db.run('DELETE FROM signatures');
       return n;
     },
-    /** Events whose last occurrence ended before `iso` (or that never had one and are older). */
+    /**
+     * Events whose last occurrence ended before `iso` (or that never had one and
+     * are older). Ongoing events are kept until a moderator unmarks them.
+     */
     async deleteEventsEndedBefore(iso: string): Promise<number> {
-      const stale = `SELECT e.id FROM events e WHERE e.created_at < ? AND NOT EXISTS
+      const stale = `SELECT e.id FROM events e WHERE e.created_at < ? AND e.ongoing = 0 AND NOT EXISTS
         (SELECT 1 FROM event_occurrences o WHERE o.event_id = e.id AND o.ends_at >= ?)`;
       const n = await count(`SELECT COUNT(*) AS n FROM (${stale})`, [iso, iso]);
       if (!n) return 0;

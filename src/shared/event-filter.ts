@@ -8,7 +8,10 @@
  *   own local date(s) with Europe/Lisbon calendar dates — an Azores event at
  *   23:30 on Saturday belongs to Saturday. See docs/decisions.md.
  * - Instant-based filters (upcoming, next7) compare UTC instants.
+ * - Ongoing events ("sem fim", set by a moderator) also get an all-day
+ *   occurrence on every day from their first date on. See docs/decisions.md #74.
  */
+import { LIMITS } from '../config/app';
 import type { EventType } from '../config/event-types';
 import {
   addCivilDaysIso,
@@ -17,6 +20,8 @@ import {
   nextDates,
   nowIso,
   occurrenceLocalDates,
+  todayIn,
+  toUtcRange,
   weekendDates,
   type Tz,
 } from './dates';
@@ -36,6 +41,8 @@ export interface FilterableEvent {
   type: EventType;
   tz: Tz;
   occurrences: FilterableOccurrence[];
+  /** Ongoing ("sem fim"): local date of its first occurrence; null/absent = normal event. */
+  ongoingSince?: string | null;
 }
 
 export type WhenFilter =
@@ -98,6 +105,42 @@ function typeMatcher(types: readonly EventType[]): (e: FilterableEvent) => boole
   return (e) => set.has(e.type);
 }
 
+/** How many days ahead ongoing events get their daily occurrences (covers the day strip). */
+const ONGOING_DAYS_AHEAD = Math.max(LIMITS.dayStripDays, 8);
+
+/**
+ * The event's occurrences plus, for an ongoing event, an all-day occurrence for
+ * each local date from yesterday (it lasts until 06:00, see #73) up to
+ * `daysAhead` days ahead, never before `ongoingSince`. Dates that already have
+ * an occurrence keep it (a cancelled date stays cancelled).
+ */
+export function withOngoingDays<E extends FilterableEvent>(
+  event: E,
+  now: Date,
+  daysAhead: number = ONGOING_DAYS_AHEAD,
+): E['occurrences'] {
+  const since = event.ongoingSince;
+  if (!since) return event.occurrences;
+  const today = todayIn(event.tz, now);
+  const last = addDays(today, daysAhead);
+  const yesterday = addDays(today, -1);
+  const taken = new Set(event.occurrences.map((o) => o.localDate));
+  const extra: FilterableOccurrence[] = [];
+  for (let d = since > yesterday ? since : yesterday; d <= last; d = addDays(d, 1)) {
+    if (taken.has(d)) continue;
+    const local = { localDate: d, startTime: null, endTime: null };
+    extra.push({
+      id: `${event.id}:${d}`,
+      ...local,
+      ...toUtcRange(local, event.tz),
+      cancelled: false,
+    });
+  }
+  // Virtual occurrences only carry the filterable fields; callers that need more
+  // (note…) read them from real occurrences.
+  return [...event.occurrences, ...(extra as E['occurrences'])];
+}
+
 export function filterEvents<E extends FilterableEvent>(
   events: readonly E[],
   filter: EventFilter,
@@ -110,7 +153,9 @@ export function filterEvents<E extends FilterableEvent>(
 
   for (const event of events) {
     if (!typeOk(event)) continue;
-    const live = event.occurrences.filter((o) => !o.cancelled && o.endsAt > nowStr).sort(byStart);
+    const live = withOngoingDays(event, now)
+      .filter((o) => !o.cancelled && o.endsAt > nowStr)
+      .sort(byStart);
     const matching = live.filter(inRange);
     const highlight = matching[0];
     if (!highlight) continue;
@@ -139,7 +184,7 @@ export function countByDay(
   for (const event of events) {
     if (!typeOk(event)) continue;
     const eventDates = new Set<string>();
-    for (const o of event.occurrences) {
+    for (const o of withOngoingDays(event, now, days)) {
       if (o.cancelled || o.endsAt <= nowStr) continue;
       for (const d of occurrenceLocalDates(o)) eventDates.add(d);
     }

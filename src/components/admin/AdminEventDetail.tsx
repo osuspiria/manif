@@ -18,6 +18,7 @@ function toListItem(d: Detail): AdminEventListItem {
     title: d.title,
     status: d.status,
     verified: d.verified,
+    ongoing: d.ongoing,
     municipality: d.municipality,
     district: d.district,
     createdAt: d.createdAt,
@@ -108,6 +109,7 @@ export function AdminEventDetail({ id }: { id: string }) {
         onError={() => setStatus(pt.admin.actionError)}
       />
       {d.reports.length > 0 && <p class="hint">{pt.admin.publishDismisses}</p>}
+      <p class="hint">{pt.admin.ongoingNote}</p>
       <p class="form-ok" role="status">
         {status}
       </p>

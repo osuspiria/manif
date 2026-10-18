@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { pt } from '../../i18n/pt';
 import { nowIso } from '../../shared/dates';
 import { filterEvents, type WhenFilter } from '../../shared/event-filter';
-import { formatOccurrence } from '../../shared/event-view';
+import { formatOccurrence, formatOngoing } from '../../shared/event-view';
 import { detectPlatform, mapsAppUrl } from '../../shared/maps-links';
 import type { PublicEvent, PublicOccurrence } from '../../shared/schemas';
 import { ReportForm } from './ReportForm';
@@ -65,12 +65,18 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
     filterEvents([event], { when, types: [] }, now)[0] ??
     filterEvents([event], { when: { kind: 'upcoming' }, types: [] }, now)[0];
   const cancelledFuture = event.occurrences.filter((o) => o.cancelled && o.endsAt > nowIso(now));
+  // Ongoing events: the daily all-day dates are summed up in one line; only
+  // real dates (with their own time or note) are listed.
+  const realIds = new Set(event.occurrences.map((o) => o.id));
+  const shown = (o: PublicOccurrence) => !event.ongoingSince || realIds.has(o.id);
   const extra = match
     ? [
         ...match.inRange.slice(1).map((o) => ({ o, faded: false })),
         ...match.others.map((o) => ({ o, faded: true })),
         ...cancelledFuture.map((o) => ({ o, faded: true })),
-      ].sort((a, b) => (a.o.startsAt < b.o.startsAt ? -1 : 1))
+      ]
+        .filter(({ o }) => shown(o))
+        .sort((a, b) => (a.o.startsAt < b.o.startsAt ? -1 : 1))
     : [];
 
   const url = `${window.location.origin}/mapa/e/${event.id}`;
@@ -129,8 +135,14 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
 
       {match ? (
         <div class="event-dates">
-          <p class="occ-highlight">{formatOccurrence(match.highlight, event.tz)}</p>
-          {match.highlight.note && <p class="occ-note">{match.highlight.note}</p>}
+          <p class="occ-highlight">
+            {event.ongoingSince
+              ? formatOngoing(event.ongoingSince)
+              : formatOccurrence(match.highlight, event.tz)}
+          </p>
+          {!event.ongoingSince && match.highlight.note && (
+            <p class="occ-note">{match.highlight.note}</p>
+          )}
           {extra.length > 0 && (
             <>
               <button

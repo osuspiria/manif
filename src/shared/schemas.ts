@@ -352,6 +352,8 @@ export const PublicEventSchema = z.object({
   district: z.string(),
   tz: TzSchema,
   verified: z.boolean(),
+  /** Ongoing ("sem fim"): first local date, shown every day from then on; null = normal event. */
+  ongoingSince: z.string().nullable(),
   occurrences: z.array(PublicOccurrenceSchema),
 });
 export type PublicEvent = z.infer<typeof PublicEventSchema>;
@@ -408,7 +410,7 @@ export const AdminEventsQuerySchema = z.object({
 });
 
 export const AdminEventActionSchema = z.object({
-  action: z.enum(['publish', 'hide', 'verify', 'unverify'], 'required'),
+  action: z.enum(['publish', 'hide', 'verify', 'unverify', 'ongoing', 'not_ongoing'], 'required'),
 });
 export type AdminEventAction = z.infer<typeof AdminEventActionSchema>['action'];
 
@@ -420,6 +422,8 @@ export const AdminEventListItemSchema = z.object({
   title: z.string(),
   status: EventStatusSchema,
   verified: z.boolean(),
+  /** Ongoing ("sem fim"): shown every day until hidden or unmarked. */
+  ongoing: z.boolean(),
   municipality: z.string(),
   district: z.string(),
   createdAt: z.string(),
@@ -432,6 +436,7 @@ export type AdminEventListItem = z.infer<typeof AdminEventListItemSchema>;
 export const AdminEventListSchema = z.object({ items: z.array(AdminEventListItemSchema) });
 
 export const AdminEventDetailSchema = EditableEventSchema.extend({
+  ongoing: z.boolean(),
   contactEmail: z.string().nullable(),
   createdAt: z.string(),
   reports: z.array(

@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import { APP_NAME } from '../../config/app';
 import { nowIso } from '../../shared/dates';
-import { formatOccurrence } from '../../shared/event-view';
+import { formatOccurrence, formatOngoing } from '../../shared/event-view';
 import type { PublicEvent } from '../../shared/schemas';
 import type { Clock } from '../clock';
 import type { Env } from '../env';
@@ -28,7 +28,11 @@ function describe(event: PublicEvent, now: Date): string {
   const at = nowIso(now);
   const next =
     event.occurrences.find((o) => !o.cancelled && o.endsAt > at) ?? event.occurrences.at(-1);
-  const when = next ? formatOccurrence(next, event.tz) : '';
+  const when = event.ongoingSince
+    ? formatOngoing(event.ongoingSince)
+    : next
+      ? formatOccurrence(next, event.tz)
+      : '';
   return [when, event.placeLabel, event.municipality].filter(Boolean).join(' · ');
 }
 

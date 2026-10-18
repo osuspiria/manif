@@ -10,9 +10,9 @@ import {
 } from '../../shared/schemas';
 import { adminApi } from './api';
 
-/** Approve / hide / "Confirmado" buttons, shared by the list and the detail view. */
+/** Approve / hide / "Confirmado" / "Sem fim" buttons, shared by the list and the detail view. */
 export function EventActions(props: {
-  event: { id: string; status: AdminEventListItem['status']; verified: boolean; reports: number };
+  event: Pick<AdminEventListItem, 'id' | 'status' | 'verified' | 'ongoing' | 'reports'>;
   onDone: (item: AdminEventListItem) => void;
   onError: () => void;
 }) {
@@ -64,6 +64,16 @@ export function EventActions(props: {
       >
         {e.verified ? pt.admin.unverify : pt.admin.verify}
       </button>
+      <button
+        type="button"
+        class="btn"
+        disabled={busy}
+        aria-pressed={e.ongoing}
+        title={pt.admin.ongoingNote}
+        onClick={() => void act(e.ongoing ? 'not_ongoing' : 'ongoing')}
+      >
+        {e.ongoing ? pt.admin.unmarkOngoing : pt.admin.markOngoing}
+      </button>
     </div>
   );
 }
@@ -75,6 +85,7 @@ export function EventBadges({ e }: { e: AdminEventListItem }) {
       <span class={e.verified ? 'badge badge-ok' : 'badge'}>
         {e.verified ? pt.event.verified : pt.event.unverified}
       </span>
+      {e.ongoing && <span class="badge badge-ok">{pt.admin.ongoing}</span>}
       {e.reports > 0 && <span class="badge badge-warn">{pt.admin.reports(e.reports)}</span>}
     </span>
   );
@@ -176,7 +187,9 @@ export function AdminEvents() {
                 {pt.eventTypes[e.type]} · {e.municipality} ·{' '}
                 {e.nextStartsAt
                   ? `${pt.admin.nextDate}: ${formatInstantShort(e.nextStartsAt)}`
-                  : pt.admin.noUpcoming}
+                  : e.ongoing
+                    ? pt.admin.ongoing
+                    : pt.admin.noUpcoming}
               </p>
               <EventActions
                 event={e}

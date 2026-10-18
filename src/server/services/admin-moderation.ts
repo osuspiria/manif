@@ -41,6 +41,7 @@ function toListItem(r: AdminEventRow): AdminEventListItem {
     title: r.title,
     status: r.status,
     verified: r.verified === 1,
+    ongoing: r.ongoing === 1,
     municipality: r.municipality,
     district: r.district,
     createdAt: r.created_at,
@@ -67,6 +68,7 @@ export async function eventDetail(id: string, d: ModerationDeps): Promise<AdminE
   ]);
   return {
     ...toEditable(row, occurrences),
+    ongoing: extra.ongoing === 1,
     contactEmail: extra.contact_email,
     createdAt: extra.created_at,
     reports: reports.map((r) => ({
@@ -90,6 +92,8 @@ export async function moderateEvent(
   if (action === 'hide') await d.write.setStatus(id, 'hidden', at);
   if (action === 'verify' || action === 'unverify')
     await d.events.setVerified(id, action === 'verify', at);
+  if (action === 'ongoing' || action === 'not_ongoing')
+    await d.events.setOngoing(id, action === 'ongoing', at);
   const row = await d.events.get(id, at);
   return row ? toListItem(row) : null;
 }

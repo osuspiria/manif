@@ -19,6 +19,7 @@ export interface EventFixture {
   contactEmail?: string | null;
   editTokenHash?: string;
   verified?: boolean;
+  ongoing?: boolean;
   occurrences: OccFixture[];
 }
 
@@ -51,9 +52,9 @@ export async function insertEvent(f: EventFixture): Promise<void> {
   const stmts = [
     env.DB.prepare(
       `INSERT INTO events (id, type, title, description, organizer, lat, lng, place_label,
-         municipality, district, tz, status, verified, contact_email, edit_token_hash,
+         municipality, district, tz, status, verified, ongoing, contact_email, edit_token_hash,
          created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '2026-11-01T00:00:00Z', '2026-11-01T00:00:00Z')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '2026-11-01T00:00:00Z', '2026-11-01T00:00:00Z')`,
     ).bind(
       f.id,
       f.type ?? 'rally',
@@ -68,6 +69,7 @@ export async function insertEvent(f: EventFixture): Promise<void> {
       tz,
       f.status ?? 'published',
       f.verified ? 1 : 0,
+      f.ongoing ? 1 : 0,
       f.contactEmail ?? SENTINELS.contactEmail,
       f.editTokenHash ?? SENTINELS.editTokenHash,
     ),

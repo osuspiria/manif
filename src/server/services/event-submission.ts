@@ -160,6 +160,7 @@ export function toEditable(row: OwnerEventRow, occurrences: OccurrenceRow[]): Ed
     district: row.district,
     tz: toTz(row.tz),
     verified: row.verified === 1,
+    ongoingSince: row.ongoing_since,
     status: row.status,
     occurrences: occurrences.map((o) => ({
       id: o.id,

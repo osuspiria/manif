@@ -106,8 +106,9 @@ CREATE TABLE event_reports (          -- botão "Reportar"
 Regras:
 - 1 ≤ ocorrências ≤ 30 por evento; todas no futuro no momento da submissão; no máximo 12 meses à frente.
 - `tz` vem do ponto (Açores ≠ continente: UTC−1). Mostrar "(hora dos Açores)" quando `tz = Atlantic/Azores`.
-- Um evento é **visível** se `status = published` e tiver pelo menos uma ocorrência não cancelada com `ends_at ≥ agora`.
-- Retenção: eventos sem ocorrências futuras há mais de 30 dias são apagados (job diário). Valor configurável.
+- Um evento é **visível** se `status = published` e tiver pelo menos uma ocorrência não cancelada com `ends_at ≥ agora`, ou se estiver marcado como **sem fim**.
+- **Sem fim** (`events.ongoing`, só pela moderação): o evento aparece todos os dias, como "todo o dia", desde a sua primeira data até ser ocultado ou desmarcado. As datas reais mantêm-se (com a sua hora; uma data cancelada continua cancelada). Na ficha e na lista: "Todos os dias desde …". A API pública devolve `ongoingSince` (primeira data local, ou `null`). Ver `docs/decisions.md` #74.
+- Retenção: eventos sem ocorrências futuras há mais de 30 dias são apagados (job diário), exceto os sem fim. Valor configurável.
 
 ### 3.2 Assinaturas
 
@@ -301,7 +302,7 @@ O concelho é guardado pelo código DICO da CAOP (há nomes repetidos, como "Lag
 
 Necessário para as duas funcionalidades, mantido mínimo:
 - Login por **magic link** para emails numa allowlist (`ADMIN_EMAILS`): `/admin/entrar/#t=<token>`, 15 minutos, uso único. Sessão com cookie estritamente necessário: `admin_session`, `Path=/api/admin`, `HttpOnly`, `Secure`, `SameSite=Strict`, 24 horas (ver `docs/decisions.md` #48–50).
-- Separador **Eventos**: pendentes, reportados, ocultos, todos; aprovar (descarta as denúncias), ocultar, marcar "confirmado", editar (sem perder o "confirmado").
+- Separador **Eventos**: pendentes, reportados, ocultos, todos; aprovar (descarta as denúncias), ocultar, marcar "confirmado", marcar "sem fim", editar (sem perder o "confirmado").
 - Separador **Assinaturas**: organizações por aprovar; pesquisa; apagar a pedido.
 - **Exportar CSV** só de quem aceitou recontacto.
 - Funciona bem em telemóvel.
@@ -316,7 +317,7 @@ Necessário para as duas funcionalidades, mantido mínimo:
 - Identificar o **responsável pelo tratamento** (pessoa/associação) e um contacto na página de privacidade.
 - Idade de consentimento digital em Portugal: **13 anos** (Lei 58/2019). Incluir declaração "Tenho 13 anos ou mais" ou equivalente.
 - Minimização: o mapa não pede dados pessoais; email de contacto opcional e nunca público.
-- Retenção: assinaturas não confirmadas 7 dias; eventos 30 dias após a última ocorrência; assinaturas até X meses após o fim da campanha (`CAMPAIGN_END` + `RETENTION.signatureMonthsAfterCampaign` em `src/config/app.ts`) ou até a pessoa retirar. Um Cron Trigger diário aplica estas regras.
+- Retenção: assinaturas não confirmadas 7 dias; eventos 30 dias após a última ocorrência (exceto os marcados como sem fim); assinaturas até X meses após o fim da campanha (`CAMPAIGN_END` + `RETENTION.signatureMonthsAfterCampaign` em `src/config/app.ts`) ou até a pessoa retirar. Um Cron Trigger diário aplica estas regras.
 - Direitos: retirar assinatura por link; pedidos de acesso/apagamento por email.
 - **Sem cookies** no site público; nada de analytics de terceiros. Se forem precisas métricas: contadores agregados no servidor, sem IP.
 - IPs: usados só para rate limit, guardados como hash com sal diário, nunca persistidos em BD.
@@ -348,7 +349,7 @@ Necessário para as duas funcionalidades, mantido mínimo:
 | GET | `/api/admin/me` | Email da sessão |
 | GET | `/api/admin/events?filter&q` | Fila de eventos: `pending`, `reported`, `hidden`, `all` |
 | GET/PATCH | `/api/admin/events/:id` | Detalhe (com email de contacto e denúncias) / editar |
-| POST | `/api/admin/events/:id/moderate` | `{action: publish \| hide \| verify \| unverify}` |
+| POST | `/api/admin/events/:id/moderate` | `{action: publish \| hide \| verify \| unverify \| ongoing \| not_ongoing}` |
 | GET | `/api/admin/signatures?filter&q` | `orgs_pending`, `organizations`, `individuals`, `unconfirmed` |
 | POST | `/api/admin/signatures/:id/moderate` | `{action: approve \| reject}` (organizações confirmadas) |
 | DELETE | `/api/admin/signatures/:id` | Apagar a pedido |

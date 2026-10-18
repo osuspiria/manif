@@ -77,6 +77,7 @@ describe('fromEditable', () => {
         district: 'Porto',
         tz: 'Europe/Lisbon',
         verified: false,
+        ongoingSince: null,
         status: 'published',
         occurrences: [
           {

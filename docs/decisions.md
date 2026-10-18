@@ -255,3 +255,10 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Aplica-se também a "todo o dia". Hora em `OPEN_END_TIME` (`src/shared/dates.ts`), na hora local do evento, com o Temporal a tratar a mudança de hora.
     - Depois da meia-noite o evento continua em "Próximos" e no mapa, mas não em "Hoje" (que já é o dia seguinte) nem em "Amanhã" do dia anterior: nos filtros por dia conta só o seu `local_date`.
     - A migração `0004_open_end_0600.sql` recalcula o `ends_at` guardado (+6 h, ou +5 h / +7 h quando o dia seguinte é o domingo da mudança de hora) e salta linhas já no novo formato.
+74. **Eventos "sem fim"** (pedido: eventos que aparecem todos os dias até serem ocultados à mão, ex.: acampamentos).
+    - Só a moderação marca: botão "Marcar como sem fim" / "Tirar \"Sem fim\"" no admin (ações `ongoing` / `not_ongoing`). Ocultar continua a ser "Ocultar"; a marca mantém-se num evento oculto.
+    - Coluna `events.ongoing` (migração `0005_ongoing_events.sql`); no código chama-se `ongoing` para não se confundir com `OPEN_END_TIME` (#73).
+    - A API pública devolve `ongoingSince`: a primeira data local não cancelada (ou `null`). Um evento sem fim publicado está sempre no GeoJSON, mesmo sem datas futuras.
+    - Os dias são gerados no cliente pelo filtro puro (`withOngoingDays` em `src/shared/event-filter.ts`, recebe `now`): uma ocorrência "todo o dia" por data local, de ontem (termina às 06:00, #73) até `LIMITS.dayStripDays` dias à frente, nunca antes de `ongoingSince`. Assim não é preciso cron e a cache do GeoJSON não fica desatualizada. Datas reais ficam como estão (a sua hora; cancelada continua cancelada).
+    - Ficha e lista mostram uma linha "Todos os dias desde seg, 12 out" em vez das datas; a ficha lista só as datas reais, não as geradas.
+    - Retenção: eventos sem fim nunca são apagados automaticamente; para os limpar, tira-se a marca.

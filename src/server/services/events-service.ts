@@ -38,6 +38,7 @@ function toPublicEvent(e: EventRow, occurrences: OccurrenceRow[]): PublicEvent {
     district: e.district,
     tz: toTz(e.tz),
     verified: e.verified === 1,
+    ongoingSince: e.ongoing_since,
     occurrences: occurrences.map(toPublicOccurrence),
   };
 }

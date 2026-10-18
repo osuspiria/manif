@@ -1,6 +1,11 @@
 import { pt } from '../../i18n/pt';
 import type { FilteredEvent } from '../../shared/event-filter';
-import { formatDayHeading, formatOccurrence, groupByDay } from '../../shared/event-view';
+import {
+  formatDayHeading,
+  formatOccurrence,
+  formatOngoing,
+  groupByDay,
+} from '../../shared/event-view';
 import type { PublicEvent } from '../../shared/schemas';
 import { TypeIcon } from './TypeIcon';
 
@@ -22,7 +27,8 @@ export function EventList({ results, selectedId, onSelect }: Props) {
           </h2>
           <ul>
             {group.items.map(({ event, highlight, inRange, others }) => {
-              const more = inRange.length - 1 + others.length;
+              // Ongoing events repeat every day: one "Todos os dias desde…" line, no count.
+              const more = event.ongoingSince ? 0 : inRange.length - 1 + others.length;
               return (
                 <li key={event.id}>
                   <button
@@ -34,7 +40,11 @@ export function EventList({ results, selectedId, onSelect }: Props) {
                     <TypeIcon type={event.type} size={22} />
                     <span class="event-card-body">
                       <span class="event-card-title">{event.title}</span>
-                      <span class="event-card-meta">{formatOccurrence(highlight, event.tz)}</span>
+                      <span class="event-card-meta">
+                        {event.ongoingSince
+                          ? formatOngoing(event.ongoingSince)
+                          : formatOccurrence(highlight, event.tz)}
+                      </span>
                       <span class="event-card-meta">
                         {[event.placeLabel, event.municipality].filter(Boolean).join(' · ')}
                       </span>

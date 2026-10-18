@@ -293,6 +293,48 @@ describe('admin: events', () => {
     ).toBe(400);
   });
 
+  it('marks an event as ongoing ("sem fim"): on the map every day until hidden', async () => {
+    // Its only date has passed: a normal event would be off the map.
+    await insertEvent({
+      id: IDS.d,
+      title: 'Acampamento',
+      occurrences: [
+        { localDate: '2026-10-12', startTime: null, cancelled: true },
+        { localDate: '2026-10-13', startTime: '18:00' },
+      ],
+    });
+    const geo = async () =>
+      PublicEventCollectionSchema.parse(await (await call('/api/events.geojson')).json()).features;
+    expect((await geo()).map((f) => f.id)).not.toContain(IDS.d);
+
+    const r1 = await call(`/api/admin/events/${IDS.d}/moderate`, {
+      json: { action: 'ongoing' },
+      cookie,
+    });
+    expect(await r1.json()).toMatchObject({ id: IDS.d, ongoing: true, nextStartsAt: null });
+    const feature = (await geo()).find((f) => f.id === IDS.d);
+    expect(feature?.properties.ongoingSince).toBe('2026-10-13');
+    expect((await list('all')).find((e) => e.id === IDS.d)?.ongoing).toBe(true);
+    const detail = AdminEventDetailSchema.parse(
+      await (await call(`/api/admin/events/${IDS.d}`, { cookie })).json(),
+    );
+    expect(detail).toMatchObject({ ongoing: true, ongoingSince: '2026-10-13' });
+
+    await call(`/api/admin/events/${IDS.d}/moderate`, { json: { action: 'hide' }, cookie });
+    expect((await geo()).map((f) => f.id)).not.toContain(IDS.d);
+    await call(`/api/admin/events/${IDS.d}/moderate`, { json: { action: 'publish' }, cookie });
+    expect((await geo()).map((f) => f.id)).toContain(IDS.d);
+
+    const r2 = await call(`/api/admin/events/${IDS.d}/moderate`, {
+      json: { action: 'not_ongoing' },
+      cookie,
+    });
+    expect(await r2.json()).toMatchObject({ ongoing: false });
+    expect((await geo()).map((f) => f.id)).not.toContain(IDS.d);
+    // Normal events carry ongoingSince: null.
+    expect((await geo()).find((f) => f.id === IDS.c)?.properties.ongoingSince).toBeNull();
+  });
+
   it('edits keep "Confirmado" and follow the same date rules', async () => {
     const detail = AdminEventDetailSchema.parse(
       await (await call(`/api/admin/events/${IDS.c}`, { cookie })).json(),
