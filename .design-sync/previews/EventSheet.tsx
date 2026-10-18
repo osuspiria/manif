@@ -37,6 +37,14 @@ export function WithCancelledDate() {
   );
 }
 
+export function Ongoing() {
+  return (
+    <MapStage>
+      <EventSheet event={EVENTS[5]!} loading={false} when={{ kind: 'upcoming' }} now={NOW} onClose={() => {}} />
+    </MapStage>
+  );
+}
+
 export function Loading() {
   return (
     <MapStage>

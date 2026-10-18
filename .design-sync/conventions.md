@@ -28,7 +28,7 @@ Selected/pressed state is expressed with ARIA attributes (`aria-pressed`, `aria-
 
 ### Data
 
-Event props use the API shape (`PublicEvent`: `type` ∈ `demonstration | rally | action | assembly | camp | other`, `tz` ∈ `Europe/Lisbon | Atlantic/Madeira | Atlantic/Azores`, `occurrences[]` with `localDate`, `startTime`, `startsAt`/`endsAt` in UTC, `cancelled`). Build list/filter props with the bundled pure helpers — `filterEvents(events, { when, types }, now)`, `countByType(results)`, `countByDay(events, types, now, 14)`, `lisbonToday(now)`, `summaryLabel(n, when, types)`, `emptyRow()`, `emptyDetails()`. Sample content must be clearly fictional (e.g. "Marcha pelo clima (exemplo)").
+Event props use the API shape (`PublicEvent`: `type` ∈ `demonstration | rally | action | assembly | camp | other`, `tz` ∈ `Europe/Lisbon | Atlantic/Madeira | Atlantic/Azores`, `occurrences[]` with `localDate`, `startTime`, `startsAt`/`endsAt` in UTC, `cancelled`; `ongoingSince`: first local date of an ongoing "sem fim" event, which `filterEvents` shows every day from then on — `null` for normal events). Build list/filter props with the bundled pure helpers — `filterEvents(events, { when, types }, now)`, `countByType(results)`, `countByDay(events, types, now, 14)`, `lisbonToday(now)`, `summaryLabel(n, when, types)`, `emptyRow()`, `emptyDetails()`. Sample content must be clearly fictional (e.g. "Marcha pelo clima (exemplo)").
 
 On the home page (the map), put `MapIntro` above the `.topbar`: site title and a one-line description. It hides itself while the filters or an event are open on a phone.
 

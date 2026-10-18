@@ -37,6 +37,8 @@ Project: "Mobilização PT" — https://claude.ai/design/p/3efc90c0-1a6a-493f-81
   Astro page and is not meant for designs.
 - Previews use fixed `NOW = 2026-10-17T09:00Z` and fictional fixtures in `previews/_fixtures.ts` (`.ts` so it isn't
   treated as a component preview).
+- `EVENTS[5]` is an ongoing ("sem fim", decisions #74) camp with `ongoingSince` and only a past real date: it shows in
+  every EventList/FilterPanel story via `filterEvents`, and has its own `EventSheet` `Ongoing` story (added 18/10/2026).
 
 - **Fonts are inlined, there is no `fonts/` dir.** `base.css` imports Archivo from `@fontsource/archivo` (latin 400/600/800);
   `bridge/build.mjs` uses esbuild's `dataurl` loader for `.woff2`/`.woff`, so `_ds_bundle.css` carries the font itself.

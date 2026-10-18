@@ -19,6 +19,7 @@ export const EVENTS: PublicEvent[] = [
     district: 'Lisboa',
     tz: 'Europe/Lisbon',
     verified: true,
+    ongoingSince: null,
     occurrences: [
       { id: 'o1a', localDate: '2026-10-17', startTime: '15:00', endTime: '18:00', startsAt: '2026-10-17T14:00:00Z', endsAt: '2026-10-17T17:00:00Z', note: null, cancelled: false },
       { id: 'o1b', localDate: '2026-10-24', startTime: '15:00', endTime: '18:00', startsAt: '2026-10-24T14:00:00Z', endsAt: '2026-10-24T17:00:00Z', note: 'Percurso alternativo', cancelled: false },
@@ -37,6 +38,7 @@ export const EVENTS: PublicEvent[] = [
     district: 'Porto',
     tz: 'Europe/Lisbon',
     verified: false,
+    ongoingSince: null,
     occurrences: [
       { id: 'o2a', localDate: '2026-10-18', startTime: '11:00', endTime: '13:00', startsAt: '2026-10-18T10:00:00Z', endsAt: '2026-10-18T12:00:00Z', note: null, cancelled: false },
     ],
@@ -54,6 +56,7 @@ export const EVENTS: PublicEvent[] = [
     district: 'Porto',
     tz: 'Europe/Lisbon',
     verified: true,
+    ongoingSince: null,
     occurrences: [
       { id: 'o3a', localDate: '2026-10-18', startTime: null, endTime: null, startsAt: '2026-10-17T23:00:00Z', endsAt: '2026-10-18T23:00:00Z', note: null, cancelled: false },
     ],
@@ -71,6 +74,7 @@ export const EVENTS: PublicEvent[] = [
     district: 'Açores',
     tz: 'Atlantic/Azores',
     verified: false,
+    ongoingSince: null,
     occurrences: [
       { id: 'o4a', localDate: '2026-10-20', startTime: '21:00', endTime: '23:00', startsAt: '2026-10-20T21:00:00Z', endsAt: '2026-10-20T23:00:00Z', note: null, cancelled: false },
     ],
@@ -88,9 +92,30 @@ export const EVENTS: PublicEvent[] = [
     district: 'Madeira',
     tz: 'Atlantic/Madeira',
     verified: true,
+    ongoingSince: null,
     occurrences: [
       { id: 'o5a', localDate: '2026-10-22', startTime: '18:30', endTime: '20:00', startsAt: '2026-10-22T17:30:00Z', endsAt: '2026-10-22T19:00:00Z', note: null, cancelled: false },
       { id: 'o5b', localDate: '2026-10-29', startTime: '18:30', endTime: '20:00', startsAt: '2026-10-29T18:30:00Z', endsAt: '2026-10-29T20:00:00Z', note: null, cancelled: true },
+    ],
+  },
+  {
+    // Ongoing ("sem fim"): its only real date is past; the filter adds an
+    // all-day occurrence for every day from ongoingSince on.
+    id: '01EXEMPLO00000000000000006',
+    type: 'camp',
+    title: 'Acampamento pela habitação (exemplo)',
+    description: 'Tendas na praça até haver resposta. Traz mantas.',
+    organizer: 'Movimento Exemplo pela Habitação',
+    lat: 40.2111,
+    lng: -8.4292,
+    placeLabel: 'Praça 8 de Maio',
+    municipality: 'Coimbra',
+    district: 'Coimbra',
+    tz: 'Europe/Lisbon',
+    verified: true,
+    ongoingSince: '2026-10-15',
+    occurrences: [
+      { id: 'o6a', localDate: '2026-10-15', startTime: null, endTime: null, startsAt: '2026-10-14T23:00:00Z', endsAt: '2026-10-16T05:00:00Z', note: null, cancelled: false },
     ],
   },
 ];
