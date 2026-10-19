@@ -131,11 +131,15 @@ describe('GET /mapa/e/:id (share page)', () => {
 
   it('has a canonical URL, schema.org Event data and the event text for search engines', async () => {
     const html = await (await get(`/mapa/e/${IDS.a}`)).text();
-    // dist/ is built with PUBLIC_SITE_URL: the canonical keeps that origin.
-    expect(html.match(/rel="canonical"/g)).toHaveLength(1);
-    expect(html).toMatch(
-      new RegExp(`<link rel="canonical" href="https?://[^"]+/mapa/e/${IDS.a}">`),
-    );
+    // The home page has a canonical only when dist/ was built with PUBLIC_SITE_URL
+    // (not in e2e mode); the event page then points it at the event, same origin.
+    const home = await (await env.ASSETS.fetch('http://localhost/')).text();
+    const canonical = home.match(/<link rel="canonical" href="([^"]+)">/)?.[1];
+    expect(html.match(/rel="canonical"/g) ?? []).toHaveLength(canonical ? 1 : 0);
+    if (canonical) {
+      const expected = new URL(`/mapa/e/${IDS.a}`, canonical).toString();
+      expect(html).toContain(`<link rel="canonical" href="${expected}">`);
+    }
     expect(html).not.toContain('"@type":"WebSite"');
     const ld = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)?.[1];
     expect(JSON.parse(ld ?? 'null')).toEqual([
