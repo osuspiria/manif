@@ -3,13 +3,16 @@ import Head from '../components/Head.astro';
 import { MapApp } from '../components/map/MapApp';
 import { MapIntro } from '../components/map/MapIntro';
 import { pt } from '../i18n/pt';
+import { siteJsonLd } from '../shared/seo';
 import '../styles/map.css';
+
+const jsonLd = Astro.site ? siteJsonLd(Astro.site.toString()) : undefined;
 ---
 
 <!doctype html>
 <html lang="pt-PT">
   <head>
-    <Head description={pt.map.description} />
+    <Head title={pt.seo.homeTitle} description={pt.seo.homeDescription} jsonLd={jsonLd} />
   </head>
   <body class="map-page">
     <div id="map-root">
@@ -25,6 +28,9 @@ import '../styles/map.css';
     <noscript>
       <h1 class="visually-hidden">{pt.site.title}</h1>
       <p>{pt.map.noscript}</p>
+      <p>
+        <a href="/manifestacoes/">{pt.seo.districtsLink}</a>
+      </p>
     </noscript>
   </body>
 </html>

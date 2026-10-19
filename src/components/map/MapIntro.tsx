@@ -21,7 +21,12 @@ export function MapIntro({ hidden = false, shell = false }: Props) {
           {pt.site.title}
         </Title>
       </div>
-      <p>{pt.map.description}</p>
+      <p>
+        {pt.map.description}{' '}
+        <a href="/manifestacoes/" class="map-intro-link">
+          {pt.seo.districtsLink}
+        </a>
+      </p>
     </section>
   );
 }

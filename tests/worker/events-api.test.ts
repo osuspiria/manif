@@ -129,6 +129,29 @@ describe('GET /mapa/e/:id (share page)', () => {
     expect(html).toMatch(/<meta name="description" content="qua, 18 nov · 18:00–20:00/);
   });
 
+  it('has a canonical URL, schema.org Event data and the event text for search engines', async () => {
+    const html = await (await get(`/mapa/e/${IDS.a}`)).text();
+    // dist/ is built with PUBLIC_SITE_URL: the canonical keeps that origin.
+    expect(html.match(/rel="canonical"/g)).toHaveLength(1);
+    expect(html).toMatch(
+      new RegExp(`<link rel="canonical" href="https?://[^"]+/mapa/e/${IDS.a}">`),
+    );
+    expect(html).not.toContain('"@type":"WebSite"');
+    const ld = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)?.[1];
+    expect(JSON.parse(ld ?? 'null')).toEqual([
+      expect.objectContaining({
+        '@type': 'Event',
+        name: 'Várias datas',
+        startDate: '2026-11-18T18:00:00Z',
+        url: `http://localhost/mapa/e/${IDS.a}`,
+      }),
+    ]);
+    const noscript = html.slice(html.indexOf('<noscript>'), html.indexOf('</noscript>'));
+    expect(noscript).toContain('<h1>Várias datas</h1>');
+    expect(noscript).toContain('Praça de Teste, Porto');
+    expect(noscript).toContain('Descrição de teste.');
+  });
+
   it('a failure while rendering answers with the HTML error page (500)', async () => {
     const broken = createApp({
       clock: () => {
@@ -139,6 +162,55 @@ describe('GET /mapa/e/:id (share page)', () => {
     expect(res.status).toBe(500);
     expect(res.headers.get('Content-Type')).toContain('text/html');
     expect(await res.text()).toContain('Algo correu mal');
+  });
+});
+
+describe('GET /manifestacoes/:slug/ (district page)', () => {
+  it("lists the district's upcoming events, linking to their pages", async () => {
+    const res = await get('/manifestacoes/porto/');
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain('<h1>Manifestações no Porto</h1>');
+    const list = html.slice(html.indexOf('<ol class="district-events">'), html.indexOf('</ol>'));
+    // Upcoming, published, not all cancelled — in date order.
+    expect(list).toContain(`href="/mapa/e/${IDS.a}"`);
+    expect(list).toContain('Várias datas');
+    expect(list).not.toContain(IDS.b); // past
+    expect(list).not.toContain(IDS.c); // pending
+    expect(list).not.toContain(IDS.d); // hidden
+    expect(list).not.toContain(IDS.e); // cancelled
+    const ld = JSON.parse(
+      html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)?.[1] ?? 'null',
+    );
+    expect(ld['@type']).toBe('ItemList');
+    expect(ld.itemListElement.map((i: { url: string }) => i.url)).toContain(
+      `http://localhost/mapa/e/${IDS.a}`,
+    );
+  });
+
+  it('says so when the district has no events', async () => {
+    const html = await (await get('/manifestacoes/acores/')).text();
+    expect(html).toContain('<h1>Manifestações nos Açores</h1>');
+    expect(html).toContain('De momento não há eventos anunciados nos Açores.');
+    expect(html).not.toContain('application/ld+json');
+  });
+
+  it('404s for an unknown district', async () => {
+    expect((await get('/manifestacoes/atlantida/')).status).toBe(404);
+  });
+});
+
+describe('GET /sitemap.xml', () => {
+  it('lists the home, district pages and upcoming events only', async () => {
+    const res = await get('/sitemap.xml');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toContain('application/xml');
+    const xml = await res.text();
+    expect(xml).toContain('<loc>http://localhost/</loc>');
+    expect(xml).toContain('<loc>http://localhost/manifestacoes/</loc>');
+    expect(xml).toContain('<loc>http://localhost/manifestacoes/lisboa/</loc>');
+    expect(xml).toContain(`<loc>http://localhost/mapa/e/${IDS.a}</loc>`);
+    for (const id of [IDS.b, IDS.c, IDS.d, IDS.e]) expect(xml).not.toContain(id);
   });
 });
 

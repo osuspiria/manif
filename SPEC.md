@@ -243,6 +243,14 @@ Não se pede nome nem morada de quem submete.
 - Auto-ocultar quando um evento recebe ≥ N reports (config, ex.: 3) até revisão.
 - Página `/admin` (ver §6).
 
+### 4.6 Páginas para motores de busca
+
+- `/manifestacoes/` (estática) lista os 18 distritos e as 2 regiões autónomas (`src/config/districts.ts`).
+- `/manifestacoes/<slug>/` (ex.: `lisboa`, `porto`, `acores`, `madeira`): página estática por distrito; o Worker preenche, em cada pedido, a lista dos próximos eventos desse distrito (filtro "Próximos"), com link para `/mapa/e/<id>` e JSON-LD `ItemList`. Sem eventos: a página responde 200 com "De momento não há eventos anunciados…". Slug desconhecido: 404.
+- `/mapa/e/<id>`: além das tags Open Graph, `<link rel="canonical">`, JSON-LD schema.org `Event` (um por data futura não cancelada, máx. 10; só campos públicos) e o texto do evento dentro do `<noscript>`.
+- `/sitemap.xml` (Worker): home, `/manifestacoes/`, páginas de distrito e eventos com datas futuras. `/robots.txt` (build) aponta para ele e não bloqueia `/api/events.geojson` nem `/tiles` (o Google precisa deles para renderizar o mapa).
+- A introdução do mapa tem um link "Manifestações por distrito".
+
 ---
 
 ## 5. Funcionalidade 2 — Assinatura de apoio
@@ -369,6 +377,7 @@ Validação partilhada entre cliente e servidor com **Zod** (`src/shared/schemas
 - WCAG 2.1 AA: contraste, foco visível, lista de eventos como alternativa ao mapa, formulários com labels e erros anunciados.
 - Funciona sem geolocalização e com JS lento; o formulário de assinatura funciona sem JS (POST normal) exceto Turnstile.
 - Todas as datas mostradas em PT-PT (`Intl.DateTimeFormat('pt-PT')`).
+- SEO: título e descrição da home com "manifestações em Portugal"; `<link rel="canonical">` (com `PUBLIC_SITE_URL`) em todas as páginas públicas; JSON-LD `WebSite` na home (ver §4.6).
 - Pré-visualização de links: Open Graph em todas as páginas públicas, imagem `public/og.png` (1200×630, `npm run og:image`); URLs absolutos com `PUBLIC_SITE_URL` no build. Páginas de erro 404 e 500 em PT-PT.
 
 ---

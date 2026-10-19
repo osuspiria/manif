@@ -1,39 +1,34 @@
 /**
  * /mapa/e/:id — serves the static map page (/) with the event's title and
- * Open Graph tags, so shared links get a proper preview. The client reads the
- * id from the path and opens the event sheet.
+ * Open Graph tags, so shared links get a proper preview, plus a canonical
+ * URL, schema.org Event data and the event's text (in <noscript>) for search
+ * engines. The client reads the id from the path and opens the event sheet.
  */
 import { Hono } from 'hono';
 import { APP_NAME } from '../../config/app';
 import { nowIso } from '../../shared/dates';
 import { formatOccurrence, formatOngoing } from '../../shared/event-view';
 import type { PublicEvent } from '../../shared/schemas';
+import { eventJsonLd, jsonLdScript } from '../../shared/seo';
 import type { Clock } from '../clock';
 import type { Env } from '../env';
+import { escapeHtml } from '../html/escape';
+import { eventNoscriptHtml, eventPath } from '../html/seo-html';
 import { d1Db } from '../repos/db';
 import { eventsRepo } from '../repos/events-repo';
 import { createEventsService } from '../services/events-service';
 
 const ID_RE = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 
-function escapeAttr(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
-}
-
-function describe(event: PublicEvent, now: Date): string {
+function whenLabel(event: PublicEvent, now: Date): string {
   const at = nowIso(now);
   const next =
     event.occurrences.find((o) => !o.cancelled && o.endsAt > at) ?? event.occurrences.at(-1);
-  const when = event.ongoingSince
+  return event.ongoingSince
     ? formatOngoing(event.ongoingSince)
     : next
       ? formatOccurrence(next, event.tz)
       : '';
-  return [when, event.placeLabel, event.municipality].filter(Boolean).join(' · ');
 }
 
 export function sharePageRoutes(clock: Clock) {
@@ -49,9 +44,11 @@ export function sharePageRoutes(clock: Clock) {
     }
 
     const page = await c.env.ASSETS.fetch(new URL('/', c.req.url));
+    const now = clock();
     const title = `${event.title} · ${APP_NAME}`;
-    const url = new URL(`/mapa/e/${event.id}`, c.req.url).toString();
-    const description = describe(event, clock());
+    const url = new URL(eventPath(event.id), c.req.url).toString();
+    const when = whenLabel(event, now);
+    const description = [when, event.placeLabel, event.municipality].filter(Boolean).join(' · ');
     const meta = [
       ['og:type', 'website'],
       ['og:site_name', APP_NAME],
@@ -63,8 +60,9 @@ export function sharePageRoutes(clock: Clock) {
       ['og:image:width', '1200'],
       ['og:image:height', '630'],
     ]
-      .map(([p, v]) => `<meta property="${p}" content="${escapeAttr(v ?? '')}">`)
+      .map(([p, v]) => `<meta property="${p}" content="${escapeHtml(v ?? '')}">`)
       .join('');
+    const jsonLd = jsonLdScript(eventJsonLd(event, url, now));
 
     const res = new HTMLRewriter()
       .on('title', {
@@ -83,9 +81,27 @@ export function sharePageRoutes(clock: Clock) {
           el.setAttribute('content', description);
         },
       })
+      // The home page's canonical URL and site data are replaced by the event's.
+      // The canonical keeps the origin the page was built for (PUBLIC_SITE_URL).
+      .on('link[rel="canonical"]', {
+        element(el) {
+          const base = el.getAttribute('href') ?? c.req.url;
+          el.setAttribute('href', new URL(eventPath(event.id), base).toString());
+        },
+      })
+      .on('script[type="application/ld+json"]', {
+        element(el) {
+          el.remove();
+        },
+      })
+      .on('noscript', {
+        element(el) {
+          el.setInnerContent(eventNoscriptHtml(event, when), { html: true });
+        },
+      })
       .on('head', {
         element(el) {
-          el.append(meta, { html: true });
+          el.append(meta + jsonLd, { html: true });
         },
       })
       .transform(page);

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-for (const path of ['/']) {
+for (const path of ['/', '/manifestacoes/', '/manifestacoes/lisboa/']) {
   test(`${path} renders in pt-PT without cookies or third-party requests`, async ({
     page,
     context,
@@ -27,7 +27,7 @@ for (const path of ['/']) {
     expect(overflow).toBeLessThanOrEqual(0);
 
     await page.screenshot({
-      path: testInfo.outputPath('home.png'),
+      path: testInfo.outputPath(`${path.replaceAll('/', '_') || 'home'}.png`),
       fullPage: true,
     });
   });
@@ -54,4 +54,21 @@ test('switched-off features are not reachable or linked (launch configuration)',
       await expect(page.locator(`a[href^="${target}"]`), `${path} → ${target}`).toHaveCount(0);
     }
   }
+});
+
+test('a district page lists its events and links to their pages', async ({ page }) => {
+  await page.goto('/manifestacoes/lisboa/');
+  await expect(page.locator('h1')).toHaveText('Manifestações em Lisboa');
+  const first = page.locator('.district-events a').first();
+  await expect(first).toBeVisible();
+  const href = await first.getAttribute('href');
+  expect(href).toMatch(/^\/mapa\/e\/[0-9A-Z]{26}$/);
+  await first.click();
+  await expect(page).toHaveURL(new RegExp(`${href}$`));
+});
+
+test('the map intro links to the district pages', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Manifestações por distrito' }).click();
+  await expect(page.locator('h1')).toHaveText('Manifestações por distrito');
 });

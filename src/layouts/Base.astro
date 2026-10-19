@@ -2,20 +2,22 @@
 import Head from '../components/Head.astro';
 import { FEATURES } from '../config/app';
 import { pt } from '../i18n/pt';
+import type { JsonLd } from '../shared/seo';
 
 interface Props {
   title?: string;
   description?: string;
   /** Pages reached from secret links: not indexed, no Referer, no preview tags. */
   secret?: boolean;
+  jsonLd?: JsonLd | JsonLd[];
 }
-const { title, description, secret = false } = Astro.props;
+const { title, description, secret = false, jsonLd } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="pt-PT">
   <head>
-    <Head title={title} description={description} secret={secret} />
+    <Head title={title} description={description} secret={secret} jsonLd={jsonLd} />
   </head>
   <body>
     <a class="skip-link" href="#conteudo">

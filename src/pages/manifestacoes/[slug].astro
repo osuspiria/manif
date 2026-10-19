@@ -1,0 +1,43 @@
+---
+/**
+ * District page. Built once per district; the Worker (src/server/routes/
+ * seo-pages.ts) fills #district-events with the upcoming events on every
+ * request (without the Worker, e.g. astro dev, the list stays empty).
+ */
+import { DISTRICTS, districtPath, type District } from '../../config/districts';
+import { pt } from '../../i18n/pt';
+import Base from '../../layouts/Base.astro';
+import '../../styles/districts.css';
+
+export function getStaticPaths() {
+  return DISTRICTS.map((district) => ({ params: { slug: district.slug }, props: { district } }));
+}
+
+const { district } = Astro.props as { district: District };
+const others = DISTRICTS.filter((d) => d.slug !== district.slug);
+---
+
+<Base
+  title={pt.seo.districtTitle(district.where)}
+  description={pt.seo.districtDescription(district.where)}
+>
+  <article class="districts">
+    <h1>{pt.seo.districtTitle(district.where)}</h1>
+    <p>{pt.seo.districtIntro(district.where)}</p>
+    <h2>{pt.seo.eventsHeading}</h2>
+    <div id="district-events"></div>
+    <p>
+      <a class="btn" href="/">
+        {pt.seo.districtSeeMap}
+      </a>
+    </p>
+    <h2>{pt.seo.districtOthers}</h2>
+    <ul class="district-links">
+      {others.map((d) => (
+        <li>
+          <a href={districtPath(d)}>{d.short}</a>
+        </li>
+      ))}
+    </ul>
+  </article>
+</Base>

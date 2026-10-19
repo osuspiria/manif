@@ -273,3 +273,13 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Os recursos internos mantêm o nome (Worker e D1 `mobilizacao-pt`, bucket `mobilizacao-tiles`): renomeá-los obrigaria a migrar os dados e os tiles, sem ganho para quem visita.
     - Os links nos emails continuam a usar a origem do pedido, por isso não há URLs de produção no código.
     - Corrigido: o `astro.config.mjs` lia `process.env.PUBLIC_SITE_URL`, mas o Astro não põe o `.env.production` no `process.env` do config; o build saía sem `og:url` e com `og:image` relativo (já acontecia com `pedroduarte.eu`). Agora lê o ficheiro com o `loadEnv` do Vite, no modo do build.
+
+## SEO (19/10/2026)
+
+76. **Páginas por distrito, sitemap e dados estruturados** (pedido: aparecer em pesquisas como "manifestação portugal"). Ver SPEC §4.6.
+    - O mapa é renderizado só no cliente; para os motores de busca terem texto e links, as páginas por distrito são geradas pelo Astro (título, h1, canonical, links) e o Worker injeta a lista de eventos com `HTMLRewriter`, como já faz em `/mapa/e/<id>`. Assim o CSS, a CSP e o `Head` vêm do build. Em `astro dev` a lista fica vazia (não há Worker à frente).
+    - Slugs sem acentos (`braganca`, `santarem`, `acores`, `madeira`); não mudam depois de publicados. `District.where` guarda a preposição ("no Porto", "na Guarda", "nos Açores").
+    - Não há regra de `noindex` para eventos antigos: a retenção apaga-os 30 dias depois da última data e a página passa a 404. O sitemap só tem eventos com datas futuras.
+    - O canonical de `/mapa/e/<id>` usa a origem do canonical da home (`PUBLIC_SITE_URL`), para o `*.workers.dev` não competir com `manifesta.pt`. O sitemap e o JSON-LD usam a origem do pedido.
+    - JSON-LD com `<` escapado (`<`), para o texto de um evento não poder fechar o `<script>`. Não é executado, por isso a CSP não se aplica.
+    - Fora do código: registar `manifesta.pt` no Google Search Console e no Bing Webmaster Tools (verificação por registo DNS TXT, sem meta tag) e submeter `https://manifesta.pt/sitemap.xml`.

@@ -202,6 +202,16 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   },
   {
     method: 'GET',
+    route: '/manifestacoes/:slug/',
+    samples: [{ url: '/manifestacoes/porto/' }, { url: '/manifestacoes/nope/' }],
+  },
+  {
+    method: 'GET',
+    route: '/sitemap.xml',
+    samples: [{ url: '/sitemap.xml' }],
+  },
+  {
+    method: 'GET',
     route: '/map/fonts/:font/:range',
     samples: [{ url: '/map/fonts/Noto%20Sans%20Regular/1536-1791.pbf' }],
   },

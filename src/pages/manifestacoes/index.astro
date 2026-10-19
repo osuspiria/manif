@@ -1,0 +1,25 @@
+---
+import { DISTRICTS, districtPath } from '../../config/districts';
+import { pt } from '../../i18n/pt';
+import Base from '../../layouts/Base.astro';
+import '../../styles/districts.css';
+---
+
+<Base title={pt.seo.districtsTitle} description={pt.seo.districtsDescription}>
+  <article class="districts">
+    <h1>{pt.seo.districtsTitle}</h1>
+    <p>{pt.seo.districtsIntro}</p>
+    <ul class="district-links">
+      {DISTRICTS.map((d) => (
+        <li>
+          <a href={districtPath(d)}>{d.short}</a>
+        </li>
+      ))}
+    </ul>
+    <p>
+      <a class="btn" href="/">
+        {pt.seo.districtSeeMap}
+      </a>
+    </p>
+  </article>
+</Base>

@@ -4,16 +4,19 @@
  * tags for link previews. Absolute URLs come from `site` (PUBLIC_SITE_URL at
  * build time); without it, og:url is left out and og:image is a path.
  * Pages reached through secret links (`secret`) are not indexed, send no
- * Referer and get no preview tags.
+ * Referer and get no preview tags. Others get a canonical URL and, when
+ * given, structured data (`jsonLd`).
  */
 import { pt } from '../i18n/pt';
+import { jsonLdText, type JsonLd } from '../shared/seo';
 
 interface Props {
   title?: string;
   description?: string;
   secret?: boolean;
+  jsonLd?: JsonLd | JsonLd[];
 }
-const { title, description = pt.site.tagline, secret = false } = Astro.props;
+const { title, description = pt.site.tagline, secret = false, jsonLd } = Astro.props;
 const fullTitle = title ? `${title} · ${pt.site.title}` : pt.site.title;
 const abs = (path: string) => (Astro.site ? new URL(path, Astro.site).toString() : path);
 ---
@@ -32,6 +35,8 @@ const abs = (path: string) => (Astro.site ? new URL(path, Astro.site).toString()
 ) : (
   <>
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    {Astro.site && <link rel="canonical" href={abs(Astro.url.pathname)} />}
+    {jsonLd && <script is:inline type="application/ld+json" set:html={jsonLdText(jsonLd)} />}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={pt.site.title} />
     <meta property="og:locale" content="pt_PT" />

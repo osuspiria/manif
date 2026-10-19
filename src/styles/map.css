@@ -81,6 +81,10 @@ body.map-page {
   text-wrap: pretty;
 }
 
+.map-intro-link {
+  white-space: nowrap;
+}
+
 .topbar {
   flex: 0 0 auto;
   display: flex;

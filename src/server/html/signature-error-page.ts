@@ -5,8 +5,7 @@
  */
 import { pt } from '../../i18n/pt';
 import type { ApiIssue } from '../../shared/schemas';
-
-const escape = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+import { escapeHtml as escape } from './escape';
 
 type FieldKey = keyof typeof pt.support.fields;
 

@@ -46,6 +46,8 @@ export default defineConfig({
       proxy: {
         '/api': 'http://127.0.0.1:8787',
         '/tiles': 'http://127.0.0.1:8787',
+        // District pages (/manifestacoes/…) are served by Astro in dev, without their event list.
+        '/sitemap.xml': 'http://127.0.0.1:8787',
       },
     },
     plugins: [

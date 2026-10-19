@@ -5,6 +5,28 @@ export const pt = {
     tagline: 'Mapa de mobilizações e apelo de apoio',
     ogImageAlt: 'Manifesta: mapa de eventos e apelo de apoio',
   },
+  /** Titles and descriptions for search engines, and the district pages. */
+  seo: {
+    homeTitle: 'Manifestações em Portugal: mapa de protestos e concentrações',
+    homeDescription:
+      'Mapa de manifestações, protestos, concentrações e assembleias em Portugal: Lisboa, Porto, todo o continente, Açores e Madeira. Vê o que há hoje e no fim de semana.',
+    districtsLink: 'Manifestações por distrito',
+    districtsTitle: 'Manifestações por distrito',
+    districtsDescription:
+      'Manifestações, protestos e concentrações em cada distrito de Portugal e nas regiões autónomas dos Açores e da Madeira.',
+    districtsIntro:
+      'Escolhe um distrito ou região autónoma para veres as manifestações, concentrações e assembleias anunciadas.',
+    /** `where`: 'em Lisboa', 'nos Açores' (src/config/districts.ts). */
+    districtTitle: (where: string) => `Manifestações ${where}`,
+    districtDescription: (where: string) =>
+      `Próximas manifestações, protestos, concentrações e assembleias ${where}: datas, horas e locais.`,
+    districtIntro: (where: string) =>
+      `Manifestações, concentrações, protestos e assembleias anunciados ${where}, por ordem de data.`,
+    districtEmpty: (where: string) => `De momento não há eventos anunciados ${where}.`,
+    districtSeeMap: 'Ver todos os eventos no mapa',
+    districtOthers: 'Outros distritos e regiões',
+    eventsHeading: 'Próximos eventos',
+  },
   nav: {
     map: 'Mapa',
     support: 'Apoiar',

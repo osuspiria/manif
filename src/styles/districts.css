@@ -1,0 +1,87 @@
+/* District pages (/manifestacoes/…) — mobile-first (360 px). Touch targets ≥ 44 px. */
+@import './base.css';
+
+body:has(.districts) {
+  font-family: var(--font);
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.districts {
+  max-width: 680px;
+  margin: 0 auto;
+  padding-bottom: 32px;
+}
+
+.districts h1 {
+  margin: 16px 0 8px;
+  font-size: 1.625rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.districts h2 {
+  margin: 28px 0 8px;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.district-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.district-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--fg);
+  text-decoration: none;
+}
+
+.district-links a:hover {
+  background: var(--accent-tint);
+}
+
+.district-events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 2px solid var(--fg);
+}
+
+.district-events li {
+  border-bottom: 2px solid var(--fg);
+}
+
+.district-events a {
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  padding: 10px 0;
+  text-decoration: none;
+}
+
+.district-events a:hover .district-event-title {
+  text-decoration: underline 2px var(--accent);
+}
+
+.district-event-title {
+  font-weight: 800;
+}
+
+.district-event-meta {
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.district-empty {
+  color: var(--muted);
+}

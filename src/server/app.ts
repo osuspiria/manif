@@ -7,6 +7,7 @@ import { adminRoutes } from './routes/admin';
 import { devRoutes } from './routes/dev';
 import { eventsRoutes } from './routes/events';
 import { geoRoutes } from './routes/geo';
+import { seoPagesRoutes } from './routes/seo-pages';
 import { glyphRoutes } from './routes/glyphs';
 import { sharePageRoutes } from './routes/share-page';
 import { signaturesRoutes } from './routes/signatures';
@@ -52,6 +53,7 @@ export function createApp(overrides: Partial<AppDeps> = {}) {
     .route('/tiles', tilesRoutes())
     .route('/map/fonts', glyphRoutes())
     .route('/mapa/e', sharePageRoutes(clock))
+    .route('/', seoPagesRoutes(clock))
     // The map moved to the home page; old links keep their filters.
     .get('/mapa', toHome)
     .get('/mapa/', toHome);
