@@ -43,7 +43,7 @@
 |---|---|---|
 | Frontend | **Astro** (páginas estáticas) + ilhas em TypeScript vanilla ou Preact | Pouco JS, ótimo em telemóvel |
 | Mapa | **MapLibre GL JS** + **PMTiles** (extrato Protomaps de Portugal) | Igual ao de referência; tiles alojados por nós |
-| Marcadores | Um pino por evento, sem clustering (ver `docs/decisions.md` #78); pinos mais pequenos com zoom afastado | Sem dependências |
+| Marcadores | Um pino por evento, sem clustering (ver `docs/decisions.md` #78); pinos mais pequenos com zoom afastado e afastados uns dos outros quando se sobrepõem | Sem dependências |
 | API | **Cloudflare Workers** (Hono) | Edge, barato, aguenta picos |
 | BD | **Cloudflare D1** (SQLite) | Suficiente para milhares de eventos/assinaturas |
 | Ficheiros | **Cloudflare R2** para o `.pmtiles` | Range requests |

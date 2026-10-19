@@ -27,6 +27,7 @@ import { EVENT_TYPES, EVENT_TYPE_KEYS, type EventType } from '../config/event-ty
 import { pt } from '../i18n/pt';
 import { MAX_BOUNDS, REGIONS, type RegionKey } from './regions';
 import { PICTOGRAMS, PICTOGRAM_SCALE, PICTOGRAM_STROKE } from './pictograms';
+import { spreadPoints } from './spread';
 
 export interface MarkerProps {
   id: string;
@@ -88,6 +89,17 @@ function buildStyle(origin: string): StyleSpecification {
 
 const ACCENT = '#ff4d00';
 const PIN = 40;
+/** Pins are drawn at SIZE_MIN up to zoom ZOOM_MIN, growing to full size at ZOOM_FULL. */
+const SIZE_MIN = 0.6;
+const ZOOM_MIN = 6;
+const ZOOM_FULL = 10;
+/** Space left between pins moved apart because they overlapped. */
+const PIN_GAP = 4;
+
+function iconSize(zoom: number): number {
+  const t = Math.min(Math.max((zoom - ZOOM_MIN) / (ZOOM_FULL - ZOOM_MIN), 0), 1);
+  return SIZE_MIN + (1 - SIZE_MIN) * t;
+}
 const PIN_SELECTED = 48;
 const TIP_W = 10;
 const TIP_H = 6;
@@ -199,6 +211,26 @@ export function createMapEngine(
   map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
 
   let pending: MarkerCollection | null = null;
+
+  /** Draws the markers, moving apart the pins that would overlap at the current zoom. */
+  function render(): void {
+    if (!loaded || !pending) return;
+    const fc = pending;
+    const minDist = PIN * iconSize(map.getZoom()) + PIN_GAP;
+    const points = fc.features.map((f) => map.project(f.geometry.coordinates));
+    const spread = spreadPoints(points, minDist);
+    const features = fc.features.map((f, i) => {
+      const p = spread[i];
+      const q = points[i];
+      if (!p || !q || (p.x === q.x && p.y === q.y)) return f;
+      const { lng, lat } = map.unproject([p.x, p.y]);
+      return {
+        ...f,
+        geometry: { type: 'Point' as const, coordinates: [lng, lat] as [number, number] },
+      };
+    });
+    (map.getSource(SOURCE) as GeoJSONSource).setData({ ...fc, features });
+  }
   let loaded = false;
   let userMarker: Marker | null = null;
   let selectedId: string | null = null;
@@ -211,7 +243,7 @@ export function createMapEngine(
     }
     map.addSource(SOURCE, {
       type: 'geojson',
-      data: pending ?? { type: 'FeatureCollection', features: [] },
+      data: { type: 'FeatureCollection', features: [] },
     });
     map.addLayer({
       id: 'event-icons',
@@ -220,7 +252,7 @@ export function createMapEngine(
       layout: {
         'icon-image': pinExpression(selectedId),
         // Every event keeps its own pin; smaller when zoomed out so they pile up less.
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 6, 0.6, 10, 1],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], ZOOM_MIN, SIZE_MIN, ZOOM_FULL, 1],
         'icon-anchor': 'bottom',
         'icon-allow-overlap': true,
         'symbol-sort-key': sortExpression(selectedId),
@@ -243,7 +275,11 @@ export function createMapEngine(
       paint: { 'text-color': '#000000', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 },
     });
     loaded = true;
+    render();
   });
+
+  // Overlaps depend only on the zoom, so panning needs no new layout.
+  map.on('zoomend', render);
 
   map.on('moveend', () => {
     const c = map.getCenter();
@@ -260,7 +296,7 @@ export function createMapEngine(
   return {
     setMarkers(fc) {
       pending = fc;
-      if (loaded) (map.getSource(SOURCE) as GeoJSONSource).setData(fc);
+      render();
     },
     setSelected(id) {
       selectedId = id;
