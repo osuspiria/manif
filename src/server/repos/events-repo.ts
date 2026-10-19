@@ -97,6 +97,8 @@ export interface NewEventRow {
   district: string;
   tz: string;
   status: 'pending' | 'published';
+  /** "Confirmado": only events created by the moderation start verified. */
+  verified: 0 | 1;
   contact_email: string | null;
   edit_token_hash: string;
   created_at: string;
@@ -168,7 +170,7 @@ export function eventsWriteRepo(db: Db): EventsWriteRepo {
           sql: `INSERT INTO events (id, type, title, description, organizer, lat, lng, place_label,
                   municipality, district, tz, status, verified, contact_email, edit_token_hash,
                   created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`,
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           params: [
             e.id,
             e.type,
@@ -182,6 +184,7 @@ export function eventsWriteRepo(db: Db): EventsWriteRepo {
             e.district,
             e.tz,
             e.status,
+            e.verified,
             e.contact_email,
             e.edit_token_hash,
             e.created_at,

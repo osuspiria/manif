@@ -45,3 +45,10 @@ export class PhotonSearch implements PlaceSearch {
     return results.slice(0, 6);
   }
 }
+
+/** e2e (FAKE_EXTERNAL=on): the same result for any query, in Lisbon. */
+export class FakePlaceSearch implements PlaceSearch {
+  search(query: string): Promise<PlaceResult[]> {
+    return Promise.resolve([{ label: `${query} (teste)`, lat: 38.7139, lng: -9.1394 }]);
+  }
+}

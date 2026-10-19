@@ -8,3 +8,6 @@ MAIL_FROM=
 # Addresses allowed in /admin (comma-separated). Locally, read the login link at
 # http://127.0.0.1:8787/api/dev/mailbox?to=admin@exemplo.invalid
 ADMIN_EMAILS=admin@exemplo.invalid
+# Claude API key for the admin import (/admin › Novo evento). Empty: the import
+# is unavailable (the form still works by hand).
+ANTHROPIC_API_KEY=

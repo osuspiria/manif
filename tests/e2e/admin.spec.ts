@@ -274,4 +274,46 @@ test.describe('Administração', () => {
     expect(csv).toContain(orgEmail);
     expect(csv).not.toContain(personEmail);
   });
+
+  test('imports an event from a post and a poster, then publishes it as confirmed', async ({
+    page,
+    request,
+  }, info) => {
+    // The e2e server runs with FAKE_EXTERNAL=on: a fixed draft, no call to Claude or Photon.
+    const title = `[Teste] Importado ${unique(info)}`;
+    await signIn(page, request, adminFor(info));
+    await page.getByRole('link', { name: '+ Novo evento' }).click();
+    await expect(page).toHaveURL(/#eventos\/novo$/);
+    await expect(page.getByRole('heading', { level: 2, name: 'Novo evento' })).toBeVisible();
+
+    await page.getByLabel('Texto do post').fill(`${title}
+Sábado às 18h no Rossio`);
+    // A 1×1 PNG: shrunk to JPEG in the browser before it is sent.
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    await page
+      .getByLabel('Imagem do cartaz ou captura de ecrã')
+      .setInputFiles({ name: 'cartaz.png', mimeType: 'image/png', buffer: png });
+    await expect(page.getByRole('img', { name: 'Imagem a importar' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Ler com IA' }).click();
+    await expect(page.getByText('Formulário preenchido.')).toBeVisible();
+    await expect(page.getByLabel('Título')).toHaveValue(title);
+    await expect(page.getByText('Ano assumido pelo extrator de teste.')).toBeVisible();
+    await expect(page.getByText('Lisboa · Lisboa')).toBeVisible();
+    await shot(page, '34-admin-importar', info.project.name);
+
+    await page.getByRole('button', { name: 'Publicar como confirmado' }).click();
+    await expect(page).toHaveURL(/#eventos\/[0-9A-Z]{26}$/);
+    await expect(page.getByRole('heading', { level: 2, name: title })).toBeVisible();
+    const id = /#eventos\/([0-9A-Z]{26})$/.exec(page.url())?.[1];
+    const event = (await (await request.get(`/api/events/${id}`)).json()) as {
+      title: string;
+      verified: boolean;
+      municipality: string;
+    };
+    expect(event).toMatchObject({ title, verified: true, municipality: 'Lisboa' });
+  });
 });

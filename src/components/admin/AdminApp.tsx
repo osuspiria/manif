@@ -1,6 +1,6 @@
 /**
  * /admin (SPEC §6): sign-in by magic link, then two tabs — Eventos and
- * Assinaturas. Hash routes: #eventos, #eventos/<id>, #assinaturas.
+ * Assinaturas. Hash routes: #eventos, #eventos/novo, #eventos/<id>, #assinaturas.
  */
 import { useEffect, useState } from 'preact/hooks';
 import { pt } from '../../i18n/pt';
@@ -8,6 +8,7 @@ import { adminApi, setUnauthorizedHandler } from './api';
 import { AdminEventDetail } from './AdminEventDetail';
 import { AdminEvents } from './AdminEvents';
 import { AdminLogin } from './AdminLogin';
+import { AdminNewEvent } from './AdminNewEvent';
 import { AdminSignatures } from './AdminSignatures';
 
 type Auth =
@@ -79,6 +80,8 @@ export function AdminApp() {
       </nav>
       {route.tab === 'signatures' && auth.signatures ? (
         <AdminSignatures />
+      ) : route.tab === 'events' && route.eventId === 'novo' ? (
+        <AdminNewEvent />
       ) : route.tab === 'events' && route.eventId ? (
         <AdminEventDetail id={route.eventId} />
       ) : (

@@ -162,3 +162,61 @@
 .admin-login form {
   max-width: 420px;
 }
+
+/* --- Novo evento (import) ------------------------------------------------- */
+
+.admin-import,
+.admin-new-form {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.admin-import {
+  padding: 12px;
+  border: 2px solid var(--fg);
+}
+
+.admin-import h3,
+.admin-new-form h3 {
+  margin: 8px 0 0;
+}
+
+.admin-import-image {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.admin-import-image img {
+  max-width: 100%;
+  max-height: 240px;
+  border: 1px solid var(--line);
+}
+
+.admin-warnings {
+  padding: 8px 12px;
+  border: 2px solid var(--fg);
+  background: var(--accent-tint);
+}
+
+.admin-warnings h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.admin-places {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+}
+
+.admin-places label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}

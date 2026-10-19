@@ -283,3 +283,14 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - O canonical de `/mapa/e/<id>` usa a origem do canonical da home (`PUBLIC_SITE_URL`), para o `*.workers.dev` não competir com `manifesta.pt`. O sitemap e o JSON-LD usam a origem do pedido.
     - JSON-LD com `<` escapado (`<`), para o texto de um evento não poder fechar o `<script>`. Não é executado, por isso a CSP não se aplica.
     - Fora do código: registar `manifesta.pt` no Google Search Console e no Bing Webmaster Tools (verificação por registo DNS TXT, sem meta tag) e submeter `https://manifesta.pt/sitemap.xml`.
+
+## Importar eventos no admin (19/10/2026)
+
+77. **"Novo evento" no admin, com importação de posts e cartazes pelo Claude** (pedido: passar de ~3 minutos por evento copiado do Instagram para ~20 segundos).
+    - Fluxo: colar o texto e/ou juntar a imagem → `POST /api/admin/events/extract` → rascunho + resultados da pesquisa de locais → o moderador revê no formulário habitual → `POST /api/admin/events`.
+    - Modelo `claude-opus-5-5` (escolha do utilizador: o mais capaz a ler cartazes e datas ambíguas; alguns cêntimos por evento), esforço `medium`, saída estruturada (`betaZodOutputFormat`) e `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`) para recusas. O SDK oficial `@anthropic-ai/sdk` é a única dependência nova.
+    - O modelo devolve um formato largo; `normalizeDraft` corta textos aos limites, descarta datas e horas inválidas, remove repetidos e limita a 30 datas. O formulário e o servidor validam tudo outra vez ao publicar (incluindo datas passadas e local fora de Portugal).
+    - Datas sem ano resolvidas em relação a hoje em Lisboa (`lisbonToday`, passado na mensagem); o modelo assinala o que assumiu em `warnings`, mostrados ao moderador.
+    - Eventos criados pela moderação ficam publicados e "Confirmado" logo (decisão do utilizador), independentemente de `MODERATION_MODE`, e sem email de contacto.
+    - Privacidade: o texto e a imagem só vão para a Anthropic quando o moderador carrega em "Ler com IA", não ficam guardados e não aparecem nos logs (só o código de erro). O browser não fala com a Anthropic. O ecrã avisa disto. Para a página de privacidade: a Anthropic passa a ser subcontratante (só para conteúdos colados pela moderação).
+    - Sem `ANTHROPIC_API_KEY`, a importação responde 503 e o formulário continua a funcionar à mão. No e2e, `FAKE_EXTERNAL=on` troca o Claude e o Photon por respostas fixas.

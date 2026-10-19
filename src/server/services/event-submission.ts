@@ -79,10 +79,15 @@ export function editUrl(origin: string, id: string, token: string): string {
 
 // --- create ---------------------------------------------------------------------
 
+/**
+ * `asModerator` (admin, SPEC §6): published and "Confirmado" straight away,
+ * whatever MODERATION_MODE says, and no contact email is kept or sent.
+ */
 export async function createEvent(
   input: EventInput,
   origin: string,
   d: SubmissionDeps,
+  opts: { asModerator?: boolean } = {},
 ): Promise<ServiceResult<CreateEventResponse>> {
   const place = d.geo.reverse(input.lat, input.lng);
   if (!place) return fail(422, 'outside_portugal', [{ path: ['lat'], code: 'outside_portugal' }]);
@@ -92,8 +97,8 @@ export async function createEvent(
 
   const id = d.newId();
   const token = newToken();
-  const contactEmail = d.storeContactEmail ? input.contactEmail : null;
-  const status = d.moderation === 'pre' ? 'pending' : 'published';
+  const contactEmail = d.storeContactEmail && !opts.asModerator ? input.contactEmail : null;
+  const status = d.moderation === 'pre' && !opts.asModerator ? 'pending' : 'published';
   const at = nowIso(d.now);
 
   await d.write.insert(
@@ -110,6 +115,7 @@ export async function createEvent(
       district: place.district,
       tz: place.tz,
       status,
+      verified: opts.asModerator ? 1 : 0,
       contact_email: contactEmail,
       edit_token_hash: await hashToken(token),
       created_at: at,

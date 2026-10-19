@@ -311,6 +311,7 @@ O concelho é guardado pelo código DICO da CAOP (há nomes repetidos, como "Lag
 Necessário para as duas funcionalidades, mantido mínimo:
 - Login por **magic link** para emails numa allowlist (`ADMIN_EMAILS`): `/admin/entrar/#t=<token>`, 15 minutos, uso único. Sessão com cookie estritamente necessário: `admin_session`, `Path=/api/admin`, `HttpOnly`, `Secure`, `SameSite=Strict`, 24 horas (ver `docs/decisions.md` #48–50).
 - Separador **Eventos**: pendentes, reportados, ocultos, todos; aprovar (descarta as denúncias), ocultar, marcar "confirmado", marcar "sem fim", editar (sem perder o "confirmado").
+- **Novo evento** (`#eventos/novo`): formulário completo, sem Turnstile; o evento fica logo publicado e "confirmado", sem email de contacto. Opcionalmente **importado** de um post ou cartaz: cola-se o texto e/ou junta-se uma imagem (reduzida no browser a ≤ 1568 px); o Worker pede ao Claude (`claude-opus-5-5`, `ANTHROPIC_API_KEY`) um rascunho (tipo, título, descrição, organização, local, datas, avisos) e procura o local com a pesquisa de locais; o formulário fica preenchido para rever. Nada do que se cola é guardado. Limite: `RATE_LIMITS.adminExtract` por hora e por admin. Ver `docs/decisions.md` #77.
 - Separador **Assinaturas**: organizações por aprovar; pesquisa; apagar a pedido.
 - **Exportar CSV** só de quem aceitou recontacto.
 - Funciona bem em telemóvel.

@@ -11,7 +11,8 @@ import { KvDevMailbox, NullMailer, ResendMailer, type Mailer } from './mailer';
 import { TurnstileVerifier, type CaptchaVerifier } from './security/captcha';
 import { KvRateLimiter, type RateLimiter } from './security/rate-limit';
 import { clientKey, emailKey } from './security/tokens';
-import { PhotonSearch, type PlaceSearch } from './services/place-search';
+import { ClaudeExtractor, FakeExtractor, type EventExtractor } from './services/event-extractor';
+import { FakePlaceSearch, PhotonSearch, type PlaceSearch } from './services/place-search';
 
 // Note: never store the global `fetch` unbound and call it as a method
 // (`this.fetchFn(...)`): the Workers runtime throws "Illegal invocation".
@@ -22,6 +23,8 @@ export interface AppDeps {
   mailer: (env: Env) => Mailer;
   rateLimiter: (env: Env) => RateLimiter;
   placeSearch: (env: Env) => PlaceSearch;
+  /** Admin import; null when not configured (no ANTHROPIC_API_KEY). */
+  extractor: (env: Env) => EventExtractor | null;
   newId: () => string;
   /** Which optional features are mounted (FEATURES; tests switch them on). */
   features: Features;
@@ -37,10 +40,21 @@ export const defaultDeps: AppDeps = {
         ? new ResendMailer(env.RESEND_API_KEY, env.MAIL_FROM)
         : new NullMailer(),
   rateLimiter: (env) => new KvRateLimiter(env.RATE_LIMIT),
-  placeSearch: () => new PhotonSearch(),
+  placeSearch: (env) => (fakeExternal(env) ? new FakePlaceSearch() : new PhotonSearch()),
+  extractor: (env) =>
+    fakeExternal(env)
+      ? new FakeExtractor()
+      : env.ANTHROPIC_API_KEY
+        ? new ClaudeExtractor(env.ANTHROPIC_API_KEY)
+        : null,
   newId: () => ulid(),
   features: FEATURES,
 };
+
+/** e2e only: no calls to Claude or Photon. */
+function fakeExternal(env: Env): boolean {
+  return env.FAKE_EXTERNAL === 'on';
+}
 
 export function devMailboxEnabled(env: Env): boolean {
   return env.DEV_MAILBOX === 'on';

@@ -115,6 +115,17 @@ export function addDays(date: string, days: number): string {
   return Temporal.PlainDate.from(date).add({ days }).toString();
 }
 
+/** 'YYYY-MM-DD' naming a real calendar day (no 2026-02-30). */
+export function isValidLocalDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  try {
+    Temporal.PlainDate.from(value, { overflow: 'reject' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** ISO day of week: Monday = 1 … Sunday = 7. */
 export function dayOfWeek(date: string): number {
   return Temporal.PlainDate.from(date).dayOfWeek;

@@ -57,6 +57,7 @@ npx wrangler secret put RATE_LIMIT_SECRET   # node -e "console.log(require('cryp
 npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put MAIL_FROM           # ex.: Manifesta <nao-responder@manifesta.pt>
 npx wrangler secret put ADMIN_EMAILS        # ex.: pessoa1@exemplo.pt,pessoa2@exemplo.pt
+npx wrangler secret put ANTHROPIC_API_KEY   # importação no /admin (opcional; sem ela, só à mão)
 ```
 
 O `MODERATION_MODE` e o `EDGE_CACHE` estão em `[vars]`. **Não** definas `DEV_MAILBOX`.

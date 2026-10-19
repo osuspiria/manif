@@ -17,4 +17,8 @@ export interface Env {
   DEV_MAILBOX?: string;
   /** Comma-separated addresses allowed to sign in to /admin (SPEC §6). */
   ADMIN_EMAILS?: string;
+  /** Claude API key for the admin import (SPEC §6); without it the import is unavailable. */
+  ANTHROPIC_API_KEY?: string;
+  /** 'on' (e2e only): fixed answers instead of calling Claude (admin import) and Photon (place search). */
+  FAKE_EXTERNAL?: string;
 }

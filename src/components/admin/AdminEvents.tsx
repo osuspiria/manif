@@ -126,6 +126,11 @@ export function AdminEvents() {
       <h2 id="admin-events-heading" class="visually-hidden">
         {pt.admin.tabs.events}
       </h2>
+      <p>
+        <a class="btn-primary" href="#eventos/novo">
+          {pt.admin.newEvent.open}
+        </a>
+      </p>
       <div class="chips chips-wrap admin-filters">
         {ADMIN_EVENT_FILTERS.map((f) => (
           <button

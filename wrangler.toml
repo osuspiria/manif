@@ -24,7 +24,8 @@ binding = "RATE_LIMIT"
 id = "a7a8254dd46f4bdcac52174f6807f46d"
 
 # Secrets (wrangler secret put …; locally in .dev.vars, see .dev.vars.example):
-# TURNSTILE_SECRET_KEY, RATE_LIMIT_SECRET, RESEND_API_KEY, MAIL_FROM, ADMIN_EMAILS
+# TURNSTILE_SECRET_KEY, RATE_LIMIT_SECRET, RESEND_API_KEY, MAIL_FROM, ADMIN_EMAILS,
+# ANTHROPIC_API_KEY (admin import, optional)
 
 # Custom domain (D2): the zone must be on this Cloudflare account. The Worker
 # also stays reachable on *.workers.dev.

@@ -52,6 +52,8 @@ export const LIMITS = {
   reportsToAutoHide: 3,
   /** Days shown in the "Escolher dia" strip. */
   dayStripDays: 60,
+  /** Admin import: text pasted from a post. */
+  extractTextMax: 5000,
 } as const;
 
 export const RETENTION = {
@@ -83,6 +85,8 @@ export const RATE_LIMITS = {
   sign: 10,
   report: 10,
   adminLogin: 10,
+  /** Admin import (Claude API calls), per admin address. */
+  adminExtract: 60,
 } as const;
 
 /** Basemap archive, served by the Worker from R2 (see data/geo/README.md). */

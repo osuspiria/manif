@@ -12,11 +12,14 @@ import { lisbonToday } from '../../shared/dates';
 import {
   AdminEventActionSchema,
   AdminEventsQuerySchema,
+  AdminExtractRequestSchema,
   AdminLoginRequestSchema,
   AdminSessionRequestSchema,
   AdminSignatureActionSchema,
   AdminSignaturesQuerySchema,
   editRequestSchema,
+  EventInputSchema,
+  type AdminExtractResponse,
 } from '../../shared/schemas';
 import { addressKey, moderationMode, requestClientKey, type AppDeps } from '../deps';
 import type { Env } from '../env';
@@ -41,7 +44,7 @@ import {
   moderateSignature,
   type ModerationDeps,
 } from '../services/admin-moderation';
-import { moderatorEditEvent } from '../services/event-submission';
+import { createEvent, moderatorEditEvent } from '../services/event-submission';
 import type { GeoService } from '../services/geo-service';
 import { purgeEdgeCache } from './edge-cache';
 import { EVENTS_GEOJSON } from './events';
@@ -183,6 +186,51 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
       .get('/events', requireSession, async (c) => {
         const q = AdminEventsQuerySchema.parse(c.req.query());
         return c.json({ items: await listEvents(q, moderation(c.env)) });
+      })
+      // Import (SPEC §6): read a draft out of a post's text or a poster; nothing is stored.
+      .post('/events/extract', requireSession, async (c) => {
+        const extractor = deps.extractor(c.env);
+        if (!extractor) return c.json({ error: 'extract_unavailable' }, 503);
+        const parsed = AdminExtractRequestSchema.safeParse(await readJson(c));
+        if (!parsed.success) {
+          return c.json({ error: 'invalid', issues: zodIssues(parsed.error) }, 400);
+        }
+        const key = await addressKey(c.get('adminEmail'), c.env);
+        const ok = await deps
+          .rateLimiter(c.env)
+          .hit(`admin-extract:${key}`, RATE_LIMITS.adminExtract, HOUR, deps.clock());
+        if (!ok) return c.json({ error: 'rate_limited' }, 429);
+
+        const result = await extractor.extract(parsed.data, lisbonToday(deps.clock()));
+        if (!result.ok) return c.json({ error: result.error }, 502);
+        const query = result.draft.placeQuery;
+        const places = query
+          ? await deps
+              .placeSearch(c.env)
+              .search(query)
+              .catch(() => [])
+          : [];
+        return c.json({ draft: result.draft, places } satisfies AdminExtractResponse);
+      })
+      // New event by the moderation: published and "Confirmado" at once, no Turnstile.
+      .post('/events', requireSession, async (c) => {
+        const parsed = EventInputSchema.safeParse(await readJson(c));
+        if (!parsed.success) {
+          return c.json({ error: 'invalid', issues: zodIssues(parsed.error) }, 400);
+        }
+        const result = await createEvent(
+          parsed.data,
+          new URL(c.req.url).origin,
+          submission(c.env),
+          {
+            asModerator: true,
+          },
+        );
+        if (!result.ok) {
+          return c.json({ error: result.error, issues: result.issues }, result.status);
+        }
+        await purgeEdgeCache(c, [EVENTS_GEOJSON]);
+        return c.json(await eventDetail(result.value.id, moderation(c.env)), 201);
       })
       .get('/events/:id', requireSession, async (c) => {
         const id = idParam(c);

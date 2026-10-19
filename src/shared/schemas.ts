@@ -449,6 +449,61 @@ export const AdminEventDetailSchema = EditableEventSchema.extend({
 });
 export type AdminEventDetail = z.infer<typeof AdminEventDetailSchema>;
 
+// --- Admin: new event, imported from a post's text or a poster ----------------
+
+export const EXTRACT_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+/** Base64 length of a ~3.7 MB image (the client shrinks posters well below this). */
+const EXTRACT_IMAGE_MAX = 5_000_000;
+
+/** POST /api/admin/events/extract: the text of a post and/or an image, at least one. */
+export const AdminExtractRequestSchema = z
+  .object({
+    text: z.string().trim().max(LIMITS.extractTextMax, 'too_long').optional(),
+    image: z
+      .object({
+        mediaType: z.enum(EXTRACT_IMAGE_TYPES, 'invalid_image'),
+        data: z
+          .string()
+          .min(1, 'invalid_image')
+          .max(EXTRACT_IMAGE_MAX, 'image_too_large')
+          .regex(/^[A-Za-z0-9+/]+={0,2}$/, 'invalid_image'),
+      })
+      .optional(),
+  })
+  .refine((v) => Boolean(v.text) || Boolean(v.image), {
+    message: 'required',
+    path: ['text'],
+  });
+export type AdminExtractRequest = z.infer<typeof AdminExtractRequestSchema>;
+
+/** What the import read: a starting point for the form, checked again on publish. */
+export const EventDraftSchema = z.object({
+  type: z.enum(EVENT_TYPE_KEYS),
+  title: z.string(),
+  description: z.string().nullable(),
+  organizer: z.string().nullable(),
+  /** Searchable place text ("Praça do Comércio, Lisboa"), or null. */
+  placeQuery: z.string().nullable(),
+  occurrences: z.array(
+    z.object({
+      localDate: LocalDate,
+      startTime: LocalTime.nullable(),
+      endTime: LocalTime.nullable(),
+      note: z.string().nullable(),
+    }),
+  ),
+  /** Doubts for the moderator, in pt-PT ("O ano não está no cartaz: assumi 2026."). */
+  warnings: z.array(z.string()),
+});
+export type EventDraft = z.infer<typeof EventDraftSchema>;
+
+export const AdminExtractResponseSchema = z.object({
+  draft: EventDraftSchema,
+  /** Place search results for `placeQuery` (best first); empty when none. */
+  places: z.array(PlaceResultSchema),
+});
+export type AdminExtractResponse = z.infer<typeof AdminExtractResponseSchema>;
+
 export const ADMIN_SIGNATURE_FILTERS = [
   'orgs_pending',
   'organizations',
