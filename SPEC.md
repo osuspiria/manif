@@ -43,7 +43,7 @@
 |---|---|---|
 | Frontend | **Astro** (páginas estáticas) + ilhas em TypeScript vanilla ou Preact | Pouco JS, ótimo em telemóvel |
 | Mapa | **MapLibre GL JS** + **PMTiles** (extrato Protomaps de Portugal) | Igual ao de referência; tiles alojados por nós |
-| Clustering | Clustering nativo do MapLibre (GeoJSON source `cluster: true`) | Sem dependências |
+| Marcadores | Um pino por evento, sem clustering (ver `docs/decisions.md` #78); pinos mais pequenos com zoom afastado | Sem dependências |
 | API | **Cloudflare Workers** (Hono) | Edge, barato, aguenta picos |
 | BD | **Cloudflare D1** (SQLite) | Suficiente para milhares de eventos/assinaturas |
 | Ficheiros | **Cloudflare R2** para o `.pmtiles` | Range requests |
@@ -389,7 +389,7 @@ Validação partilhada entre cliente e servidor com **Zod** (`src/shared/schemas
 |---|---|---|
 | 0 | Esqueleto: Astro + Worker + D1 + migrations + CI (lint, typecheck, testes) | `npm run dev` levanta tudo localmente |
 | 1 | Geodados: GeoJSON CAOP simplificado, lista de municípios, PMTiles de PT (continente + ilhas) | `/api/geo/reverse` devolve concelho/distrito/tz corretos para pontos de teste (Porto, Funchal, Ponta Delgada, Bragança) |
-| 2 | Mapa só de leitura com seed de ~50 eventos multi-data, clustering, popup, lista | Mapa funcional em 360 px |
+| 2 | Mapa só de leitura com seed de ~50 eventos multi-data, pinos, popup, lista | Mapa funcional em 360 px |
 | 3 | Filtros "Quando" + "Tipo" + URL state + contadores | Testes unitários da lógica de intervalos (incluindo fim de semana, Açores, mudança de hora de outubro/março) |
 | 4 | Adicionar/editar evento com várias datas + Turnstile + link de edição | E2E Playwright em viewport de telemóvel |
 | 5 | Assinaturas (individual + organização), confirmação por email, contador, lista pública | E2E com mailer fake |

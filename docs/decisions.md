@@ -294,3 +294,5 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Eventos criados pela moderação ficam publicados e "Confirmado" logo (decisão do utilizador), independentemente de `MODERATION_MODE`, e sem email de contacto.
     - Privacidade: o texto e a imagem só vão para a Anthropic quando o moderador carrega em "Ler com IA", não ficam guardados e não aparecem nos logs (só o código de erro). O browser não fala com a Anthropic. O ecrã avisa disto. Para a página de privacidade: a Anthropic passa a ser subcontratante (só para conteúdos colados pela moderação).
     - Sem `ANTHROPIC_API_KEY`, a importação responde 503 e o formulário continua a funcionar à mão. No e2e, `FAKE_EXTERNAL=on` troca o Claude e o Photon por respostas fixas.
+
+78. **Sem clustering no mapa** (pedido: ver cada evento com o seu ícone, mesmo com zoom afastado, em vez do número de eventos da zona). Cada evento tem sempre o seu pino; com zoom afastado os pinos ficam a 60% do tamanho (100% a partir do zoom 10) para se sobreporem menos. Pinos sobrepostos separam-se ao aproximar; a vista Lista continua a ser a alternativa equivalente.

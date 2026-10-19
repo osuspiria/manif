@@ -44,7 +44,7 @@ Se algum destes comandos ainda não existir, cria-o quando criares a peça corre
 src/
   pages/            # rotas Astro: / (mapa), /mapa/e/[id], /manifestacoes/[slug], /apoio, /privacidade, /admin; /mapa → /
   components/       # UI (Preact/Astro)
-  map/              # setup MapLibre, camadas, clustering, popup
+  map/              # setup MapLibre, camadas, pinos, popup
   shared/
     schemas.ts      # Zod
     dates.ts        # TODA a lógica de datas/intervalos/fusos (ver abaixo)
