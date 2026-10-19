@@ -212,11 +212,14 @@ export function createMapEngine(
 
   let pending: MarkerCollection | null = null;
 
+  let renderedZoom = NaN;
+
   /** Draws the markers, moving apart the pins that would overlap at the current zoom. */
   function render(): void {
     if (!loaded || !pending) return;
     const fc = pending;
-    const minDist = PIN * iconSize(map.getZoom()) + PIN_GAP;
+    renderedZoom = map.getZoom();
+    const minDist = PIN * iconSize(renderedZoom) + PIN_GAP;
     const points = fc.features.map((f) => map.project(f.geometry.coordinates));
     const spread = spreadPoints(points, minDist);
     const features = fc.features.map((f, i) => {
@@ -278,8 +281,12 @@ export function createMapEngine(
     render();
   });
 
-  // Overlaps depend only on the zoom, so panning needs no new layout.
-  map.on('zoomend', render);
+  // Overlaps depend only on the zoom, so panning needs no new layout. The zoom
+  // can also change without a zoomend (e.g. maxBounds after the container is
+  // sized), so check again whenever the map settles.
+  map.on('idle', () => {
+    if (Math.abs(map.getZoom() - renderedZoom) > 1e-6) render();
+  });
 
   map.on('moveend', () => {
     const c = map.getCenter();
