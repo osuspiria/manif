@@ -1,6 +1,6 @@
 /**
  * MapLibre setup: self-hosted Protomaps basemap (PMTiles via /tiles, glyphs and
- * sprites from /map), one square pictogram pin per event (no clustering).
+ * sprites from /map), clustered event markers drawn as square pictogram pins.
  * Loaded lazily so the filters and the list work before the map is ready.
  */
 import { layers, namedFlavor } from '@protomaps/basemaps';
@@ -27,7 +27,6 @@ import { EVENT_TYPES, EVENT_TYPE_KEYS, type EventType } from '../config/event-ty
 import { pt } from '../i18n/pt';
 import { MAX_BOUNDS, REGIONS, type RegionKey } from './regions';
 import { PICTOGRAMS, PICTOGRAM_SCALE, PICTOGRAM_STROKE } from './pictograms';
-import { spreadPoints } from './spread';
 
 export interface MarkerProps {
   id: string;
@@ -89,20 +88,10 @@ function buildStyle(origin: string): StyleSpecification {
 
 const ACCENT = '#ff4d00';
 const PIN = 40;
-/** Pins are drawn at SIZE_MIN up to zoom ZOOM_MIN, growing to full size at ZOOM_FULL. */
-const SIZE_MIN = 0.6;
-const ZOOM_MIN = 6;
-const ZOOM_FULL = 10;
-/** Space left between pins moved apart because they overlapped. */
-const PIN_GAP = 4;
-
-function iconSize(zoom: number): number {
-  const t = Math.min(Math.max((zoom - ZOOM_MIN) / (ZOOM_FULL - ZOOM_MIN), 0), 1);
-  return SIZE_MIN + (1 - SIZE_MIN) * t;
-}
 const PIN_SELECTED = 48;
 const TIP_W = 10;
 const TIP_H = 6;
+const CLUSTER_SIZES = [32, 40, 52] as const;
 
 /** A 2× canvas context for an image of `width`×`height` CSS pixels. */
 function canvas2d(width: number, height: number): CanvasRenderingContext2D {
@@ -161,6 +150,16 @@ function pinImage(type: EventType, variant: 'base' | 'key' | 'selected'): ImageD
   return ctx.getImageData(0, 0, side * 2, (side + TIP_H) * 2);
 }
 
+/** Cluster background: white square with a 2px black border. */
+function clusterImage(side: number): ImageData {
+  const ctx = canvas2d(side, side);
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, side, side);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(2, 2, side - 4, side - 4);
+  return ctx.getImageData(0, 0, side * 2, side * 2);
+}
+
 function pinExpression(selectedId: string | null): ExpressionSpecification {
   return [
     'case',
@@ -211,26 +210,6 @@ export function createMapEngine(
   map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
 
   let pending: MarkerCollection | null = null;
-
-  /** Draws the markers, moving apart the pins that would overlap at the current zoom. */
-  function render(): void {
-    if (!loaded || !pending) return;
-    const fc = pending;
-    const minDist = PIN * iconSize(map.getZoom()) + PIN_GAP;
-    const points = fc.features.map((f) => map.project(f.geometry.coordinates));
-    const spread = spreadPoints(points, minDist);
-    const features = fc.features.map((f, i) => {
-      const p = spread[i];
-      const q = points[i];
-      if (!p || !q || (p.x === q.x && p.y === q.y)) return f;
-      const { lng, lat } = map.unproject([p.x, p.y]);
-      return {
-        ...f,
-        geometry: { type: 'Point' as const, coordinates: [lng, lat] as [number, number] },
-      };
-    });
-    (map.getSource(SOURCE) as GeoJSONSource).setData({ ...fc, features });
-  }
   let loaded = false;
   let userMarker: Marker | null = null;
   let selectedId: string | null = null;
@@ -241,18 +220,47 @@ export function createMapEngine(
       map.addImage(`pin-key-${type}`, pinImage(type, 'key'), { pixelRatio: 2 });
       map.addImage(`pin-selected-${type}`, pinImage(type, 'selected'), { pixelRatio: 2 });
     }
+    for (const side of CLUSTER_SIZES) {
+      map.addImage(`cluster-${side}`, clusterImage(side), { pixelRatio: 2 });
+    }
     map.addSource(SOURCE, {
       type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] },
+      data: pending ?? { type: 'FeatureCollection', features: [] },
+      cluster: true,
+      clusterRadius: 44,
+      clusterMaxZoom: 12,
+    });
+    map.addLayer({
+      id: 'clusters',
+      type: 'symbol',
+      source: SOURCE,
+      filter: ['has', 'point_count'],
+      layout: {
+        'icon-image': [
+          'step',
+          ['get', 'point_count'],
+          `cluster-${CLUSTER_SIZES[0]}`,
+          10,
+          `cluster-${CLUSTER_SIZES[1]}`,
+          50,
+          `cluster-${CLUSTER_SIZES[2]}`,
+        ],
+        'icon-allow-overlap': true,
+        'text-field': ['get', 'point_count_abbreviated'],
+        'text-font': FONT,
+        'text-size': 14,
+        'text-allow-overlap': true,
+      },
+      // Only a Medium glyph set is self-hosted: a same-colour halo makes the count heavier.
+      paint: { 'text-color': '#000000', 'text-halo-color': '#000000', 'text-halo-width': 0.6 },
     });
     map.addLayer({
       id: 'event-icons',
       type: 'symbol',
       source: SOURCE,
+      filter: ['!', ['has', 'point_count']],
       layout: {
         'icon-image': pinExpression(selectedId),
-        // Every event keeps its own pin; smaller when zoomed out so they pile up less.
-        'icon-size': ['interpolate', ['linear'], ['zoom'], ZOOM_MIN, SIZE_MIN, ZOOM_FULL, 1],
         'icon-anchor': 'bottom',
         'icon-allow-overlap': true,
         'symbol-sort-key': sortExpression(selectedId),
@@ -263,7 +271,7 @@ export function createMapEngine(
       type: 'symbol',
       source: SOURCE,
       minzoom: 8,
-      filter: ['!=', ['get', 'dayLabel'], ''],
+      filter: ['all', ['!', ['has', 'point_count']], ['!=', ['get', 'dayLabel'], '']],
       layout: {
         'text-field': ['get', 'dayLabel'],
         'text-font': FONT,
@@ -275,11 +283,7 @@ export function createMapEngine(
       paint: { 'text-color': '#000000', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 },
     });
     loaded = true;
-    render();
   });
-
-  // Overlaps depend only on the zoom, so panning needs no new layout.
-  map.on('zoomend', render);
 
   map.on('moveend', () => {
     const c = map.getCenter();
@@ -290,13 +294,22 @@ export function createMapEngine(
     const id = e.features?.[0]?.properties?.id as unknown;
     if (typeof id === 'string') opts.onSelect(id);
   });
-  map.on('mouseenter', 'event-icons', () => (map.getCanvas().style.cursor = 'pointer'));
-  map.on('mouseleave', 'event-icons', () => (map.getCanvas().style.cursor = ''));
+  map.on('click', 'clusters', async (e) => {
+    const feature = e.features?.[0];
+    const clusterId = feature?.properties?.cluster_id as unknown;
+    if (!feature || typeof clusterId !== 'number' || feature.geometry.type !== 'Point') return;
+    const zoom = await (map.getSource(SOURCE) as GeoJSONSource).getClusterExpansionZoom(clusterId);
+    map.easeTo({ center: feature.geometry.coordinates as [number, number], zoom });
+  });
+  for (const layer of ['event-icons', 'clusters']) {
+    map.on('mouseenter', layer, () => (map.getCanvas().style.cursor = 'pointer'));
+    map.on('mouseleave', layer, () => (map.getCanvas().style.cursor = ''));
+  }
 
   return {
     setMarkers(fc) {
       pending = fc;
-      render();
+      if (loaded) (map.getSource(SOURCE) as GeoJSONSource).setData(fc);
     },
     setSelected(id) {
       selectedId = id;

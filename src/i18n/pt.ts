@@ -70,6 +70,7 @@ export const pt = {
     typeGroup: 'Tipo',
     dayStripLabel: 'Escolher um dia',
     noEventsThatDay: 'sem eventos',
+    clusterLabel: 'eventos',
     keyDate: 'Data-chave',
     showingResults: (label: string) => `A mostrar: ${label}`,
   },
