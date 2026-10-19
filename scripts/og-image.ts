@@ -11,19 +11,25 @@ const OUT = resolve(import.meta.dirname, '../public/og.png');
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
+// Acid theme (src/styles/base.css, docs/decisions.md #70): white, black lines,
+// orange accent, square marks, heavy uppercase title.
 const html = `<!doctype html><html lang="pt-PT"><head><meta charset="utf-8"><style>
-  body { margin: 0; width: 1200px; height: 630px; display: flex; align-items: center;
-    font-family: system-ui, 'Segoe UI', sans-serif; color: #1a1a1a;
-    background: linear-gradient(135deg, #fff 0%, #fff 55%, #fdecea 100%); }
-  .wrap { padding: 0 96px; }
-  .dot { width: 96px; height: 96px; border-radius: 50%; background: #c62828;
-    border: 10px solid #fff; box-shadow: 0 0 0 4px #c62828; margin-bottom: 40px; }
-  h1 { font-size: 104px; line-height: 1; margin: 0 0 28px; letter-spacing: -2px; }
-  p { font-size: 44px; line-height: 1.25; margin: 0; color: #444; max-width: 900px; }
-</style></head><body><div class="wrap">
-  <div class="dot"></div>
-  <h1>${esc(pt.site.title)}</h1>
+  * { box-sizing: border-box; }
+  body { margin: 0; width: 1200px; height: 630px; background: #fff; color: #000;
+    font-family: 'Archivo', system-ui, sans-serif; }
+  .frame { position: absolute; inset: 32px; border: 8px solid #000; display: flex;
+    flex-direction: column; justify-content: center; padding: 0 72px; }
+  .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: #ff4d00;
+    border-top: 8px solid #000; }
+  .title { display: flex; align-items: center; gap: 36px; margin-bottom: 36px; }
+  .mark { width: 72px; height: 72px; flex: none; background: #ff4d00; border: 8px solid #000; }
+  h1 { font-size: 128px; font-weight: 800; line-height: 1; margin: 0; letter-spacing: -2px;
+    text-transform: uppercase; }
+  p { font-size: 44px; line-height: 1.25; margin: 0; color: #3d3d3d; max-width: 900px; }
+</style></head><body><div class="frame">
+  <div class="title"><div class="mark"></div><h1>${esc(pt.site.title)}</h1></div>
   <p>${esc(pt.site.tagline)}</p>
+  <div class="bar"></div>
 </div></body></html>`;
 
 const browser = await chromium.launch();

@@ -22,7 +22,6 @@ export function MapIntro({ hidden = false, shell = false }: Props) {
         </Title>
       </div>
       <p>{pt.map.description}</p>
-      <p class="map-intro-note">{pt.map.domainNote}</p>
     </section>
   );
 }

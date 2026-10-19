@@ -1,7 +1,7 @@
 /** App-wide configuration. See docs/decisions.md for the reasoning behind each default. */
 
 /** D2 — placeholder until name/domain is decided. */
-export const APP_NAME = 'Mobilização';
+export const APP_NAME = 'Manifesta';
 
 /** D8 — data controller (GDPR). Must be filled in before launch (phase 7). */
 export const DATA_CONTROLLER = {

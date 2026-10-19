@@ -124,7 +124,7 @@ test.describe('map page (/)', () => {
   }) => {
     await page.goto('/mapa?quando=hoje');
     await expect(page).toHaveURL(/\/\?quando=hoje$/);
-    await expect(page.getByRole('heading', { level: 1, name: 'Mobilização' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Manifesta' })).toBeVisible();
   });
 
   test('the intro makes room for the filters and the event sheet on a phone', async ({
@@ -135,16 +135,13 @@ test.describe('map page (/)', () => {
     const intro = page.locator('.map-app .map-intro');
     await expect(intro).toBeVisible();
     await expect(intro).toContainText('Manifestações, concentrações e assembleias');
-    await expect(intro).toContainText(
-      'não tem qualquer ligação ao Presidente da Câmara Municipal do Porto',
-    );
     await shot(page, '00-intro', info.project.name);
 
     await page.locator('#summary-button').click();
     await expect(page.locator('#filters')).toBeVisible();
     await expect(intro).toBeHidden();
     // The h1 stays for screen readers.
-    await expect(page.getByRole('heading', { level: 1, name: 'Mobilização' })).toBeAttached();
+    await expect(page.getByRole('heading', { level: 1, name: 'Manifesta' })).toBeAttached();
 
     // Choosing an event closes the filters.
     await page.getByRole('button', { name: 'Ver resultados' }).click();

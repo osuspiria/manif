@@ -4,16 +4,16 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
 
 ## Decisões em aberto (SPEC §11) — 2026-10-17
 
-| #   | Decisão                            | Valor                                                        | Estado                                                                                                                      |
-| --- | ---------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| D1  | Alojamento                         | Cloudflare (Workers + D1 + R2)                               | Confirmada. Lógica isolada em `services/` e na porta `Db` (`src/server/repos/db.ts`), para poder trocar para Node + SQLite. |
-| D2  | Nome/domínio/identidade            | Placeholder `APP_NAME = 'Mobilização'` (`src/config/app.ts`) | **Por decidir**                                                                                                             |
-| D3  | `MODERATION_MODE`                  | `post` (publica logo, com selo "não confirmado")             | Confirmada                                                                                                                  |
-| D4  | Provider de email                  | Resend (atrás da interface `Mailer`)                         | Confirmada; implementação na Fase 5                                                                                         |
-| D5  | `KEY_DATES`                        | Nenhuma                                                      | Confirmada                                                                                                                  |
-| D6  | Concelho vs código postal          | Concelho (select com os 308)                                 | Confirmada                                                                                                                  |
-| D7  | Camadas de dados abertos           | Fora da v1                                                   | Confirmada                                                                                                                  |
-| D8  | Responsável pelo tratamento (RGPD) | Placeholder `DATA_CONTROLLER` em `src/config/app.ts`         | **Por decidir** antes da Fase 7                                                                                             |
+| #   | Decisão                            | Valor                                                           | Estado                                                                                                                      |
+| --- | ---------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Alojamento                         | Cloudflare (Workers + D1 + R2)                                  | Confirmada. Lógica isolada em `services/` e na porta `Db` (`src/server/repos/db.ts`), para poder trocar para Node + SQLite. |
+| D2  | Nome/domínio/identidade            | "Manifesta" em `manifesta.pt` (`APP_NAME`, `src/config/app.ts`) | Confirmada (#65, #75)                                                                                                       |
+| D3  | `MODERATION_MODE`                  | `post` (publica logo, com selo "não confirmado")                | Confirmada                                                                                                                  |
+| D4  | Provider de email                  | Resend (atrás da interface `Mailer`)                            | Confirmada; implementação na Fase 5                                                                                         |
+| D5  | `KEY_DATES`                        | Nenhuma                                                         | Confirmada                                                                                                                  |
+| D6  | Concelho vs código postal          | Concelho (select com os 308)                                    | Confirmada                                                                                                                  |
+| D7  | Camadas de dados abertos           | Fora da v1                                                      | Confirmada                                                                                                                  |
+| D8  | Responsável pelo tratamento (RGPD) | Placeholder `DATA_CONTROLLER` em `src/config/app.ts`            | **Por decidir** antes da Fase 7                                                                                             |
 
 ## Datas e filtros
 
@@ -222,7 +222,7 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
 
 ## Deploy (17/10/2026)
 
-65. **D2 — domínio:** `pedroduarte.eu` (Custom Domain do Worker, `[[routes]]` no `wrangler.toml`). O nome do site continua "Mobilização" (`APP_NAME`, por decidir).
+65. **D2 — domínio:** `pedroduarte.eu` (Custom Domain do Worker, `[[routes]]` no `wrangler.toml`). O nome do site continua "Mobilização" (`APP_NAME`, por decidir). Substituído por `manifesta.pt` em #75.
 66. **Recursos de produção** (conta Cloudflare do utilizador): D1 `mobilizacao-pt` e bucket R2 `mobilizacao-tiles`, ambos na Europa Ocidental (`weur`); KV `RATE_LIMIT`. Mapa base: extrato do build Protomaps `20261017` (zoom 0–15, 1,06 GB), carregado com `rclone`.
 67. **Turnstile em modo Managed** (escolha do utilizador): normalmente invisível; mostra uma caixa a confirmar só quando a Cloudflare tem dúvidas. O cliente já usa `appearance: 'interaction-only'`, por isso o widget só aparece nesses casos.
 68. **Administração:** para já, um único endereço em `ADMIN_EMAILS` (secret).
@@ -230,7 +230,7 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - O GeoJSON ficava 60 s em cache no browser e na edge, e o mapa voltava a pedir a lista e recebia a cópia antiga.
     - Agora a cache de 60 s é só na edge. O browser recebe `max-age=0, must-revalidate`; o mesmo vale para `/api/events/:id` e para os contadores e a lista das assinaturas.
     - Criar, editar, reportar ou moderar um evento apaga a cópia da edge no centro de dados de quem fez a alteração, e o mapa pede a lista sem cache depois de criar. Quem muda vê na hora; os outros visitantes, no máximo 60 s depois.
-    - `wrangler dev` passa a usar `--local-upstream`: com a rota `pedroduarte.eu` no `wrangler.toml`, os pedidos locais passariam a ter o URL de produção (links de email locais errados e a caixa de correio de dev bloqueada).
+    - `wrangler dev` passa a usar `--local-upstream`: com a rota do domínio de produção no `wrangler.toml`, os pedidos locais passariam a ter o URL de produção (links de email locais errados e a caixa de correio de dev bloqueada).
 
 ## Tema ácido (17/10/2026)
 
@@ -262,3 +262,13 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Os dias são gerados no cliente pelo filtro puro (`withOngoingDays` em `src/shared/event-filter.ts`, recebe `now`): uma ocorrência "todo o dia" por data local, de ontem (termina às 06:00, #73) até `LIMITS.dayStripDays` dias à frente, nunca antes de `ongoingSince`. Assim não é preciso cron e a cache do GeoJSON não fica desatualizada. Datas reais ficam como estão (a sua hora; cancelada continua cancelada).
     - Ficha e lista mostram uma linha "Todos os dias desde seg, 12 out" em vez das datas; a ficha lista só as datas reais, não as geradas.
     - Retenção: eventos sem fim nunca são apagados automaticamente; para os limpar, tira-se a marca.
+
+## Domínio manifesta.pt (19/10/2026)
+
+75. **Domínio principal `manifesta.pt` e nome "Manifesta"** (D2 fechada).
+    - Custom Domain do Worker passa a `manifesta.pt` (`[[routes]]` no `wrangler.toml`); `PUBLIC_SITE_URL=https://manifesta.pt` no `.env.production`. `APP_NAME` e `pt.site.title` passam a "Manifesta"; `public/og.png` regenerado, agora com o tema ácido (moldura preta, quadrado laranja, título em maiúsculas; `scripts/og-image.ts`).
+    - `pedroduarte.eu` responde 301 para `https://manifesta.pt`, com o mesmo caminho e a query, através de uma Redirect Rule na zona (corre antes do Worker, por isso apanha também os ficheiros estáticos). Os links já partilhados (`/mapa/e/<id>`) e os links de edição (`/editar/#…`, o browser mantém o fragmento) continuam a funcionar.
+    - `www.manifesta.pt` responde 301 para o apex, também por Redirect Rule.
+    - A nota "sem ligação ao Presidente da Câmara Municipal do Porto" (`pt.map.domainNote`) foi retirada: só existia por causa do domínio antigo.
+    - Os recursos internos mantêm o nome (Worker e D1 `mobilizacao-pt`, bucket `mobilizacao-tiles`): renomeá-los obrigaria a migrar os dados e os tiles, sem ganho para quem visita.
+    - Os links nos emails continuam a usar a origem do pedido, por isso não há URLs de produção no código.

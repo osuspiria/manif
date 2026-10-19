@@ -5,7 +5,7 @@ Os comandos são para PowerShell; com `npx`, corre-os na raiz do projeto.
 
 ## 0. Antes de começar
 
-- **Domínio (D2)** na Cloudflare, por exemplo `exemplo.pt`. É preciso para o Resend (emails de
+- **Domínio (D2)** na Cloudflare: `manifesta.pt` (`docs/decisions.md` #75). É preciso para o Resend (emails de
   entrada no admin) e para os URLs absolutos das pré-visualizações de links. O `*.workers.dev`
   chega para testar.
 - **Plano Workers Paid (5 USD/mês), recomendado.** No plano gratuito:
@@ -55,7 +55,7 @@ email só serve para os links de entrada no admin.
 npx wrangler secret put TURNSTILE_SECRET_KEY
 npx wrangler secret put RATE_LIMIT_SECRET   # node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 npx wrangler secret put RESEND_API_KEY
-npx wrangler secret put MAIL_FROM           # ex.: Mobilização <nao-responder@exemplo.pt>
+npx wrangler secret put MAIL_FROM           # ex.: Manifesta <nao-responder@manifesta.pt>
 npx wrangler secret put ADMIN_EMAILS        # ex.: pessoa1@exemplo.pt,pessoa2@exemplo.pt
 ```
 
@@ -69,7 +69,7 @@ do Astro e pelo `deploy:check`). Variáveis definidas na shell têm precedência
 ```powershell
 # .env.production
 # PUBLIC_TURNSTILE_SITE_KEY=<site key do widget>
-# PUBLIC_SITE_URL=https://exemplo.pt
+# PUBLIC_SITE_URL=https://manifesta.pt
 npm run og:image        # se o nome do site mudou (D2)
 npm run deploy
 ```
@@ -95,7 +95,20 @@ O `npm run deploy` faz, por ordem:
 - [ ] O Cron Trigger aparece no painel do Worker.
 - [ ] Lighthouse em produção, já com HTTPS.
 
-## 9. Operação
+## 9. Domínios antigos e `www`
+
+Redirecionam por Redirect Rules no painel da Cloudflare (não passam pelo Worker):
+
+- Zona `pedroduarte.eu`: Single Redirect, hostname igual a `pedroduarte.eu`, URL dinâmico
+  `concat("https://manifesta.pt", http.request.uri.path)`, 301, manter a query string. Se a zona
+  não tiver nenhum registo DNS com proxy (o Custom Domain antigo deixou de existir), cria
+  `AAAA @ 100::` com proxy para a regra disparar.
+- Zona `manifesta.pt`: registo `AAAA www 100::` com proxy e a mesma regra para
+  `www.manifesta.pt`.
+- Verificar: `curl -sI https://pedroduarte.eu/mapa/e/<id>?x=1` dá `301` com
+  `location: https://manifesta.pt/mapa/e/<id>?x=1`.
+
+## 10. Operação
 
 | Para…                                   | Comando                                                                |
 | --------------------------------------- | ---------------------------------------------------------------------- |

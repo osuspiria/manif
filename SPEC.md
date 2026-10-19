@@ -164,7 +164,7 @@ Todos os tipos usam o mesmo pin quadrado preto; o tipo distingue-se pelo pictogr
 O mapa é a página de entrada. `/mapa` redireciona (301) para `/`, mantendo os filtros do URL; as fichas continuam em `/mapa/e/<id>`.
 
 Layout telemóvel (de cima para baixo):
-0. Introdução: "Mobilização" + uma frase sobre a plataforma (`pt.map.description`) + uma nota a dizer que o site é independente e não tem ligação ao Presidente da Câmara Municipal do Porto nem à Câmara (`pt.map.domainNote`). Esconde-se (só visualmente; o `h1` fica para leitores de ecrã) enquanto o painel de filtros ou a ficha de um evento estão abertos. Abrir os filtros fecha a ficha; escolher um evento fecha os filtros. No desktop fica sempre visível no topo do painel lateral.
+0. Introdução: "Manifesta" + uma frase sobre a plataforma (`pt.map.description`). Esconde-se (só visualmente; o `h1` fica para leitores de ecrã) enquanto o painel de filtros ou a ficha de um evento estão abertos. Abrir os filtros fecha a ficha; escolher um evento fecha os filtros. No desktop fica sempre visível no topo do painel lateral.
 1. Barra fixa: **resumo do filtro ativo** ("23 eventos · Este fim de semana") — tocar abre o painel de filtros.
 2. Mapa em ecrã inteiro.
 3. Botões flutuantes: 📍 *Perto de mim* (geolocalização no browser; nada é enviado ao servidor), 🔍 *Procurar local*, ➕ *Adicionar evento*.

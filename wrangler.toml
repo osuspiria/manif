@@ -29,7 +29,7 @@ id = "a7a8254dd46f4bdcac52174f6807f46d"
 # Custom domain (D2): the zone must be on this Cloudflare account. The Worker
 # also stays reachable on *.workers.dev.
 [[routes]]
-pattern = "pedroduarte.eu"
+pattern = "manifesta.pt"
 custom_domain = true
 
 # Logs: only our own console output (counts and error codes, never personal data).
