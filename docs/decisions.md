@@ -272,3 +272,4 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - A nota "sem ligação ao Presidente da Câmara Municipal do Porto" (`pt.map.domainNote`) foi retirada: só existia por causa do domínio antigo.
     - Os recursos internos mantêm o nome (Worker e D1 `mobilizacao-pt`, bucket `mobilizacao-tiles`): renomeá-los obrigaria a migrar os dados e os tiles, sem ganho para quem visita.
     - Os links nos emails continuam a usar a origem do pedido, por isso não há URLs de produção no código.
+    - Corrigido: o `astro.config.mjs` lia `process.env.PUBLIC_SITE_URL`, mas o Astro não põe o `.env.production` no `process.env` do config; o build saía sem `og:url` e com `og:image` relativo (já acontecia com `pedroduarte.eu`). Agora lê o ficheiro com o `loadEnv` do Vite, no modo do build.

@@ -1,13 +1,22 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import preact from '@astrojs/preact';
+import { loadEnv } from 'vite';
+
+// Astro loads .env.<mode> for the source code only, not into process.env for this file,
+// so read it here (shell variables still win). Mode: --mode, else build → production.
+const argv = process.argv;
+const mode =
+  (argv.includes('--mode') && argv[argv.indexOf('--mode') + 1]) ||
+  (argv.includes('build') ? 'production' : 'development');
+const env = loadEnv(mode, process.cwd(), '');
 
 // Static site. The API is served by the Worker in src/server; in dev, Vite proxies /api to it.
 export default defineConfig({
   output: 'static',
-  // Absolute URLs for link previews (og:url, og:image). Set PUBLIC_SITE_URL when building
-  // for production, e.g. https://exemplo.pt (decision D2).
-  site: process.env.PUBLIC_SITE_URL || undefined,
+  // Absolute URLs for link previews (og:url, og:image). Set PUBLIC_SITE_URL (.env.production)
+  // when building for production, e.g. https://manifesta.pt (decision D2).
+  site: env.PUBLIC_SITE_URL || undefined,
   integrations: [preact()],
   // No code blocks in our Markdown; Shiki's inline styles would need 'unsafe-inline'.
   markdown: { syntaxHighlight: false },
