@@ -70,6 +70,43 @@ describe('GET /api/events.geojson', () => {
   });
 });
 
+describe('GET /api/past-events.geojson', () => {
+  it('returns published events with an ended, non-cancelled occurrence', async () => {
+    await insertEvent({
+      id: IDS.g,
+      status: 'hidden',
+      occurrences: [{ localDate: '2026-11-01', startTime: '10:00' }],
+    });
+    await insertEvent({
+      id: IDS.h,
+      ongoing: true,
+      occurrences: [{ localDate: '2026-10-01', startTime: null }],
+    });
+    await insertEvent({
+      id: IDS.j,
+      occurrences: [{ localDate: '2026-11-02', startTime: '10:00', cancelled: true }],
+    });
+    const res = await get('/api/past-events.geojson');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toContain('application/geo+json');
+    expect(res.headers.get('Cache-Control')).toBe('public, max-age=0, must-revalidate');
+    const fc = PublicEventCollectionSchema.parse(await res.json());
+    expect(fc.features.map((f) => f.id).sort()).toEqual([IDS.a, IDS.b]);
+  });
+
+  it('includes all occurrences of each event, past and future', async () => {
+    const fc = PublicEventCollectionSchema.parse(
+      await (await get('/api/past-events.geojson')).json(),
+    );
+    const a = fc.features.find((f) => f.id === IDS.a);
+    expect(a?.properties.occurrences.map((o) => o.localDate)).toEqual([
+      '2026-11-04',
+      '2026-11-18',
+      '2026-11-25',
+    ]);
+  });
+});
+
 describe('GET /api/events/:id', () => {
   it('returns a published event with all its occurrences', async () => {
     const res = await get(`/api/events/${IDS.a}`);

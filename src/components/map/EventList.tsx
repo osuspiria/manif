@@ -11,16 +11,18 @@ import { TypeIcon } from './TypeIcon';
 
 interface Props {
   results: FilteredEvent<PublicEvent>[];
+  /** Past events: newest day first. */
+  newestFirst?: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
 }
 
-export function EventList({ results, selectedId, onSelect }: Props) {
+export function EventList({ results, newestFirst = false, selectedId, onSelect }: Props) {
   if (results.length === 0) return <p class="empty">{pt.map.empty}</p>;
 
   return (
     <div class="event-list">
-      {groupByDay(results).map((group) => (
+      {groupByDay(results, newestFirst ? 'desc' : 'asc').map((group) => (
         <section key={group.date} aria-labelledby={`day-${group.date}`}>
           <h2 class="day-heading" id={`day-${group.date}`}>
             {formatDayHeading(group.date)}

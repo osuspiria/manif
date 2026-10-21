@@ -43,9 +43,29 @@ function toPublicEvent(e: EventRow, occurrences: OccurrenceRow[]): PublicEvent {
   };
 }
 
+function toCollection(events: EventRow[], occurrences: OccurrenceRow[]): PublicEventCollection {
+  const byEvent = new Map<string, OccurrenceRow[]>();
+  for (const o of occurrences) {
+    const list = byEvent.get(o.event_id);
+    if (list) list.push(o);
+    else byEvent.set(o.event_id, [o]);
+  }
+  return {
+    type: 'FeatureCollection',
+    features: events.map((e) => ({
+      type: 'Feature',
+      id: e.id,
+      geometry: { type: 'Point', coordinates: [e.lng, e.lat] },
+      properties: toPublicEvent(e, byEvent.get(e.id) ?? []),
+    })),
+  };
+}
+
 export interface EventsService {
   /** All visible events with their not-yet-ended occurrences (SPEC §3.1, §4.2). */
   listVisible(now: Date): Promise<PublicEventCollection>;
+  /** Events that already happened ("Já aconteceram"), with all their occurrences. */
+  listPast(now: Date): Promise<PublicEventCollection>;
   /** A published event with all its occurrences (past ones included), or null. */
   getPublic(id: string): Promise<PublicEvent | null>;
 }
@@ -58,21 +78,16 @@ export function createEventsService(repo: EventsRepo): EventsService {
         repo.listPublishedLive(at),
         repo.listOccurrencesEndingAfter(at),
       ]);
-      const byEvent = new Map<string, OccurrenceRow[]>();
-      for (const o of occurrences) {
-        const list = byEvent.get(o.event_id);
-        if (list) list.push(o);
-        else byEvent.set(o.event_id, [o]);
-      }
-      return {
-        type: 'FeatureCollection',
-        features: events.map((e) => ({
-          type: 'Feature',
-          id: e.id,
-          geometry: { type: 'Point', coordinates: [e.lng, e.lat] },
-          properties: toPublicEvent(e, byEvent.get(e.id) ?? []),
-        })),
-      };
+      return toCollection(events, occurrences);
+    },
+
+    async listPast(now) {
+      const at = nowIso(now);
+      const [events, occurrences] = await Promise.all([
+        repo.listPublishedPast(at),
+        repo.listPastEventOccurrences(at),
+      ]);
+      return toCollection(events, occurrences);
     },
 
     async getPublic(id) {

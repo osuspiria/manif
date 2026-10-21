@@ -11,6 +11,7 @@ describe('parseMapUrl', () => {
     ['amanha', 'tomorrow'],
     ['fds', 'weekend'],
     ['7dias', 'next7'],
+    ['passados', 'past'],
     ['proximos', 'upcoming'],
   ] as const)('quando=%s → %s', (param, kind) => {
     expect(parseMapUrl(`?quando=${param}`).when).toEqual({ kind });

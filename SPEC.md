@@ -108,7 +108,7 @@ Regras:
 - `tz` vem do ponto (Açores ≠ continente: UTC−1). Mostrar "(hora dos Açores)" quando `tz = Atlantic/Azores`.
 - Um evento é **visível** se `status = published` e tiver pelo menos uma ocorrência não cancelada com `ends_at ≥ agora`, ou se estiver marcado como **sem fim**.
 - **Sem fim** (`events.ongoing`, só pela moderação): o evento aparece todos os dias, como "todo o dia", desde a sua primeira data até ser ocultado ou desmarcado. As datas reais mantêm-se (com a sua hora; uma data cancelada continua cancelada). Na ficha e na lista: "Todos os dias desde …". A API pública devolve `ongoingSince` (primeira data local, ou `null`). Ver `docs/decisions.md` #74.
-- Retenção: eventos sem ocorrências futuras há mais de 30 dias são apagados (job diário), exceto os sem fim. Valor configurável.
+- Retenção: 30 dias depois da última ocorrência (job diário; exceto os sem fim), os eventos **não publicados** são apagados e os **publicados** ficam (filtro "Já aconteceram") mas perdem o email de contacto, o link de edição e as denúncias. Valor configurável. Ver `docs/decisions.md` #78.
 
 ### 3.2 Assinaturas
 
@@ -184,13 +184,14 @@ Contadores (como no site de referência): total visível + por tipo, recalculado
 Chips de escolha única, em scroll horizontal:
 
 ```
-[ Próximos ✓ ] [ Hoje ] [ Amanhã ] [ Fim de semana ] [ 7 dias ] [ 📅 Escolher dia ]
+[ Próximos ✓ ] [ Hoje ] [ Amanhã ] [ Fim de semana ] [ 7 dias ] [ Já aconteceram ] [ 📅 Escolher dia ]
 ```
 
 - **Próximos** (por defeito): tudo de agora em diante.
 - **Hoje / Amanhã**: dia civil em Europe/Lisbon.
 - **Fim de semana**: sábado+domingo seguintes (se hoje for sábado/domingo, o fim de semana corrente).
 - **7 dias**: agora → +7 dias.
+- **Já aconteceram** (`?quando=passados`): eventos publicados com pelo menos uma ocorrência não cancelada que já terminou (`ends_at ≤ agora`), da mais recente para a mais antiga (lista agrupada por dia, dia mais recente primeiro). Um evento com datas passadas e futuras aparece aqui e nos outros filtros. Os sem fim nunca aparecem. Os dados vêm de `/api/past-events.geojson`, pedido só quando o filtro é escolhido.
 - **Escolher dia**: abre uma **faixa de dias** (não um calendário), os próximos 60 dias em scroll horizontal; cada dia mostra o nº de eventos; dias sem eventos aparecem esbatidos e não são clicáveis. Um toque = um dia.
 
 ```
@@ -326,7 +327,7 @@ Necessário para as duas funcionalidades, mantido mínimo:
 - Identificar o **responsável pelo tratamento** (pessoa/associação) e um contacto na página de privacidade.
 - Idade de consentimento digital em Portugal: **13 anos** (Lei 58/2019). Incluir declaração "Tenho 13 anos ou mais" ou equivalente.
 - Minimização: o mapa não pede dados pessoais; email de contacto opcional e nunca público.
-- Retenção: assinaturas não confirmadas 7 dias; eventos 30 dias após a última ocorrência (exceto os marcados como sem fim); assinaturas até X meses após o fim da campanha (`CAMPAIGN_END` + `RETENTION.signatureMonthsAfterCampaign` em `src/config/app.ts`) ou até a pessoa retirar. Um Cron Trigger diário aplica estas regras.
+- Retenção: assinaturas não confirmadas 7 dias; eventos não publicados 30 dias após a última ocorrência (exceto os marcados como sem fim), e os publicados ficam sem email de contacto, link de edição e denúncias; assinaturas até X meses após o fim da campanha (`CAMPAIGN_END` + `RETENTION.signatureMonthsAfterCampaign` em `src/config/app.ts`) ou até a pessoa retirar. Um Cron Trigger diário aplica estas regras.
 - Direitos: retirar assinatura por link; pedidos de acesso/apagamento por email.
 - **Sem cookies** no site público; nada de analytics de terceiros. Se forem precisas métricas: contadores agregados no servidor, sem IP.
 - IPs: usados só para rate limit, guardados como hash com sal diário, nunca persistidos em BD.
@@ -340,6 +341,7 @@ Necessário para as duas funcionalidades, mantido mínimo:
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/api/events.geojson` | Todos os eventos visíveis + ocorrências futuras. Cache 60 s na edge (nunca no browser), apagada após cada escrita |
+| GET | `/api/past-events.geojson` | Eventos publicados que já aconteceram (filtro "Já aconteceram"), com todas as ocorrências. Cache 300 s na edge, apagada após cada escrita |
 | GET | `/api/events/:id` | Ficha de um evento |
 | POST | `/api/events` | Criar evento (Turnstile) → `{id, editUrl, status}` |
 | GET | `/api/events/:id/edit` | Dados para edição, com o estado de moderação (header `X-Edit-Token`) |

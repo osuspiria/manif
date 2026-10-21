@@ -85,6 +85,7 @@ export const pt = {
     tomorrow: 'Amanhã',
     weekend: 'Este fim de semana',
     next7: 'Próximos 7 dias',
+    past: 'Já aconteceram',
     types: (n: number) => (n === 1 ? '1 tipo' : `${n} tipos`),
   },
   event: {
@@ -521,6 +522,7 @@ export const pt = {
     tomorrow: 'Amanhã',
     weekend: 'Fim de semana',
     next7: '7 dias',
+    past: 'Já aconteceram',
     pickDay: 'Escolher dia',
     clear: 'Limpar',
   },

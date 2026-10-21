@@ -43,9 +43,17 @@ export interface EventsRepo {
   listPublishedLive(nowIso: string): Promise<EventRow[]>;
   /** Occurrences ending after `nowIso` (cancelled included) for published events. */
   listOccurrencesEndingAfter(nowIso: string): Promise<OccurrenceRow[]>;
+  /** Published, not ongoing events with a non-cancelled occurrence that ended by `nowIso`. */
+  listPublishedPast(nowIso: string): Promise<EventRow[]>;
+  /** All occurrences (cancelled included) of the events in `listPublishedPast`. */
+  listPastEventOccurrences(nowIso: string): Promise<OccurrenceRow[]>;
   getPublished(id: string): Promise<EventRow | null>;
   listOccurrences(eventId: string): Promise<OccurrenceRow[]>;
 }
+
+const PAST_EVENT = `e.status = 'published' AND e.ongoing = 0
+  AND EXISTS (SELECT 1 FROM event_occurrences po
+              WHERE po.event_id = e.id AND po.cancelled = 0 AND po.ends_at <= ?)`;
 
 export function eventsRepo(db: Db): EventsRepo {
   return {
@@ -63,6 +71,20 @@ export function eventsRepo(db: Db): EventsRepo {
         `SELECT ${OCC_COLUMNS} FROM event_occurrences o
          JOIN events e ON e.id = o.event_id
          WHERE e.status = 'published' AND o.ends_at > ?
+         ORDER BY o.starts_at`,
+        [nowIso],
+      );
+    },
+    listPublishedPast(nowIso) {
+      return db.all<EventRow>(`SELECT ${EVENT_COLUMNS} FROM events e WHERE ${PAST_EVENT}`, [
+        nowIso,
+      ]);
+    },
+    listPastEventOccurrences(nowIso) {
+      return db.all<OccurrenceRow>(
+        `SELECT ${OCC_COLUMNS} FROM event_occurrences o
+         JOIN events e ON e.id = o.event_id
+         WHERE ${PAST_EVENT}
          ORDER BY o.starts_at`,
         [nowIso],
       );

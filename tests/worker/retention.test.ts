@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { retentionRepo } from '../../src/server/repos/admin-repo';
 import { d1Db } from '../../src/server/repos/db';
 import { runRetention } from '../../src/server/services/retention';
-import { IDS, insertEvent, insertReport, insertSignature, resetDb } from './fixtures';
+import { IDS, insertEvent, insertReport, insertSignature, resetDb, SENTINELS } from './fixtures';
 
 // 20 Dec 2026, 10:00 Lisbon: 30 days back is 20 Nov.
 const NOW = new Date('2026-12-20T10:00:00Z');
@@ -34,24 +34,26 @@ describe('retention job (SPEC §7)', () => {
     expect(await ids('signatures')).toEqual(['new-unconfirmed', 'old-confirmed']);
   });
 
-  it('deletes events 30 days after their last occurrence, with occurrences and reports', async () => {
+  it('30 days after the last occurrence, deletes unpublished events with occurrences and reports', async () => {
     await insertEvent({
       id: IDS.a,
+      status: 'pending',
       occurrences: [{ localDate: '2026-11-15', startTime: '18:00' }],
     });
     await insertReport(IDS.a);
     await insertEvent({
       id: IDS.b,
+      status: 'hidden',
       occurrences: [{ localDate: '2026-11-25', startTime: '18:00' }],
     });
     await insertEvent({
       id: IDS.c,
+      status: 'hidden',
       occurrences: [
         { localDate: '2026-11-02', startTime: '18:00' },
         { localDate: '2027-01-10', startTime: '18:00' },
       ],
     });
-    // Any status: hidden events go too.
     await insertEvent({
       id: IDS.d,
       status: 'hidden',
@@ -69,6 +71,49 @@ describe('retention job (SPEC §7)', () => {
     expect(orphans?.n).toBe(0);
   });
 
+  it('keeps published past events ("Já aconteceram") but strips contact email, edit link and reports', async () => {
+    await insertEvent({
+      id: IDS.a,
+      occurrences: [{ localDate: '2026-11-15', startTime: '18:00' }],
+    });
+    await insertReport(IDS.a);
+    // Ended less than 30 days ago: untouched.
+    await insertEvent({
+      id: IDS.b,
+      occurrences: [{ localDate: '2026-11-25', startTime: '18:00' }],
+    });
+    await insertReport(IDS.b);
+
+    const r = await runRetention(repo(), NOW, null);
+    expect(r).toMatchObject({ events: 0, anonymizedEvents: 1 });
+    expect(await ids('events')).toEqual([IDS.a, IDS.b]);
+
+    const row = (id: string) =>
+      env.DB.prepare(
+        `SELECT contact_email, edit_token_hash,
+           (SELECT COUNT(*) FROM event_occurrences WHERE event_id = e.id) AS occurrences,
+           (SELECT COUNT(*) FROM event_reports WHERE event_id = e.id) AS reports
+         FROM events e WHERE id = ?`,
+      )
+        .bind(id)
+        .first();
+    expect(await row(IDS.a)).toEqual({
+      contact_email: null,
+      edit_token_hash: '',
+      occurrences: 1,
+      reports: 0,
+    });
+    expect(await row(IDS.b)).toEqual({
+      contact_email: SENTINELS.contactEmail,
+      edit_token_hash: SENTINELS.editTokenHash,
+      occurrences: 1,
+      reports: 1,
+    });
+
+    // Idempotent: nothing left to clean the next day.
+    expect((await runRetention(repo(), NOW, null)).anonymizedEvents).toBe(0);
+  });
+
   it('keeps ongoing ("sem fim") events, whatever their dates', async () => {
     await insertEvent({
       id: IDS.a,
@@ -81,7 +126,7 @@ describe('retention job (SPEC §7)', () => {
       status: 'hidden',
       occurrences: [{ localDate: '2026-01-15', startTime: null }],
     });
-    expect((await runRetention(repo(), NOW, null)).events).toBe(0);
+    expect(await runRetention(repo(), NOW, null)).toMatchObject({ events: 0, anonymizedEvents: 0 });
     expect(await ids('events')).toEqual([IDS.a, IDS.b]);
   });
 

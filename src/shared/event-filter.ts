@@ -8,6 +8,9 @@
  *   own local date(s) with Europe/Lisbon calendar dates — an Azores event at
  *   23:30 on Saturday belongs to Saturday. See docs/decisions.md.
  * - Instant-based filters (upcoming, next7) compare UTC instants.
+ * - "Já aconteceram" (past) is the other way round: events with at least one
+ *   non-cancelled occurrence that has ended, most recent first. Ongoing events
+ *   never count as past.
  * - Ongoing events ("sem fim", set by a moderator) also get an all-day
  *   occurrence on every day from their first date on. See docs/decisions.md #74.
  */
@@ -51,6 +54,7 @@ export type WhenFilter =
   | { kind: 'tomorrow' }
   | { kind: 'weekend' }
   | { kind: 'next7' }
+  | { kind: 'past' }
   | { kind: 'day'; date: string };
 
 export interface EventFilter {
@@ -61,9 +65,9 @@ export interface EventFilter {
 
 export interface FilteredEvent<E extends FilterableEvent> {
   event: E;
-  /** First live occurrence in range. */
+  /** First live occurrence in range (past: the most recent ended one). */
   highlight: E['occurrences'][number];
-  /** Live occurrences in range, chronological. */
+  /** Live occurrences in range, chronological (past: ended ones, newest first). */
   inRange: E['occurrences'][number][];
   /** Live occurrences outside the range, chronological ("+ N outras datas"). */
   others: E['occurrences'][number][];
@@ -71,12 +75,15 @@ export interface FilteredEvent<E extends FilterableEvent> {
 
 type OccurrenceMatcher = (o: FilterableOccurrence) => boolean;
 
+/** Upcoming-style filters: everything except 'past'. */
+type LiveWhen = Exclude<WhenFilter, { kind: 'past' }>;
+
 function dateMatcher(dates: readonly string[]): OccurrenceMatcher {
   const set = new Set(dates);
   return (o) => occurrenceLocalDates(o).some((d) => set.has(d));
 }
 
-function rangeMatcher(now: Date, when: WhenFilter): OccurrenceMatcher {
+function rangeMatcher(now: Date, when: LiveWhen): OccurrenceMatcher {
   switch (when.kind) {
     case 'upcoming':
       return () => true;
@@ -146,6 +153,7 @@ export function filterEvents<E extends FilterableEvent>(
   filter: EventFilter,
   now: Date,
 ): FilteredEvent<E>[] {
+  if (filter.when.kind === 'past') return filterPast(events, filter.types, now);
   const nowStr = nowIso(now);
   const inRange = rangeMatcher(now, filter.when);
   const typeOk = typeMatcher(filter.types);
@@ -168,6 +176,32 @@ export function filterEvents<E extends FilterableEvent>(
   }
 
   return results.sort((a, b) => byStart(a.highlight, b.highlight));
+}
+
+function filterPast<E extends FilterableEvent>(
+  events: readonly E[],
+  types: readonly EventType[],
+  now: Date,
+): FilteredEvent<E>[] {
+  const nowStr = nowIso(now);
+  const typeOk = typeMatcher(types);
+  const results: FilteredEvent<E>[] = [];
+
+  for (const event of events) {
+    if (event.ongoingSince || !typeOk(event)) continue;
+    const kept = event.occurrences.filter((o) => !o.cancelled).sort(byStart);
+    const ended = kept.filter((o) => o.endsAt <= nowStr).reverse();
+    const highlight = ended[0];
+    if (!highlight) continue;
+    results.push({
+      event,
+      highlight,
+      inRange: ended,
+      others: kept.filter((o) => o.endsAt > nowStr),
+    });
+  }
+
+  return results.sort((a, b) => byStart(b.highlight, a.highlight));
 }
 
 /** Number of matching events per Lisbon date, for the "Escolher dia" strip. */

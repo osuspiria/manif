@@ -167,6 +167,10 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
       ) : (
         <p class="event-ended">{pt.event.ended}</p>
       )}
+      {/* "Já aconteceram": the past date is shown above; say so if none is left. */}
+      {match && when.kind === 'past' && match.others.length === 0 && (
+        <p class="event-ended">{pt.event.ended}</p>
+      )}
 
       {event.description && <p class="event-description">{event.description}</p>}
       {event.organizer && (

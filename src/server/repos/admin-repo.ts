@@ -201,6 +201,10 @@ export type AdminSignaturesRepo = ReturnType<typeof adminSignaturesRepo>;
 
 // --- retention (SPEC §7) -----------------------------------------------------------------
 
+/** Not ongoing, created before `?` and with no occurrence ending at or after `?`. */
+const staleEvents = `SELECT e.id FROM events e WHERE e.created_at < ? AND e.ongoing = 0 AND NOT EXISTS
+  (SELECT 1 FROM event_occurrences o WHERE o.event_id = e.id AND o.ends_at >= ?)`;
+
 export function retentionRepo(db: Db) {
   const count = async (sql: string, params: unknown[]) =>
     (await db.first<{ n: number }>(sql, params))?.n ?? 0;
@@ -217,18 +221,39 @@ export function retentionRepo(db: Db) {
       return n;
     },
     /**
-     * Events whose last occurrence ended before `iso` (or that never had one and
-     * are older). Ongoing events are kept until a moderator unmarks them.
+     * Unpublished (pending/hidden) events whose last occurrence ended before
+     * `iso` (or that never had one and are older). Published ones stay for
+     * "Já aconteceram" (see anonymizeEventsEndedBefore). Ongoing events are
+     * kept until a moderator unmarks them.
      */
     async deleteEventsEndedBefore(iso: string): Promise<number> {
-      const stale = `SELECT e.id FROM events e WHERE e.created_at < ? AND e.ongoing = 0 AND NOT EXISTS
-        (SELECT 1 FROM event_occurrences o WHERE o.event_id = e.id AND o.ends_at >= ?)`;
+      const stale = `${staleEvents} AND e.status <> 'published'`;
       const n = await count(`SELECT COUNT(*) AS n FROM (${stale})`, [iso, iso]);
       if (!n) return 0;
       await db.batch([
         { sql: `DELETE FROM event_reports WHERE event_id IN (${stale})`, params: [iso, iso] },
         { sql: `DELETE FROM event_occurrences WHERE event_id IN (${stale})`, params: [iso, iso] },
         { sql: `DELETE FROM events WHERE id IN (${stale})`, params: [iso, iso] },
+      ]);
+      return n;
+    },
+    /**
+     * Published events past the same deadline stay public but lose what is
+     * personal or secret: contact email, edit link (an empty hash never matches
+     * a SHA-256) and reports. Returns how many events had something to clean.
+     */
+    async anonymizeEventsEndedBefore(iso: string): Promise<number> {
+      const stale = `${staleEvents} AND e.status = 'published'`;
+      const dirty = `SELECT e.id FROM events e WHERE e.id IN (${stale}) AND (e.contact_email IS NOT NULL
+        OR e.edit_token_hash <> '' OR EXISTS (SELECT 1 FROM event_reports r WHERE r.event_id = e.id))`;
+      const n = await count(`SELECT COUNT(*) AS n FROM (${dirty})`, [iso, iso]);
+      if (!n) return 0;
+      await db.batch([
+        { sql: `DELETE FROM event_reports WHERE event_id IN (${stale})`, params: [iso, iso] },
+        {
+          sql: `UPDATE events SET contact_email = NULL, edit_token_hash = '' WHERE id IN (${stale})`,
+          params: [iso, iso],
+        },
       ]);
       return n;
     },

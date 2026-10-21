@@ -102,6 +102,7 @@ describe('showsDayLabels', () => {
     expect(showsDayLabels({ kind: 'upcoming' })).toBe(true);
     expect(showsDayLabels({ kind: 'next7' })).toBe(true);
     expect(showsDayLabels({ kind: 'weekend' })).toBe(true);
+    expect(showsDayLabels({ kind: 'past' })).toBe(true);
     expect(showsDayLabels({ kind: 'today' })).toBe(false);
     expect(showsDayLabels({ kind: 'tomorrow' })).toBe(false);
     expect(showsDayLabels({ kind: 'day', date: '2026-11-28' })).toBe(false);
@@ -163,6 +164,24 @@ describe('groupByDay', () => {
       ['2026-11-14', ['lx-14', 'az-14']],
       ['2026-11-15', ['lx-15']],
       ['2026-11-20', ['lx-20']],
+    ]);
+  });
+
+  it('newest day first when asked (past events), keeping the order within a day', () => {
+    const results = filterEvents(
+      [
+        ev('a', 'rally', [['2026-11-01', '18:00']]),
+        ev('b', 'rally', [['2026-11-03', '10:00']]),
+        ev('c', 'rally', [['2026-11-03', '18:00']]),
+      ],
+      { when: { kind: 'past' }, types: [] },
+      NOW,
+    );
+    expect(
+      groupByDay(results, 'desc').map((g) => [g.date, g.items.map((r) => r.event.id)]),
+    ).toEqual([
+      ['2026-11-03', ['c', 'b']],
+      ['2026-11-01', ['a']],
     ]);
   });
 });

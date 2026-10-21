@@ -61,6 +61,36 @@ test.describe('map page (/)', () => {
     await expect(page).not.toHaveURL(/quando=|tipo=/);
   });
 
+  test('"Já aconteceram" shows past events, newest first, on the map and in the list', async ({
+    page,
+  }, info) => {
+    await page.goto('/');
+    await expect(page.getByText(/\d+ eventos · Próximos/).first()).toBeVisible();
+    if (isMobile(info.project.name)) await page.locator('#summary-button').click();
+
+    const panel = page.locator('#filters');
+    await panel.getByRole('button', { name: 'Já aconteceram', exact: true }).click();
+    await expect(page).toHaveURL(/quando=passados/);
+    await expect(page.getByText(/eventos? · Já aconteceram/).first()).toBeVisible();
+    await waitForMap(page);
+    await shot(page, '02b-ja-aconteceram', info.project.name);
+
+    await page.goto('/?quando=passados&vista=lista');
+    const list = page.locator('.event-list');
+    await expect(list).toBeVisible();
+    await shot(page, '02c-ja-aconteceram-lista', info.project.name);
+    // From the seed: a past date 3 days ago, then an event that ended 5 days ago.
+    const titles = await list.locator('.event-card-title').allTextContents();
+    const recent = titles.findIndex((t) => /Reunião de preparação do dia D/.test(t));
+    const older = titles.findIndex((t) => /Evento já terminado/.test(t));
+    expect(recent).toBeGreaterThanOrEqual(0);
+    expect(older).toBeGreaterThan(recent);
+    expect(titles.some((t) => /Evento oculto/.test(t))).toBe(false);
+
+    await list.getByRole('button', { name: /Evento já terminado/ }).click();
+    await expect(page.getByRole('dialog').getByText('Este evento já terminou.')).toBeVisible();
+  });
+
   test('"Escolher dia" opens the day strip; empty days are disabled', async ({ page }, info) => {
     await page.goto('/');
     await expect(page.getByText(/\d+ eventos · Próximos/).first()).toBeVisible();

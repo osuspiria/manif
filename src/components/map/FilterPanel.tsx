@@ -7,7 +7,7 @@ import { formatCount, formatLongDate, formatShortDayLabel } from '../../shared/e
 import { TypeIcon } from './TypeIcon';
 
 type NamedWhen = Exclude<WhenFilter['kind'], 'day'>;
-const WHEN_CHIPS: NamedWhen[] = ['upcoming', 'today', 'tomorrow', 'weekend', 'next7'];
+const WHEN_CHIPS: NamedWhen[] = ['upcoming', 'today', 'tomorrow', 'weekend', 'next7', 'past'];
 
 export interface DayCount {
   date: string;

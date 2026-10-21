@@ -271,6 +271,88 @@ describe('filterEvents — multiple dates: highlight and others', () => {
   });
 });
 
+describe('filterEvents — "Já aconteceram"', () => {
+  const past: WhenFilter = { kind: 'past' };
+
+  it('keeps events with an occurrence that has ended, most recent first', () => {
+    const events = [
+      ev('older', (tz) => [occ('2026-10-01', '18:00', '20:00', tz)]),
+      ev('recent', (tz) => [occ('2026-11-10', '18:00', '20:00', tz)]),
+      ev('future', (tz) => [occ('2026-12-01', '18:00', null, tz)]),
+    ];
+    expect(ids(run(events, past, WED))).toEqual(['recent', 'older']);
+  });
+
+  it('an occurrence happening right now is not past yet', () => {
+    const events = [ev('now', (tz) => [occ('2026-11-11', '09:00', '11:00', tz)])];
+    expect(ids(run(events, past, WED))).toEqual([]);
+    expect(ids(run(events, past, '2026-11-11T11:00:00Z'))).toEqual(['now']);
+  });
+
+  it('ignores cancelled occurrences', () => {
+    const events = [
+      ev('cancelled', (tz) => [occ('2026-11-01', '18:00', null, tz, true)]),
+      ev('mixed', (tz) => [
+        occ('2026-11-01', '18:00', null, tz),
+        occ('2026-11-08', '18:00', null, tz, true),
+      ]),
+    ];
+    const r = run(events, past, WED);
+    expect(ids(r)).toEqual(['mixed']);
+    expect(r[0]?.inRange.map((o) => o.localDate)).toEqual(['2026-11-01']);
+  });
+
+  it('with one past and one future occurrence, shows in both filters', () => {
+    const events = [
+      ev('twice', (tz) => [
+        occ('2026-11-04', '18:00', null, tz),
+        occ('2026-11-18', '18:00', null, tz),
+      ]),
+    ];
+    const [r] = run(events, past, WED);
+    expect(r?.highlight.localDate).toBe('2026-11-04');
+    expect(r?.others.map((o) => o.localDate)).toEqual(['2026-11-18']);
+    expect(ids(run(events, { kind: 'upcoming' }, WED))).toEqual(['twice']);
+  });
+
+  it('highlights the most recent past occurrence and lists the past ones newest first', () => {
+    const events = [
+      ev('series', (tz) => [
+        occ('2026-10-21', '18:00', null, tz),
+        occ('2026-11-04', '18:00', null, tz),
+        occ('2026-10-28', '18:00', null, tz),
+      ]),
+    ];
+    const [r] = run(events, past, WED);
+    expect(r?.inRange.map((o) => o.localDate)).toEqual(['2026-11-04', '2026-10-28', '2026-10-21']);
+  });
+
+  it('Azores event near midnight is past only once it has ended in UTC terms', () => {
+    const azores = [
+      ev('acores', (tz) => [occ('2026-11-14', '23:30', null, tz)], { tz: 'Atlantic/Azores' }),
+    ];
+    // No end time: ends at 06:00 local on the 15th = 07:00 UTC.
+    expect(ids(run(azores, past, '2026-11-15T06:59:00Z'))).toEqual([]);
+    const [r] = run(azores, past, '2026-11-15T07:00:00Z');
+    expect(r?.highlight.localDate).toBe('2026-11-14');
+  });
+
+  it('never includes ongoing ("sem fim") events', () => {
+    const events: FilterableEvent[] = [
+      { ...ev('camp', (tz) => [occ('2026-10-12', null, null, tz)]), ongoingSince: '2026-10-12' },
+    ];
+    expect(ids(run(events, past, WED))).toEqual([]);
+  });
+
+  it('respects the type filter', () => {
+    const events = [
+      ev('a', (tz) => [occ('2026-11-01', '18:00', null, tz)], { type: 'rally' }),
+      ev('b', (tz) => [occ('2026-11-02', '18:00', null, tz)], { type: 'camp' }),
+    ];
+    expect(ids(run(events, past, WED, ['camp']))).toEqual(['b']);
+  });
+});
+
 describe('filterEvents — type filter', () => {
   const events = [
     ev('demo', (tz) => [occ('2026-11-20', '10:00', null, tz)], { type: 'demonstration' }),

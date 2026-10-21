@@ -19,8 +19,8 @@ para fins comerciais.
   (komoot, Alemanha), baseado no OpenStreetMap. O teu endereço IP não lhe é enviado.
 - **Adicionar um evento:** guardamos o que escreves sobre o evento (que é público) e, se o
   indicares, um **email de contacto**, que nunca é publicado e só serve para a moderação e para
-  te enviarmos o link de edição. O evento e o email são apagados 30 dias depois da última data
-  do evento.
+  te enviarmos o link de edição. O email e o link de edição são apagados 30 dias depois da
+  última data do evento; o evento publicado continua visível em "Já aconteceram".
 - **Reportar um evento:** guardamos o motivo e o detalhe que escreveres, sem dados pessoais.
 
 ### Assinatura do apelo
@@ -49,7 +49,9 @@ Para assinar é preciso ter **13 anos ou mais** (Lei n.º 58/2019).
 - Assinaturas não confirmadas: apagadas ao fim de 7 dias.
 - Assinaturas confirmadas: até as retirares, ou até ao prazo fixado após o fim da campanha,
   indicado nesta página quando for decidido.
-- Eventos: apagados 30 dias depois da última data.
+- Eventos: 30 dias depois da última data, o email de contacto, o link de edição e as denúncias
+  são apagados; os eventos não publicados são apagados por inteiro. Os eventos publicados
+  continuam visíveis como eventos que já aconteceram.
 
 Um processo automático apaga os dados diariamente quando estes prazos terminam.
 

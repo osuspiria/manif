@@ -1,7 +1,8 @@
 /**
  * Map page island (/): loads all visible events once, filters them in the browser
  * (SPEC §4.2), keeps the filter in the URL, and shows them on the map and in
- * the equivalent list.
+ * the equivalent list. Past events ("Já aconteceram") come from a separate
+ * list, loaded only when that filter is picked.
  */
 import type { ComponentType } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
@@ -59,6 +60,7 @@ export function MapApp() {
   const [url, setUrl] = useState<MapUrlState>(() => parseMapUrl(window.location.search));
   const [selectedId, setSelectedId] = useState(() => eventIdFromPath(window.location.pathname));
   const [load, setLoad] = useState<Load>({ state: 'loading' });
+  const [pastLoad, setPastLoad] = useState<Load | null>(null);
   const [extraEvent, setExtraEvent] = useState<{
     id: string;
     event: PublicEvent | null;
@@ -84,19 +86,30 @@ export function MapApp() {
     setCommand((c) => ({ seq: (c?.seq ?? 0) + 1, action }));
 
   // --- data ------------------------------------------------------------------
-  /** `fresh`: after our own change, skip any cached copy. */
-  const fetchEvents = useCallback((fresh = false) => {
-    setLoad({ state: 'loading' });
-    fetch('/api/events.geojson', { cache: fresh ? 'reload' : 'default' })
+  const loadList = (url: string, set: (l: Load) => void, fresh: boolean) => {
+    set({ state: 'loading' });
+    fetch(url, { cache: fresh ? 'reload' : 'default' })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       // Our own API, validated by its tests: no Zod in the client bundle.
       .then((fc: PublicEventCollection) => {
-        setLoad({ state: 'ok', events: fc.features.map((f) => f.properties) });
+        set({ state: 'ok', events: fc.features.map((f) => f.properties) });
       })
-      .catch(() => setLoad({ state: 'error' }));
+      .catch(() => set({ state: 'error' }));
+  };
+  /** `fresh`: after our own change, skip any cached copy. */
+  const fetchEvents = useCallback((fresh = false) => {
+    loadList('/api/events.geojson', setLoad, fresh);
+    // Loaded again only if "Já aconteceram" is picked (again).
+    setPastLoad(null);
   }, []);
+  const fetchPast = () => loadList('/api/past-events.geojson', setPastLoad, false);
 
   useEffect(() => fetchEvents(), [fetchEvents]);
+
+  const showingPast = url.when.kind === 'past';
+  useEffect(() => {
+    if (showingPast && pastLoad === null) fetchPast();
+  }, [showingPast, pastLoad]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(currentTime()), 60_000);
@@ -104,11 +117,15 @@ export function MapApp() {
   }, []);
 
   const events = load.state === 'ok' ? load.events : [];
+  // What the list, the markers and the type counts show.
+  const shownLoad: Load = showingPast ? (pastLoad ?? { state: 'loading' }) : load;
+  const shown = shownLoad.state === 'ok' ? shownLoad.events : [];
 
   // An event opened by link that is not in the map data (ended, or filtered out server-side).
   useEffect(() => {
     if (!selectedId || load.state !== 'ok') return;
-    if (events.some((e) => e.id === selectedId) || extraEvent?.id === selectedId) return;
+    if (shown.some((e) => e.id === selectedId) || events.some((e) => e.id === selectedId)) return;
+    if (extraEvent?.id === selectedId) return;
     setExtraEvent({ id: selectedId, event: null, loading: true });
     fetch(`/api/events/${selectedId}`)
       .then((r) => (r.ok ? (r.json() as Promise<PublicEvent>) : null))
@@ -118,11 +135,11 @@ export function MapApp() {
 
   // Opened by link: centre the map on the event once the data is in.
   useEffect(() => {
-    if (load.state !== 'ok' || !selectedId) return;
-    const e = load.events.find((x) => x.id === selectedId);
+    if (shownLoad.state !== 'ok' || !selectedId) return;
+    const e = shown.find((x) => x.id === selectedId);
     if (e) issue({ kind: 'focus', lng: e.lng, lat: e.lat, offset: sheetOffset() });
     // Runs when the data arrives, not on every selection.
-  }, [load.state]);
+  }, [shownLoad.state]);
 
   // --- URL state -------------------------------------------------------------
   useEffect(() => {
@@ -143,10 +160,10 @@ export function MapApp() {
   }, []);
 
   // --- derived ---------------------------------------------------------------
-  const results = useMemo(() => filterEvents(events, url, now), [events, url, now]);
+  const results = useMemo(() => filterEvents(shown, url, now), [shown, url, now]);
   const typeCounts = useMemo(
-    () => countByType(filterEvents(events, { when: url.when, types: [] }, now)),
-    [events, url.when, now],
+    () => countByType(filterEvents(shown, { when: url.when, types: [] }, now)),
+    [shown, url.when, now],
   );
   const dayCounts = useMemo(
     () => countByDay(events, url.types, now, LIMITS.dayStripDays),
@@ -174,6 +191,7 @@ export function MapApp() {
   }, [results, url.when]);
 
   const selectedEvent =
+    shown.find((e) => e.id === selectedId) ??
     events.find((e) => e.id === selectedId) ??
     (extraEvent?.id === selectedId ? extraEvent.event : null);
 
@@ -197,7 +215,7 @@ export function MapApp() {
     setSelectedId(id);
     // The filters and the event sheet never cover each other.
     setPanelOpen(false);
-    const e = events.find((x) => x.id === id);
+    const e = shown.find((x) => x.id === id);
     if (e && (isDesktop || url.view === 'map'))
       issue({ kind: 'focus', lng: e.lng, lat: e.lat, offset: sheetOffset() });
   };
@@ -369,11 +387,15 @@ export function MapApp() {
         {/* Inside .content: it opens right under the top bar, whatever its height. */}
         {overlay && <div class="panel-overlay">{panel}</div>}
         <div class="list-pane" hidden={!showList}>
-          {load.state === 'loading' && <p class="empty">{pt.map.loading}</p>}
-          {load.state === 'error' && (
+          {shownLoad.state === 'loading' && <p class="empty">{pt.map.loading}</p>}
+          {shownLoad.state === 'error' && (
             <p class="empty">
               {pt.map.loadError}{' '}
-              <button type="button" class="btn-link" onClick={() => fetchEvents()}>
+              <button
+                type="button"
+                class="btn-link"
+                onClick={() => (showingPast ? fetchPast() : fetchEvents())}
+              >
                 {pt.map.retry}
               </button>
             </p>
@@ -383,8 +405,13 @@ export function MapApp() {
               + {pt.add.open}
             </button>
           )}
-          {load.state === 'ok' && (
-            <EventList results={results} selectedId={selectedId} onSelect={select} />
+          {shownLoad.state === 'ok' && (
+            <EventList
+              results={results}
+              newestFirst={showingPast}
+              selectedId={selectedId}
+              onSelect={select}
+            />
           )}
           {(FEATURES.signatures || FEATURES.privacyPage) && (
             <nav class="list-footer" aria-label={pt.nav.footer}>

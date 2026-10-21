@@ -76,7 +76,12 @@ export function summaryLabel(count: number, when: WhenFilter, types: readonly Ev
 
 /** Whether the filter range can span several days (→ show day labels on markers). */
 export function showsDayLabels(when: WhenFilter): boolean {
-  return when.kind === 'upcoming' || when.kind === 'next7' || when.kind === 'weekend';
+  return (
+    when.kind === 'upcoming' ||
+    when.kind === 'next7' ||
+    when.kind === 'weekend' ||
+    when.kind === 'past'
+  );
 }
 
 export function countByType(
@@ -95,9 +100,13 @@ export interface DayGroup<E extends FilterableEvent> {
   items: FilteredEvent<E>[];
 }
 
-/** Groups results by the local date of their highlighted occurrence, in date order. */
+/**
+ * Groups results by the local date of their highlighted occurrence, in date
+ * order ('desc': newest first, for past events). Items keep the results' order.
+ */
 export function groupByDay<E extends FilterableEvent>(
   results: readonly FilteredEvent<E>[],
+  order: 'asc' | 'desc' = 'asc',
 ): DayGroup<E>[] {
   const groups = new Map<string, FilteredEvent<E>[]>();
   for (const r of results) {
@@ -107,6 +116,6 @@ export function groupByDay<E extends FilterableEvent>(
     else groups.set(key, [r]);
   }
   return [...groups]
-    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0) * (order === 'desc' ? -1 : 1))
     .map(([date, items]) => ({ date, items }));
 }

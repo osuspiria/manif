@@ -294,3 +294,12 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Eventos criados pela moderação ficam publicados e "Confirmado" logo (decisão do utilizador), independentemente de `MODERATION_MODE`, e sem email de contacto.
     - Privacidade: o texto e a imagem só vão para a Anthropic quando o moderador carrega em "Ler com IA", não ficam guardados e não aparecem nos logs (só o código de erro). O browser não fala com a Anthropic. O ecrã avisa disto. Para a página de privacidade: a Anthropic passa a ser subcontratante (só para conteúdos colados pela moderação).
     - Sem `ANTHROPIC_API_KEY`, a importação responde 503 e o formulário continua a funcionar à mão. No e2e, `FAKE_EXTERNAL=on` troca o Claude e o Photon por respostas fixas.
+
+## Filtro "Já aconteceram" (21/10/2026)
+
+78. **Novo filtro "Já aconteceram" e eventos publicados guardados depois de terminarem** (pedido: um botão nos filtros que mostre, no mapa e na lista, todos os eventos que já aconteceram).
+    - Rótulo "Já aconteceram" (escolha do utilizador), último chip antes de "Escolher dia"; URL `?quando=passados`.
+    - Filtro puro (`kind: 'past'` em `src/shared/event-filter.ts`): ocorrências não canceladas com `endsAt ≤ now`, mais recente primeiro; `others` são as datas futuras ainda ativas. Os sem fim ficam de fora (estão sempre "a decorrer").
+    - Endpoint próprio `/api/past-events.geojson`, pedido só quando o filtro é escolhido: o GeoJSON principal não cresce com o histórico. Este ficheiro cresce com o tempo; se ficar pesado, paginar ou limitar por período.
+    - Retenção (escolha do utilizador): os eventos publicados deixam de ser apagados. 30 dias depois da última data perdem o email de contacto, o link de edição (`edit_token_hash = ''`, que nunca coincide com um SHA-256) e as denúncias. Os pendentes e ocultos continuam a ser apagados. Sem migration.
+    - Consequência para o SEO (#76): `/mapa/e/<id>` de um evento antigo deixa de dar 404 e mostra "Este evento já terminou."; o sitemap continua só com eventos futuros.

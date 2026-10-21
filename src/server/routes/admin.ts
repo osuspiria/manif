@@ -47,7 +47,7 @@ import {
 import { createEvent, moderatorEditEvent } from '../services/event-submission';
 import type { GeoService } from '../services/geo-service';
 import { purgeEdgeCache } from './edge-cache';
-import { EVENTS_GEOJSON } from './events';
+import { EVENT_LISTS } from './events';
 import { readJson, zodIssues } from './http';
 
 export const ADMIN_COOKIE = 'admin_session';
@@ -229,7 +229,7 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
         if (!result.ok) {
           return c.json({ error: result.error, issues: result.issues }, result.status);
         }
-        await purgeEdgeCache(c, [EVENTS_GEOJSON]);
+        await purgeEdgeCache(c, EVENT_LISTS);
         return c.json(await eventDetail(result.value.id, moderation(c.env)), 201);
       })
       .get('/events/:id', requireSession, async (c) => {
@@ -244,7 +244,7 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
           return c.json({ error: 'invalid', issues: zodIssues(parsed.error) }, 400);
         }
         const item = id ? await moderateEvent(id, parsed.data.action, moderation(c.env)) : null;
-        if (item) await purgeEdgeCache(c, [EVENTS_GEOJSON]);
+        if (item) await purgeEdgeCache(c, EVENT_LISTS);
         return item ? c.json(item) : c.json({ error: 'not_found' }, 404);
       })
       .patch('/events/:id', requireSession, async (c) => {
@@ -256,7 +256,7 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
           return c.json({ error: 'invalid', issues: zodIssues(parsed.error) }, 400);
         }
         const result = await moderatorEditEvent(id, parsed.data, submission(c.env));
-        if (result.ok) await purgeEdgeCache(c, [EVENTS_GEOJSON]);
+        if (result.ok) await purgeEdgeCache(c, EVENT_LISTS);
         if (!result.ok) {
           return c.json({ error: result.error, issues: result.issues }, result.status);
         }

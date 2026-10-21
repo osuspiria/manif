@@ -1,7 +1,9 @@
 /**
  * Retention job (SPEC §7), run daily by the Cron Trigger:
  * - unconfirmed signatures after 7 days;
- * - events 30 days after their last occurrence;
+ * - 30 days after an event's last occurrence: unpublished events are deleted;
+ *   published ones stay ("Já aconteceram") without contact email, edit link
+ *   or reports;
  * - all signatures N months after CAMPAIGN_END (when it is set);
  * - expired admin login links and sessions.
  */
@@ -12,6 +14,7 @@ import type { RetentionRepo } from '../repos/admin-repo';
 export interface RetentionResult {
   unconfirmedSignatures: number;
   events: number;
+  anonymizedEvents: number;
   campaignSignatures: number;
 }
 
@@ -23,9 +26,9 @@ export async function runRetention(
   const unconfirmedSignatures = await repo.deleteUnconfirmedSignaturesBefore(
     addCivilDaysIso(now, -RETENTION.unconfirmedSignatureDays),
   );
-  const events = await repo.deleteEventsEndedBefore(
-    addCivilDaysIso(now, -RETENTION.eventDaysAfterLastOccurrence),
-  );
+  const eventDeadline = addCivilDaysIso(now, -RETENTION.eventDaysAfterLastOccurrence);
+  const events = await repo.deleteEventsEndedBefore(eventDeadline);
+  const anonymizedEvents = await repo.anonymizeEventsEndedBefore(eventDeadline);
   let campaignSignatures = 0;
   if (
     campaignEnd &&
@@ -34,5 +37,5 @@ export async function runRetention(
     campaignSignatures = await repo.deleteAllSignatures();
   }
   await repo.deleteExpiredAdminAuth(nowIso(now));
-  return { unconfirmedSignatures, events, campaignSignatures };
+  return { unconfirmedSignatures, events, anonymizedEvents, campaignSignatures };
 }

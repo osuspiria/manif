@@ -178,6 +178,11 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   },
   {
     method: 'GET',
+    route: '/api/past-events.geojson',
+    samples: [{ url: '/api/past-events.geojson' }],
+  },
+  {
+    method: 'GET',
     route: '/api/events/:id',
     samples: [
       { url: '/api/events/{eventId}' },

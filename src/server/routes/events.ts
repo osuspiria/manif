@@ -26,6 +26,10 @@ const ID_RE = /^[0-9A-HJKMNP-TV-Z]{26}$/; // ULID
 const HOUR = 3600;
 /** Edge-cached list, dropped after every write (see purgeEdgeCache). */
 export const EVENTS_GEOJSON = '/api/events.geojson';
+/** Edge-cached past events ("Já aconteceram"), dropped together with EVENTS_GEOJSON. */
+export const PAST_EVENTS_GEOJSON = '/api/past-events.geojson';
+/** Every edge-cached event list: what each write purges. */
+export const EVENT_LISTS = [EVENTS_GEOJSON, PAST_EVENTS_GEOJSON];
 const DAY = 86400;
 
 function respond<T>(c: C, result: ServiceResult<T>, okStatus: 200 | 201 = 200) {
@@ -65,6 +69,14 @@ export function eventsRoutes(geo: GeoService, deps: AppDeps) {
           });
         }),
       )
+      .get('/past-events.geojson', (c) =>
+        edgeCached(c, 300, async () => {
+          const fc = await read(c.env).listPast(deps.clock());
+          return new Response(JSON.stringify(fc), {
+            headers: { 'Content-Type': 'application/geo+json; charset=utf-8' },
+          });
+        }),
+      )
       .get('/events/:id', async (c) => {
         const id = c.req.param('id');
         if (!ID_RE.test(id)) return c.json({ error: 'not_found' }, 404);
@@ -93,7 +105,7 @@ export function eventsRoutes(geo: GeoService, deps: AppDeps) {
         void website;
         const origin = new URL(c.req.url).origin;
         const created = await createEvent(input, origin, submission(c.env));
-        if (created.ok) await purgeEdgeCache(c, [EVENTS_GEOJSON]);
+        if (created.ok) await purgeEdgeCache(c, EVENT_LISTS);
         return respond(c, created, 201);
       })
 
@@ -114,7 +126,7 @@ export function eventsRoutes(geo: GeoService, deps: AppDeps) {
         }
         c.header('Cache-Control', 'no-store');
         const edited = await editEvent(id, token(c), parsed.data, submission(c.env));
-        if (edited.ok) await purgeEdgeCache(c, [EVENTS_GEOJSON]);
+        if (edited.ok) await purgeEdgeCache(c, EVENT_LISTS);
         return respond(c, edited);
       })
 
@@ -135,7 +147,7 @@ export function eventsRoutes(geo: GeoService, deps: AppDeps) {
           .hit(`report-once:${id}:${key}`, 1, DAY, deps.clock());
         const reported = await reportEvent(id, parsed.data, first, submission(c.env));
         // A report may hide the event (SPEC §4.5).
-        if (reported.ok && first) await purgeEdgeCache(c, [EVENTS_GEOJSON]);
+        if (reported.ok && first) await purgeEdgeCache(c, EVENT_LISTS);
         return respond(c, reported, 201);
       })
   );

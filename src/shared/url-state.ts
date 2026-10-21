@@ -1,6 +1,6 @@
 /**
  * Map filter state <-> URL query string (SPEC §4.2), for shareable links:
- *   /mapa?quando=fds&tipo=rally,action   /mapa?dia=2026-11-25   ?vista=lista
+ *   /mapa?quando=fds&tipo=rally,action   /mapa?dia=2026-11-25   ?quando=passados   ?vista=lista
  * Defaults (upcoming, all types, map view) are omitted.
  */
 import { Temporal } from 'temporal-polyfill';
@@ -22,6 +22,7 @@ const WHEN_PARAM: Record<NamedWhen, string> = {
   tomorrow: 'amanha',
   weekend: 'fds',
   next7: '7dias',
+  past: 'passados',
 };
 
 const WHEN_BY_PARAM = new Map(

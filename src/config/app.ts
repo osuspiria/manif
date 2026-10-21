@@ -57,6 +57,7 @@ export const LIMITS = {
 } as const;
 
 export const RETENTION = {
+  /** Then unpublished events are deleted and published ones lose contact email, edit link and reports. */
   eventDaysAfterLastOccurrence: 30,
   unconfirmedSignatureDays: 7,
   /** Months after CAMPAIGN_END to keep signatures; then the retention job deletes them all. */
