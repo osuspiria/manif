@@ -36,6 +36,7 @@ import {
 } from '../services/admin-auth';
 import {
   deleteSignature,
+  eventCounts,
   eventDetail,
   exportContactsCsv,
   listEvents,
@@ -205,6 +206,9 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
         const q = AdminEventsQuerySchema.parse(c.req.query());
         return c.json({ items: await listEvents(q, moderation(c.env)) });
       })
+      .get('/events/counts', requireSession, async (c) =>
+        c.json(await eventCounts(moderation(c.env))),
+      )
       // Import (SPEC §6): read a draft out of a post's text or a poster; nothing is stored.
       .post('/events/extract', requireSession, async (c) => {
         const extractor = deps.extractor(c.env);

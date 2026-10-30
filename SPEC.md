@@ -248,7 +248,7 @@ Não se pede nome nem morada de quem submete.
 
 - `MODERATION_MODE = "pre" | "post"` (config).
   - `pre`: novos eventos ficam `pending` até aprovação.
-  - `post`: publicados logo, com aspeto "não confirmado", e entram na fila para verificação.
+  - `post`: publicados logo, com aspeto "não confirmado", e entram na fila para verificação (filtro **"Por confirmar"** do admin, §6).
 - Auto-ocultar quando um evento recebe ≥ N reports (config, ex.: 3) até revisão.
 - Possíveis duplicados: a ficha do evento no admin lista os eventos publicados a ≤ 300 m nas mesmas datas, com a distância (§4.4, `docs/decisions.md` #80).
 - Cartazes: moderados à parte do evento, sempre antes de ficarem visíveis, qualquer que seja o `MODERATION_MODE` (§4.7).
@@ -334,7 +334,7 @@ O concelho é guardado pelo código DICO da CAOP (há nomes repetidos, como "Lag
 
 Necessário para as duas funcionalidades, mantido mínimo:
 - Login por **magic link** para emails numa allowlist (`ADMIN_EMAILS`): `/admin/entrar/#t=<token>`, 15 minutos, uso único. Sessão com cookie estritamente necessário: `admin_session`, `Path=/api/admin`, `HttpOnly`, `Secure`, `SameSite=Strict`, 24 horas (ver `docs/decisions.md` #48–50).
-- Separador **Eventos**: pendentes, reportados, ocultos, cartazes por aprovar, todos; aprovar ou rejeitar um cartaz (§4.7); aprovar (descarta as denúncias), ocultar, marcar "confirmado", marcar "sem fim", editar (sem perder o "confirmado").
+- Separador **Eventos**: por confirmar (publicados, sem "confirmado" e ainda no mapa; abre por omissão, data mais próxima primeiro), pendentes (só aparece se tiver eventos), reportados, ocultos, cartazes por aprovar, todos, cada um com o número de eventos (exceto "Todos"); aprovar ou rejeitar um cartaz (§4.7); aprovar (descarta as denúncias), ocultar, marcar "confirmado", marcar "sem fim", editar (sem perder o "confirmado").
 - **Novo evento** (`#eventos/novo`): formulário completo, sem Turnstile; o evento fica logo publicado e "confirmado", sem email de contacto. Opcionalmente **importado** de um post ou cartaz: cola-se o texto e/ou junta-se uma imagem (reduzida no browser a ≤ 1568 px); o Worker pede ao Claude (`claude-opus-5-5`, `ANTHROPIC_API_KEY`) um rascunho (tipo, título, descrição, organização, local, datas, avisos) e procura o local com a pesquisa de locais; o formulário fica preenchido para rever. Nada do que se cola é guardado, exceto a imagem, se o moderador a quiser como cartaz do evento. Limite: `RATE_LIMITS.adminExtract` por hora e por admin. Ver `docs/decisions.md` #77.
 - Separador **Assinaturas**: organizações por aprovar; pesquisa; apagar a pedido.
 - **Exportar CSV** só de quem aceitou recontacto.

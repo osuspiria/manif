@@ -1,10 +1,14 @@
-/** Admin › Eventos: queues (pendentes, reportados, ocultos, todos), search, quick actions. */
+/**
+ * Admin › Eventos: queues with their counts (por confirmar, pendentes, reportados,
+ * ocultos, cartazes, todos), search, quick actions.
+ */
 import { useEffect, useState } from 'preact/hooks';
 import { pt } from '../../i18n/pt';
 import { formatInstantShort } from '../../shared/dates';
 import {
   ADMIN_EVENT_FILTERS,
   type AdminEventAction,
+  type AdminEventCounts,
   type AdminEventFilter,
   type AdminEventListItem,
 } from '../../shared/schemas';
@@ -119,14 +123,22 @@ export function EventBadges({ e }: { e: AdminEventListItem }) {
 }
 
 export function AdminEvents() {
-  const [filter, setFilter] = useState<AdminEventFilter>('pending');
+  const [filter, setFilter] = useState<AdminEventFilter>('unverified');
+  const [counts, setCounts] = useState<AdminEventCounts | null>(null);
   const [query, setQuery] = useState('');
   const [submitted, setSubmitted] = useState('');
   const [items, setItems] = useState<AdminEventListItem[] | null>(null);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
 
+  /** Counts are a convenience: on failure the filters just show none. */
+  async function loadCounts() {
+    const r = await adminApi<AdminEventCounts>('/events/counts').catch(() => null);
+    if (r?.ok) setCounts(r.data);
+  }
+
   async function load() {
+    void loadCounts();
     setError('');
     try {
       const q = new URLSearchParams({ filter, q: submitted });
@@ -145,6 +157,7 @@ export function AdminEvents() {
 
   const replace = (item: AdminEventListItem) => {
     setItems((list) => list?.map((x) => (x.id === item.id ? item : x)) ?? null);
+    void loadCounts();
     setStatus(`${item.title}: ${pt.admin.eventStatus[item.status]}`);
   };
 
@@ -159,17 +172,23 @@ export function AdminEvents() {
         </a>
       </p>
       <div class="chips chips-wrap admin-filters">
-        {ADMIN_EVENT_FILTERS.map((f) => (
-          <button
-            key={f}
-            type="button"
-            class="chip"
-            aria-pressed={filter === f}
-            onClick={() => setFilter(f)}
-          >
-            {pt.admin.eventFilters[f]}
-          </button>
-        ))}
+        {ADMIN_EVENT_FILTERS.map((f) => {
+          const count = f === 'all' ? null : (counts?.[f] ?? null);
+          // "Pendentes" only fills up under MODERATION_MODE = pre.
+          if (f === 'pending' && count === 0 && filter !== f) return null;
+          return (
+            <button
+              key={f}
+              type="button"
+              class="chip"
+              aria-pressed={filter === f}
+              onClick={() => setFilter(f)}
+            >
+              {pt.admin.eventFilters[f]}
+              {count !== null && <span class="chip-count">{count}</span>}
+            </button>
+          );
+        })}
       </div>
       <form
         class="admin-search"

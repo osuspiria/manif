@@ -5,6 +5,7 @@ import { FakeMailer } from '../../src/server/mailer';
 import { MemoryRateLimiter } from '../../src/server/security/rate-limit';
 import { FakeCaptcha } from '../../src/server/security/captcha';
 import {
+  AdminEventCountsSchema,
   AdminEventDetailSchema,
   AdminEventListSchema,
   AdminSignatureListSchema,
@@ -247,6 +248,72 @@ describe('admin: events', () => {
     // The next date skips the cancelled one.
     expect(published?.nextStartsAt).toBe('2026-11-28T10:00:00Z');
     expect(published?.verified).toBe(true);
+  });
+
+  it('"Por confirmar": published, not "Confirmado", still on the map; soonest first', async () => {
+    await insertEvent({
+      id: IDS.d,
+      title: 'Por confirmar, mais tarde',
+      occurrences: [{ localDate: '2026-12-05', startTime: '18:00' }],
+    });
+    await insertEvent({
+      id: IDS.e,
+      title: 'Por confirmar, mais cedo',
+      occurrences: [
+        { localDate: '2026-11-12', startTime: '18:00', cancelled: true },
+        { localDate: '2026-11-20', startTime: '18:00' },
+      ],
+    });
+    await insertEvent({
+      id: IDS.f,
+      title: 'Já passou',
+      occurrences: [{ localDate: '2026-11-02', startTime: '18:00' }],
+    });
+    await insertEvent({
+      id: IDS.g,
+      title: 'Sem fim',
+      ongoing: true,
+      occurrences: [{ localDate: '2026-11-02', startTime: null }],
+    });
+    await insertEvent({
+      id: IDS.h,
+      title: 'Só datas canceladas',
+      occurrences: [{ localDate: '2026-11-30', startTime: '18:00', cancelled: true }],
+    });
+    expect((await list('unverified')).map((e) => e.id)).toEqual([IDS.e, IDS.d, IDS.g]);
+    // The default queue.
+    const res = await call('/api/admin/events', { cookie });
+    expect(AdminEventListSchema.parse(await res.json()).items.map((e) => e.id)).toEqual([
+      IDS.e,
+      IDS.d,
+      IDS.g,
+    ]);
+  });
+
+  it('counts every queue, and follows the moderation actions', async () => {
+    await insertEvent({
+      id: IDS.d,
+      title: 'Por confirmar, com cartaz',
+      poster: { key: 'posters/d/1', status: 'pending' },
+      occurrences: [{ localDate: '2026-12-05', startTime: '18:00' }],
+    });
+    const counts = async () =>
+      AdminEventCountsSchema.parse(
+        await (await call('/api/admin/events/counts', { cookie })).json(),
+      );
+    expect(await counts()).toEqual({
+      unverified: 1,
+      pending: 1,
+      reported: 2,
+      hidden: 1,
+      posters: 1,
+    });
+    await call(`/api/admin/events/${IDS.d}/moderate`, { cookie, json: { action: 'verify' } });
+    await call(`/api/admin/events/${IDS.b}/moderate`, { cookie, json: { action: 'publish' } });
+    expect(await counts()).toMatchObject({ unverified: 1, reported: 1, hidden: 0 });
+    // IDS.b was published unverified, with a future date: now it waits for "Confirmado".
+    expect((await list('unverified')).map((e) => e.id)).toEqual([IDS.b]);
+    expect((await call('/api/admin/events/counts')).status).toBe(401);
   });
 
   it('detail includes the contact email and the reports', async () => {

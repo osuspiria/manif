@@ -113,6 +113,17 @@ test.describe('Administração', () => {
     const [cookie] = await context.cookies(new URL('/api/admin/me', page.url()).toString());
     expect(cookie).toMatchObject({ name: 'admin_session', httpOnly: true, sameSite: 'Strict' });
 
+    // Opens on the verification queue; every queue but "Todos" shows its count
+    // (other tests change them, so only their presence is checked).
+    const queue = page.getByRole('button', { name: /^Por confirmar \d+$/ });
+    await expect(queue).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: /^Reportados \d+$/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Todos', exact: true })).toBeVisible();
+    // The top of the page only: the queue holds every seeded event.
+    await page.screenshot({
+      path: `test-results/screens/${info.project.name}-29-admin-por-confirmar.png`,
+    });
+
     await page.getByRole('button', { name: 'Reportados' }).click();
     await page.getByLabel('Pesquisar por título ou concelho').fill(title);
     await page.getByRole('button', { name: 'Pesquisar', exact: true }).click();

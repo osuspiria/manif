@@ -13,6 +13,7 @@ import { findPossibleDuplicates } from '../../shared/duplicates';
 import { municipalityLabel } from '../../shared/municipalities';
 import type {
   AdminEventAction,
+  AdminEventCounts,
   AdminEventDetail,
   AdminEventFilter,
   AdminEventListItem,
@@ -62,6 +63,11 @@ export async function listEvents(
 ): Promise<AdminEventListItem[]> {
   const rows = await d.events.list(q.filter, q.q, nowIso(d.now), ADMIN.listLimit);
   return rows.map(toListItem);
+}
+
+/** How many events each queue holds: shown on the admin filters. */
+export function eventCounts(d: ModerationDeps): Promise<AdminEventCounts> {
+  return d.events.counts(nowIso(d.now));
 }
 
 export async function eventDetail(id: string, d: ModerationDeps): Promise<AdminEventDetail | null> {

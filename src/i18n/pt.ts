@@ -437,6 +437,7 @@ export const pt = {
     actionError: 'Não foi possível concluir a ação. Tenta de novo.',
     retry: 'Tentar de novo',
     eventFilters: {
+      unverified: 'Por confirmar',
       pending: 'Pendentes',
       reported: 'Reportados',
       hidden: 'Ocultos',

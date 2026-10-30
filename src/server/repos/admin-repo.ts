@@ -2,6 +2,7 @@
  * Admin side (SPEC §6): login tokens and sessions, moderation queries over
  * events and signatures. Only ever used behind the admin session check.
  */
+import type { AdminEventFilter } from '../../shared/schemas';
 import type { Db } from './db';
 import type { SignatureRow, SignatureStatus } from './signatures-repo';
 
@@ -45,6 +46,14 @@ export type AdminAuthRepo = ReturnType<typeof adminAuthRepo>;
 
 // --- events ------------------------------------------------------------------------------
 
+/**
+ * Published, not yet "Confirmado", and still on the map: a date that has not
+ * ended, or ongoing ("sem fim"). One parameter: now (ISO).
+ */
+const UNVERIFIED = `(e.status = 'published' AND e.verified = 0 AND (e.ongoing = 1 OR EXISTS (
+    SELECT 1 FROM event_occurrences o WHERE o.event_id = e.id AND o.cancelled = 0 AND o.ends_at > ?)))`;
+const REPORTED = 'EXISTS (SELECT 1 FROM event_reports r WHERE r.event_id = e.id)';
+
 export interface AdminEventRow {
   id: string;
   type: string;
@@ -58,6 +67,14 @@ export interface AdminEventRow {
   reports: number;
   next_starts_at: string | null;
   poster_status: 'pending' | 'approved' | null;
+}
+
+export interface AdminEventCountRow {
+  unverified: number;
+  pending: number;
+  reported: number;
+  hidden: number;
+  posters: number;
 }
 
 export interface AdminReportRow {
@@ -76,28 +93,49 @@ export function adminEventsRepo(db: Db) {
     FROM events e`;
   return {
     async list(
-      filter: 'pending' | 'reported' | 'hidden' | 'posters' | 'all',
+      filter: AdminEventFilter,
       q: string | null,
       nowIso: string,
       limit: number,
     ): Promise<AdminEventRow[]> {
       const where: string[] = [];
       const params: unknown[] = [nowIso];
+      if (filter === 'unverified') {
+        where.push(UNVERIFIED);
+        params.push(nowIso);
+      }
       if (filter === 'pending') where.push("e.status = 'pending'");
       if (filter === 'hidden') where.push("e.status = 'hidden'");
       if (filter === 'posters') where.push("e.poster_status = 'pending'");
-      if (filter === 'reported')
-        where.push('EXISTS (SELECT 1 FROM event_reports r WHERE r.event_id = e.id)');
+      if (filter === 'reported') where.push(REPORTED);
       if (q) {
         where.push("(e.title LIKE ? ESCAPE '\\' OR e.municipality LIKE ? ESCAPE '\\')");
         const like = `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
         params.push(like, like);
       }
-      const order = filter === 'reported' ? 'reports DESC, e.created_at DESC' : 'e.created_at DESC';
+      // The verification queue: soonest first (ongoing events, with no next date, last).
+      const order =
+        filter === 'reported'
+          ? 'reports DESC, e.created_at DESC'
+          : filter === 'unverified'
+            ? 'next_starts_at IS NULL, next_starts_at, e.created_at DESC'
+            : 'e.created_at DESC';
       return db.all<AdminEventRow>(
         `${select} ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY ${order} LIMIT ?`,
         [...params, limit],
       );
+    },
+    async counts(nowIso: string): Promise<AdminEventCountRow> {
+      const row = await db.first<AdminEventCountRow>(
+        `SELECT COALESCE(SUM(${UNVERIFIED}), 0) AS unverified,
+           COALESCE(SUM(e.status = 'pending'), 0) AS pending,
+           COALESCE(SUM(${REPORTED}), 0) AS reported,
+           COALESCE(SUM(e.status = 'hidden'), 0) AS hidden,
+           COALESCE(SUM(e.poster_status = 'pending'), 0) AS posters
+         FROM events e`,
+        [nowIso],
+      );
+      return row ?? { unverified: 0, pending: 0, reported: 0, hidden: 0, posters: 0 };
     },
     async get(id: string, nowIso: string): Promise<AdminEventRow | null> {
       return db.first<AdminEventRow>(`${select} WHERE e.id = ?`, [nowIso, id]);

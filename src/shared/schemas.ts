@@ -412,7 +412,15 @@ export interface ApiIssue {
 export const AdminLoginRequestSchema = z.object({ email: RequiredEmail });
 export const AdminSessionRequestSchema = z.object({ token: z.string().min(20).max(100) });
 
-export const ADMIN_EVENT_FILTERS = ['pending', 'reported', 'hidden', 'posters', 'all'] as const;
+/** 'unverified': the queue under MODERATION_MODE = post (published, not yet "Confirmado"). */
+export const ADMIN_EVENT_FILTERS = [
+  'unverified',
+  'pending',
+  'reported',
+  'hidden',
+  'posters',
+  'all',
+] as const;
 export type AdminEventFilter = (typeof ADMIN_EVENT_FILTERS)[number];
 
 /** Free-text search in admin lists: trimmed, empty = none. */
@@ -424,7 +432,7 @@ const AdminSearch = z
   .transform((v) => v || null);
 
 export const AdminEventsQuerySchema = z.object({
-  filter: z.enum(ADMIN_EVENT_FILTERS).catch('pending'),
+  filter: z.enum(ADMIN_EVENT_FILTERS).catch('unverified'),
   q: AdminSearch,
 });
 
@@ -467,6 +475,16 @@ export const AdminEventListItemSchema = z.object({
 });
 export type AdminEventListItem = z.infer<typeof AdminEventListItemSchema>;
 export const AdminEventListSchema = z.object({ items: z.array(AdminEventListItemSchema) });
+
+/** GET /api/admin/events/counts: how many events each queue holds ('all' has none). */
+export const AdminEventCountsSchema = z.object({
+  unverified: z.number().int(),
+  pending: z.number().int(),
+  reported: z.number().int(),
+  hidden: z.number().int(),
+  posters: z.number().int(),
+});
+export type AdminEventCounts = z.infer<typeof AdminEventCountsSchema>;
 
 export const AdminEventDetailSchema = EditableEventSchema.extend({
   ongoing: z.boolean(),

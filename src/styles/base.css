@@ -126,6 +126,22 @@ a:hover {
   display: inline;
 }
 
+.chip-count {
+  min-width: 1.5em;
+  padding: 0 6px;
+  border-radius: 0;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.chip[aria-pressed='true'] .chip-count {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
 .btn,
 .btn-primary {
   display: inline-flex;

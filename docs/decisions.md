@@ -328,3 +328,12 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Formulário público: a verificação é feita no browser, contra os eventos que o mapa já carregou (`/api/events.geojson`), sem endpoint novo e sem dados novos a sair da API. O primeiro "Enviar evento" mostra o aviso; o botão passa a "Enviar na mesma". Não bloqueia (podem ser dois eventos diferentes no mesmo sítio). Mudar o ponto ou as datas volta a verificar. O link abre a ficha num separador novo, para não perder o que foi preenchido.
     - Admin: a ficha do evento (`GET /api/admin/events/:id`) traz `possibleDuplicates` (título, concelho, distância, datas em comum), calculados contra os eventos visíveis, com as datas do evento que ainda não terminaram. A moderação decide e oculta um deles; não há "fundir" (juntaria datas, cartazes e links de edição de pessoas diferentes; fica para quando for preciso).
     - e2e: os testes que submetem pelo browser usam `sendEvent` (`tests/e2e/send-event.ts`), que carrega em "Enviar na mesma" se o aviso aparecer, porque os dois viewports criam eventos no mesmo centro e nas mesmas datas.
+
+## Fila "Por confirmar" e contadores no admin (30/10/2026)
+
+81. **Filtro "Por confirmar" e contadores nos filtros do admin** (escolha do utilizador, a partir da análise do projeto).
+    - Com `MODERATION_MODE = post` os eventos novos ficam publicados e "Não confirmado", mas o admin não tinha essa fila: abria em "Pendentes", sempre vazio, e os eventos por verificar só se encontravam em "Todos". O SPEC §4.5 já dizia que entram "na fila para verificação".
+    - "Por confirmar" (`filter=unverified`): publicado, `verified = 0` e ainda no mapa, ou seja, com uma data não cancelada que ainda não terminou, ou "sem fim". Data mais próxima primeiro (é o que urge verificar), os "sem fim" no fim. Passa a ser o filtro por omissão (também da API, quando o filtro falta ou é inválido).
+    - "Pendentes" só aparece com eventos, ou quando está escolhido: com `post` só lá chegam eventos se `MODERATION_MODE` mudar.
+    - Contadores: `GET /api/admin/events/counts` (uma consulta) e o número em cada filtro exceto "Todos". Recarregam ao abrir a lista e depois de cada ação rápida. Se o pedido falhar, os filtros aparecem sem número. "Reportados" conta também os ocultos com denúncias, como a lista.
+    - `.chip-count` passou de `map.css` para `base.css`, para o admin a usar.
