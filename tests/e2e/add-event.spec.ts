@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { FEATURES } from '../../src/config/app';
+import { sendEvent } from './send-event';
 
 /** Local date (Europe/Lisbon ≈ test machine) N days from today, 'YYYY-MM-DD'. */
 function dayFromNow(n: number): string {
@@ -74,7 +75,7 @@ test.describe('Adicionar e editar evento', () => {
     if (FEATURES.eventContactEmail) {
       await flow.getByLabel('Email (opcional)').fill('pessoa@exemplo.pt');
     }
-    await flow.getByRole('button', { name: 'Enviar evento' }).click();
+    await sendEvent(flow);
 
     // Turnstile test key (always passes), then the final screen.
     await expect(flow.getByRole('heading', { name: 'Publicado' })).toBeVisible({ timeout: 30_000 });
@@ -127,6 +128,78 @@ test.describe('Adicionar e editar evento', () => {
     expect(event.occurrences.map((o) => o.cancelled)).toEqual([false, true, false]);
   });
 
+  test('warns about an event already at the same place on the same day', async ({
+    page,
+    request,
+  }, info) => {
+    // A point of its own per viewport: other tests leave events (some "sem fim",
+    // on every date) at the point the fake place search answers.
+    const at =
+      info.project.name === 'desktop'
+        ? { lat: 37.0194, lng: -7.9304 }
+        : { lat: 38.5714, lng: -7.9135 };
+    await page.route('**/api/geo/search?*', (route) =>
+      route.fulfill({ json: [{ label: 'Ponto de teste', ...at }] }),
+    );
+    const existing = `[Teste] Já no mapa ${info.project.name} ${Date.now()}`;
+    const res = await request.post('/api/events', {
+      headers: { 'CF-Connecting-IP': `203.0.113.${info.project.name === 'desktop' ? 32 : 31}` },
+      data: {
+        type: 'rally',
+        title: existing,
+        ...at,
+        occurrences: [{ localDate: dayFromNow(5), startTime: '17:00', endTime: null, note: null }],
+        turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+      },
+    });
+    expect(res.status(), await res.text()).toBe(201);
+
+    // Its own client address, so the browser submissions of other tests do not
+    // use up this one's rate limit.
+    await page.route('**/api/events', (route) =>
+      route.continue({
+        headers: {
+          ...route.request().headers(),
+          'cf-connecting-ip': `203.0.113.${info.project.name === 'desktop' ? 34 : 33}`,
+        },
+      }),
+    );
+    await page.goto('/');
+    await page
+      .getByRole('button', { name: /Adicionar evento/ })
+      .first()
+      .click();
+    const flow = page.locator('.add-flow');
+    await flow.getByText('Procurar local').click();
+    await flow.getByLabel('Procurar um local ou morada').fill('Ponto');
+    await flow.getByRole('button', { name: 'Procurar', exact: true }).click();
+    await flow.getByRole('button', { name: 'Ponto de teste' }).click();
+    await expect(flow.locator('.detected strong')).toHaveText(
+      info.project.name === 'desktop' ? /Faro/ : /Évora/,
+      { timeout: 20_000 },
+    );
+    await flow.getByRole('button', { name: 'Seguinte' }).click();
+    await flow.getByText('Concentração', { exact: true }).click();
+    await flow.getByLabel('Título').fill(`[Teste] Duplicado ${info.project.name} ${Date.now()}`);
+    await flow.getByRole('button', { name: 'Seguinte' }).click();
+    await flow.getByLabel('Data', { exact: true }).fill(dayFromNow(5));
+    await flow.getByLabel('Hora de início').fill('18:00');
+    if (FEATURES.eventContactEmail) await flow.getByRole('button', { name: 'Seguinte' }).click();
+
+    await flow.getByRole('button', { name: 'Enviar evento' }).click();
+    const notice = flow.locator('.duplicates');
+    await expect(notice.getByRole('listitem')).toHaveCount(1);
+    await expect(notice).toContainText('Este evento pode já estar no mapa');
+    const link = notice.getByRole('link', { name: existing });
+    await expect(link).toHaveAttribute('href', /^\/mapa\/e\/[0-9A-Z]{26}$/);
+    await expect(notice).toBeInViewport();
+    await shot(page, '16-adicionar-duplicado', info.project.name);
+
+    // Not a block: sending anyway publishes it.
+    await flow.getByRole('button', { name: 'Enviar na mesma' }).click();
+    await expect(flow.getByRole('heading', { name: 'Publicado' })).toBeVisible({ timeout: 30_000 });
+  });
+
   test('an invalid edit link shows an error', async ({ page }) => {
     await page.goto('/editar/#e=01JC0000000000000000000ZZZ&t=nope');
     await expect(page.getByRole('alert')).toHaveText(/não é válido/);
@@ -140,7 +213,7 @@ test.describe('Adicionar e editar evento', () => {
       el.value = 'http://spam.example';
       el.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    await flow.getByRole('button', { name: 'Enviar evento' }).click();
+    await sendEvent(flow);
     await expect(flow.getByRole('alert')).toHaveText('Não foi possível enviar o evento.', {
       timeout: 30_000,
     });

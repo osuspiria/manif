@@ -237,7 +237,7 @@ Fluxo em passos curtos (bottom sheet em telemóvel):
    - Atalho **"Repetir semanalmente até…"** → gera as linhas, que ficam editáveis/removíveis individualmente.
    - Inputs nativos `type="date"` e `type="time"` (são os melhores em telemóvel).
 4. **Contacto (opcional)** — email só para a moderação, nunca publicado. Texto: "Se quiseres que te avisemos ou te possamos perguntar algo."
-5. **Enviar** — Turnstile invisível + honeypot. Ecrã final com:
+5. **Enviar** — antes de enviar, se já houver no mapa um evento a ≤ 300 m (`LIMITS.duplicateRadiusM`) numa das mesmas datas, mostra "Este evento pode já estar no mapa:" com os eventos (até 3, link para a ficha num separador novo) e o botão passa a "Enviar na mesma". Não bloqueia: compara no browser com os eventos já carregados, sem pedidos novos (`docs/decisions.md` #80). Turnstile invisível + honeypot. Ecrã final com:
    - estado ("Publicado" ou "A aguardar moderação", conforme `MODERATION_MODE`); com cartaz, também "O cartaz fica visível depois de verificado";
    - **link secreto de edição** (para guardar; também enviado por email se foi indicado) que permite editar datas, cancelar uma ocorrência ou o evento inteiro.
      Formato: `/editar/#e=<id>&t=<token>`. O token fica no fragmento do URL (nunca é enviado ao servidor em pedidos de página, nem aparece em logs ou no Referer) e segue só no header `X-Edit-Token`.
@@ -250,6 +250,7 @@ Não se pede nome nem morada de quem submete.
   - `pre`: novos eventos ficam `pending` até aprovação.
   - `post`: publicados logo, com aspeto "não confirmado", e entram na fila para verificação.
 - Auto-ocultar quando um evento recebe ≥ N reports (config, ex.: 3) até revisão.
+- Possíveis duplicados: a ficha do evento no admin lista os eventos publicados a ≤ 300 m nas mesmas datas, com a distância (§4.4, `docs/decisions.md` #80).
 - Cartazes: moderados à parte do evento, sempre antes de ficarem visíveis, qualquer que seja o `MODERATION_MODE` (§4.7).
 - Página `/admin` (ver §6).
 

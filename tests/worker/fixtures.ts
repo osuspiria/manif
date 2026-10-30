@@ -20,6 +20,9 @@ export interface EventFixture {
   editTokenHash?: string;
   verified?: boolean;
   ongoing?: boolean;
+  /** Defaults to a point in Porto (all fixtures share it unless set). */
+  lat?: number;
+  lng?: number;
   /** Poster row only; store the files with putPosterFiles. */
   poster?: {
     key: string;
@@ -72,8 +75,8 @@ export async function insertEvent(f: EventFixture): Promise<void> {
       f.title ?? `Evento ${f.id}`,
       'Descrição de teste.',
       'Coletivo Exemplo',
-      41.1496,
-      -8.6109,
+      f.lat ?? 41.1496,
+      f.lng ?? -8.6109,
       'Praça de Teste',
       'Porto',
       'Porto',

@@ -7,12 +7,15 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { FEATURES, LIMITS } from '../../config/app';
 import { pt } from '../../i18n/pt';
 import { addMonths, lisbonToday, todayIn } from '../../shared/dates';
+import { findPossibleDuplicates, type PossibleDuplicate } from '../../shared/duplicates';
+import { formatShortDayLabel } from '../../shared/event-view';
 import { checkOccurrences } from '../../shared/occurrence-rules';
 import {
   EventInputSchema,
   type ApiIssue,
   type CreateEventResponse,
   type PlaceResult,
+  type PublicEvent,
   type ReverseResult,
 } from '../../shared/schemas';
 import { EventDetailsFields } from '../forms/EventDetailsFields';
@@ -59,6 +62,8 @@ function stepOf(issue: ApiIssue): Step {
 export interface AddEventFlowProps {
   center: [number, number] | null;
   now: Date;
+  /** Events already on the map: checked for possible duplicates before sending. */
+  events: readonly PublicEvent[];
   onPickingChange: (picking: boolean) => void;
   onFly: (lng: number, lat: number, zoom: number) => void;
   onUseLocation: () => void;
@@ -92,9 +97,12 @@ export function AddEventFlow(p: AddEventFlowProps) {
   const [copied, setCopied] = useState(false);
   const [poster, setPoster] = useState<PosterDraft | null>(null);
   const [posterUpload, setPosterUpload] = useState<PosterUpload>(null);
+  /** Shown once before sending; null = not checked yet (or the details changed since). */
+  const [duplicates, setDuplicates] = useState<PossibleDuplicate<PublicEvent>[] | null>(null);
   const root = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const captchaRef = useRef<HTMLDivElement>(null);
+  const duplicatesRef = useRef<HTMLDivElement>(null);
   const firstCheck = useRef(true);
 
   const stepIndex = STEPS.indexOf(step);
@@ -107,6 +115,13 @@ export function AddEventFlow(p: AddEventFlowProps) {
   useEffect(() => {
     headingRef.current?.focus();
   }, [step, done]);
+
+  // Another place or other dates: check for duplicates again before sending.
+  useEffect(() => setDuplicates(null), [p.center?.[0], p.center?.[1], rows]);
+
+  useEffect(() => {
+    if (duplicates?.length) duplicatesRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [duplicates]);
 
   // Detect the municipality of the map centre (debounced).
   useEffect(() => {
@@ -187,6 +202,18 @@ export function AddEventFlow(p: AddEventFlowProps) {
     if (first) {
       setStep(stepOf(first));
       return showErrors(issues);
+    }
+    if (!duplicates) {
+      const found = findPossibleDuplicates(
+        {
+          lat: p.center?.[1] ?? 0,
+          lng: p.center?.[0] ?? 0,
+          dates: rows.map((r) => r.localDate).filter(Boolean),
+        },
+        p.events,
+      );
+      setDuplicates(found);
+      if (found.length) return;
     }
     setSubmitting(true);
     setFormError('');
@@ -408,6 +435,25 @@ export function AddEventFlow(p: AddEventFlowProps) {
         </>
       )}
 
+      {step === LAST_STEP && duplicates && duplicates.length > 0 && (
+        <div class="duplicates" role="status" ref={duplicatesRef}>
+          <p>
+            <strong>{pt.add.duplicates.heading}</strong>
+          </p>
+          <ul>
+            {duplicates.map((d) => (
+              <li key={d.event.id}>
+                <a href={`/mapa/e/${d.event.id}`} target="_blank" rel="noopener">
+                  {d.event.title}
+                </a>
+                <span class="hint">{d.dates.map(formatShortDayLabel).join(', ')}</span>
+              </li>
+            ))}
+          </ul>
+          <p class="hint">{pt.add.duplicates.hint}</p>
+        </div>
+      )}
+
       <p class="form-error" role="alert">
         {formError}
       </p>
@@ -429,7 +475,11 @@ export function AddEventFlow(p: AddEventFlowProps) {
             onClick={() => void submit()}
             disabled={submitting}
           >
-            {submitting ? pt.add.submitting : pt.add.submit}
+            {submitting
+              ? pt.add.submitting
+              : duplicates?.length
+                ? pt.add.duplicates.submitAnyway
+                : pt.add.submit}
           </button>
         )}
       </div>

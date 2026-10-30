@@ -431,3 +431,38 @@ body.form-page {
 .poster-upload-status {
   margin: 12px 0;
 }
+
+/* Possible duplicates before sending (decisions #80). */
+.duplicates {
+  margin: 12px 0;
+  padding: 12px;
+  border: 2px solid var(--fg);
+  background: var(--accent-tint);
+}
+
+.duplicates p,
+.duplicates ul {
+  margin: 0 0 8px;
+}
+
+.duplicates ul {
+  padding-left: 20px;
+}
+
+.duplicates li {
+  margin: 4px 0 8px;
+}
+
+.duplicates li .hint {
+  display: block;
+  margin: 0;
+}
+
+.duplicates a {
+  display: block;
+  min-height: 44px;
+  padding: 12px 0 8px;
+  box-sizing: border-box;
+  color: var(--fg);
+  font-weight: 600;
+}

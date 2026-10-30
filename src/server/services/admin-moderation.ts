@@ -9,6 +9,7 @@ import { REPORT_REASONS, type ReportReason } from '../../config/reports';
 import { ORG_TYPES, type OrgType } from '../../config/signatures';
 import { pt } from '../../i18n/pt';
 import { nowIso } from '../../shared/dates';
+import { findPossibleDuplicates } from '../../shared/duplicates';
 import { municipalityLabel } from '../../shared/municipalities';
 import type {
   AdminEventAction,
@@ -24,6 +25,7 @@ import type { EventsRepo, EventsWriteRepo } from '../repos/events-repo';
 import type { PosterStore } from '../repos/poster-store';
 import type { SignatureRow } from '../repos/signatures-repo';
 import { toEditable } from './event-submission';
+import { createEventsService } from './events-service';
 import { removePoster } from './posters';
 
 export interface ModerationDeps {
@@ -66,10 +68,23 @@ export async function eventDetail(id: string, d: ModerationDeps): Promise<AdminE
   const row = await d.write.getOwner(id);
   const extra = await d.events.contact(id);
   if (!row || !extra) return null;
-  const [occurrences, reports] = await Promise.all([
+  const [occurrences, reports, visible] = await Promise.all([
     d.read.listOccurrences(id),
     d.events.reports(id),
+    createEventsService(d.read).listVisible(d.now),
   ]);
+  const at = nowIso(d.now);
+  const duplicates = findPossibleDuplicates(
+    {
+      lat: row.lat,
+      lng: row.lng,
+      dates: occurrences
+        .filter((o) => o.cancelled === 0 && o.ends_at > at)
+        .map((o) => o.local_date),
+    },
+    visible.features.map((f) => f.properties),
+    id,
+  );
   return {
     ...toEditable(row, occurrences),
     ongoing: extra.ongoing === 1,
@@ -81,6 +96,13 @@ export async function eventDetail(id: string, d: ModerationDeps): Promise<AdminE
         : 'other',
       detail: r.detail,
       createdAt: r.created_at,
+    })),
+    possibleDuplicates: duplicates.map((x) => ({
+      id: x.event.id,
+      title: x.event.title,
+      municipality: x.event.municipality,
+      distanceM: Math.round(x.distanceM),
+      dates: x.dates,
     })),
   };
 }

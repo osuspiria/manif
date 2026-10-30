@@ -260,6 +260,43 @@ describe('admin: events', () => {
     );
   });
 
+  it('detail lists published events nearby on the same dates as possible duplicates', async () => {
+    await insertEvent({
+      id: IDS.d,
+      title: 'Mesmo sítio, mesmo dia',
+      occurrences: [{ localDate: '2026-11-20', startTime: '17:00' }],
+    });
+    await insertEvent({
+      id: IDS.e,
+      title: 'Mesmo dia, longe',
+      lat: 41.5454,
+      lng: -8.4265,
+      occurrences: [{ localDate: '2026-11-20', startTime: '18:00' }],
+    });
+    await insertEvent({
+      id: IDS.f,
+      title: 'Mesmo sítio, data cancelada',
+      occurrences: [{ localDate: '2026-11-20', startTime: '18:00', cancelled: true }],
+    });
+    const detail = AdminEventDetailSchema.parse(
+      await (await call(`/api/admin/events/${IDS.a}`, { cookie })).json(),
+    );
+    expect(detail.possibleDuplicates).toEqual([
+      {
+        id: IDS.d,
+        title: 'Mesmo sítio, mesmo dia',
+        municipality: 'Porto',
+        distanceM: 0,
+        dates: ['2026-11-20'],
+      },
+    ]);
+    // Only published events count (not the pending one), and never the event itself.
+    const published = AdminEventDetailSchema.parse(
+      await (await call(`/api/admin/events/${IDS.d}`, { cookie })).json(),
+    );
+    expect(published.possibleDuplicates).toEqual([]);
+  });
+
   it('approving publishes and dismisses reports; hiding removes from the map', async () => {
     const res = await call(`/api/admin/events/${IDS.b}/moderate`, {
       json: { action: 'publish' },

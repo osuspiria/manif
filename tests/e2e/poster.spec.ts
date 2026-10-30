@@ -1,12 +1,15 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { sendEvent } from './send-event';
 
 /**
  * Posters (SPEC §4.7): picked in the add flow, invisible until the moderation
  * approves them, then on the event sheet and in the link preview. Photo
  * metadata never reaches the server.
  */
-const adminFor = (project: string) => `admin-${project}@exemplo.invalid`;
+// Not the addresses of admin.spec.ts: both run in parallel, and one could use up
+// the other's single-use sign-in link.
+const adminFor = (project: string) => `admin-poster-${project}@exemplo.invalid`;
 
 function dayFromNow(n: number): string {
   const d = new Date();
@@ -101,7 +104,7 @@ test('a poster is sent with the event, waits for moderation, then is public with
   await flow.getByRole('button', { name: 'Seguinte' }).click();
   await flow.getByLabel('Data', { exact: true }).first().fill(dayFromNow(3));
   await flow.getByLabel('Hora de início').first().fill('18:00');
-  await flow.getByRole('button', { name: 'Enviar evento' }).click();
+  await sendEvent(flow);
   await expect(flow.getByRole('heading', { name: 'Publicado' })).toBeVisible({ timeout: 30_000 });
   await expect(flow.getByText('O cartaz fica visível depois de verificado')).toBeVisible();
   const editUrl = await flow.getByLabel('Link de edição').inputValue();

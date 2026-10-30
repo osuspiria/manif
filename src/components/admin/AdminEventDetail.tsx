@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { pt } from '../../i18n/pt';
 import { formatInstantShort } from '../../shared/dates';
+import { formatShortDayLabel } from '../../shared/event-view';
 import type {
   AdminEventDetail as Detail,
   AdminEventListItem,
@@ -124,6 +125,22 @@ export function AdminEventDetail({ id }: { id: string }) {
         }}
         onError={() => setStatus(pt.admin.actionError)}
       />
+
+      {d.possibleDuplicates.length > 0 && (
+        <>
+          <h3>{pt.admin.duplicatesHeading}</h3>
+          <ul class="admin-reports">
+            {d.possibleDuplicates.map((x) => (
+              <li key={x.id}>
+                <a href={`#eventos/${x.id}`}>{x.title}</a> · {x.municipality} ·{' '}
+                {pt.admin.duplicateDistance(x.distanceM)} ·{' '}
+                {x.dates.map(formatShortDayLabel).join(', ')}
+              </li>
+            ))}
+          </ul>
+          <p class="hint">{pt.admin.duplicatesHint}</p>
+        </>
+      )}
 
       <h3>{pt.admin.reportsHeading}</h3>
       {d.reports.length ? (

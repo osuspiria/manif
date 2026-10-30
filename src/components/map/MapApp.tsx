@@ -360,6 +360,7 @@ export function MapApp() {
             <AddFlow
               center={center}
               now={now}
+              events={events}
               onPickingChange={setPicking}
               onFly={(lng, lat, zoom) => issue({ kind: 'fly', lng, lat, zoom })}
               onUseLocation={() =>

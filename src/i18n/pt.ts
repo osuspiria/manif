@@ -207,6 +207,11 @@ export const pt = {
       view: 'Ver no mapa',
       close: 'Fechar',
     },
+    duplicates: {
+      heading: 'Este evento pode já estar no mapa:',
+      hint: 'Se for o mesmo, não precisas de o adicionar. Se for outro, envia na mesma.',
+      submitAnyway: 'Enviar na mesma',
+    },
     errors: {
       fix: 'Corrige os campos assinalados.',
       rate_limited: 'Já enviaste vários eventos na última hora. Tenta mais tarde.',
@@ -468,6 +473,10 @@ export const pt = {
     createdAt: 'Criado em',
     reportsHeading: 'Denúncias',
     noReports: 'Sem denúncias.',
+    duplicatesHeading: 'Possíveis duplicados',
+    duplicateDistance: (m: number) => `a ${m} m`,
+    duplicatesHint:
+      'Eventos publicados perto deste nas mesmas datas. Se for o mesmo, oculta um deles.',
     editHeading: 'Editar',
     moderatorEditNote: 'As edições da moderação não tiram o selo "Confirmado".',
     newEvent: {

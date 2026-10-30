@@ -479,6 +479,16 @@ export const AdminEventDetailSchema = EditableEventSchema.extend({
       createdAt: z.string(),
     }),
   ),
+  /** Published events nearby on the same local dates (decisions #80), nearest first. */
+  possibleDuplicates: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      municipality: z.string(),
+      distanceM: z.number(),
+      dates: z.array(LocalDate),
+    }),
+  ),
 });
 export type AdminEventDetail = z.infer<typeof AdminEventDetailSchema>;
 

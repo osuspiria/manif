@@ -320,3 +320,11 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Um cartaz pendente não tem URL público; a moderação vê-o por `GET /api/admin/events/:id/poster` (o cookie `Path=/api/admin` segue no `<img>`). `/posters/…` confirma no D1 que a chave é a aprovada de um evento publicado; ocultar o evento esconde o cartaz.
     - Na importação do admin, a imagem lida passa a ser guardada como cartaz (aprovado), salvo se o moderador desmarcar "Guardar a imagem como cartaz do evento".
     - A retenção apaga do R2 os cartazes dos eventos que apaga; os publicados antigos mantêm o cartaz.
+
+## Possíveis duplicados (30/10/2026)
+
+80. **Aviso de possível duplicado ao adicionar e no admin** (proposta da análise do projeto: com submissão pública, o mesmo evento pode chegar por várias pessoas, por exemplo a partir do mesmo cartaz).
+    - Regra (função pura `findPossibleDuplicates`, `src/shared/duplicates.ts`): evento publicado a ≤ 300 m (`LIMITS.duplicateRadiusM`, distância haversine) com pelo menos uma data local (`local_date`) em comum, sem contar as canceladas. Um evento "sem fim" conta em todas as datas desde `ongoingSince`. Mais próximos primeiro, no máximo 3 (`LIMITS.duplicatesShown`). Não compara títulos: o mesmo evento aparece com títulos muito diferentes.
+    - Formulário público: a verificação é feita no browser, contra os eventos que o mapa já carregou (`/api/events.geojson`), sem endpoint novo e sem dados novos a sair da API. O primeiro "Enviar evento" mostra o aviso; o botão passa a "Enviar na mesma". Não bloqueia (podem ser dois eventos diferentes no mesmo sítio). Mudar o ponto ou as datas volta a verificar. O link abre a ficha num separador novo, para não perder o que foi preenchido.
+    - Admin: a ficha do evento (`GET /api/admin/events/:id`) traz `possibleDuplicates` (título, concelho, distância, datas em comum), calculados contra os eventos visíveis, com as datas do evento que ainda não terminaram. A moderação decide e oculta um deles; não há "fundir" (juntaria datas, cartazes e links de edição de pessoas diferentes; fica para quando for preciso).
+    - e2e: os testes que submetem pelo browser usam `sendEvent` (`tests/e2e/send-event.ts`), que carrega em "Enviar na mesma" se o aviso aparecer, porque os dois viewports criam eventos no mesmo centro e nas mesmas datas.

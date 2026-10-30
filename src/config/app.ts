@@ -60,6 +60,9 @@ export const LIMITS = {
   posterMaxSide: 1600,
   posterThumbMaxSide: 320,
   posterAltMax: 600,
+  /** Possible duplicates (decisions #80): same local date within this distance. */
+  duplicateRadiusM: 300,
+  duplicatesShown: 3,
 } as const;
 
 export const RETENTION = {
