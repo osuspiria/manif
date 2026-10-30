@@ -6,6 +6,7 @@ import { FakeMailer } from '../../src/server/mailer';
 import { MemoryRateLimiter } from '../../src/server/security/rate-limit';
 import { FakeExtractor, type EventExtractor } from '../../src/server/services/event-extractor';
 import {
+  AdminActivitySchema,
   AdminEventDetailSchema,
   AdminExtractResponseSchema,
   PublicEventCollectionSchema,
@@ -90,6 +91,10 @@ describe('POST /api/admin/events/extract', () => {
 
   it('reads a draft with the Lisbon date and searches its place', async () => {
     const cookie = await signIn();
+    const imports = async () =>
+      AdminActivitySchema.parse(await (await call('/api/admin/activity', undefined, cookie)).json())
+        .days[0]?.extractions ?? 0;
+    const before = await imports();
     const res = await call(
       '/api/admin/events/extract',
       { text: 'Concentração no Rossio\nsábado às 18h', image: IMAGE },
@@ -105,6 +110,9 @@ describe('POST /api/admin/events/extract', () => {
     expect(extractCalls).toEqual([
       { text: 'Concentração no Rossio\nsábado às 18h', image: IMAGE, today: '2026-11-11' },
     ]);
+    // Counted per Lisbon day in the admin activity (decisions #82).
+    expect(await imports()).toBe(before + 1);
+    expect((await call('/api/admin/activity')).status).toBe(401);
   });
 
   it('rejects an empty request, a text too long and an invalid or oversized image', async () => {

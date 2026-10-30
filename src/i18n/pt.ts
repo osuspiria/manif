@@ -411,6 +411,16 @@ export const pt = {
     },
   },
   admin: {
+    activity: {
+      heading: 'Atividade dos últimos 14 dias',
+      day: 'Dia',
+      events: 'Eventos novos',
+      extractions: 'Importações com IA',
+      lastJob: (when: string) => `Última execução do trabalho diário: ${when}.`,
+      staleSince: (when: string) =>
+        `O trabalho diário (retenção de dados) não termina desde ${when}. Vê os logs do Worker.`,
+      staleNever: 'Ainda não há registo de o trabalho diário (retenção de dados) ter terminado.',
+    },
     title: 'Administração',
     noscript: 'A administração precisa de JavaScript.',
     loginHeading: 'Entrar na administração',
@@ -645,6 +655,35 @@ export const pt = {
     } as Record<string, string>,
   },
   email: {
+    // Operations (decisions #82), to ADMIN_EMAILS only.
+    digestQueue: (queue: 'unverified' | 'pending' | 'reported' | 'posters', n: number) =>
+      ({
+        unverified: `${n} por confirmar`,
+        pending: `${n} pendente${n === 1 ? '' : 's'}`,
+        reported: `${n} reportado${n === 1 ? '' : 's'}`,
+        posters: `${n} cartaz${n === 1 ? '' : 'es'} por aprovar`,
+      })[queue],
+    digestSubject: (app: string, lines: string[]) => `${app}: ${lines.join(', ')}`,
+    digestText: (lines: string[], soon: string[], adminUrl: string) =>
+      [
+        'Por moderar:',
+        ...lines.map((l) => `- ${l}`),
+        ...(soon.length
+          ? ['', 'Por confirmar e a começar nas próximas 48 horas:', ...soon.map((s) => `- ${s}`)]
+          : []),
+        '',
+        `Administração: ${adminUrl}`,
+        '',
+        'Este resumo é enviado de manhã a quem está em ADMIN_EMAILS, só quando há algo por moderar.',
+      ].join('\n'),
+    dailyJobFailedSubject: (app: string) => `${app}: o trabalho diário falhou`,
+    dailyJobFailedText: (code: string, adminUrl: string) =>
+      [
+        `O trabalho diário de retenção (apagar dados antigos) falhou com o erro "${code}".`,
+        'Vê os logs do Worker no painel da Cloudflare. Volta a correr amanhã à mesma hora.',
+        '',
+        `Administração: ${adminUrl}`,
+      ].join('\n'),
     adminLoginSubject: 'Link para entrar na administração',
     adminLoginText: (url: string, minutes: number) =>
       [

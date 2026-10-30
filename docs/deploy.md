@@ -84,7 +84,7 @@ O `npm run deploy` faz, por ordem:
 2. `ci`;
 3. `build`;
 4. migrações remotas da D1;
-5. `wrangler deploy`, que também ativa o cron de retenção (03:17 UTC).
+5. `wrangler deploy`, que também ativa os dois Cron Triggers: retenção às 03:17 UTC e resumo da moderação às 08:00 UTC (`docs/decisions.md` #82). Sem `RESEND_API_KEY` e `MAIL_FROM`, o resumo e o alerta de falha não são enviados (os logs dizem `digest: sent` na mesma).
 
 ## 8. Verificação
 
@@ -94,7 +94,8 @@ O `npm run deploy` faz, por ordem:
 - [ ] `/apoio/` e `/privacidade/` dão 404.
 - [ ] Ferramentas de programador: sem cookies; só há pedidos a `challenges.cloudflare.com` quando
       se envia um formulário; os cabeçalhos de segurança e a CSP estão presentes.
-- [ ] O Cron Trigger aparece no painel do Worker.
+- [ ] Os dois Cron Triggers aparecem no painel do Worker.
+- [ ] No dia seguinte ao deploy, o admin deixa de mostrar o aviso "Ainda não há registo de o trabalho diário…" (aparece até à primeira execução da retenção).
 - [ ] Lighthouse em produção, já com HTTPS.
 
 ## 9. Domínios antigos e `www`

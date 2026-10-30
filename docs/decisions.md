@@ -337,3 +337,15 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - "Pendentes" só aparece com eventos, ou quando está escolhido: com `post` só lá chegam eventos se `MODERATION_MODE` mudar.
     - Contadores: `GET /api/admin/events/counts` (uma consulta) e o número em cada filtro exceto "Todos". Recarregam ao abrir a lista e depois de cada ação rápida. Se o pedido falhar, os filtros aparecem sem número. "Reportados" conta também os ocultos com denúncias, como a lista.
     - `.chip-count` passou de `map.css` para `base.css`, para o admin a usar.
+
+## Resumo diário, alerta do trabalho diário e atividade (30/10/2026)
+
+82. **Resumo da moderação por email, alerta quando a retenção falha e tabela de atividade no admin** (escolha do utilizador, a partir da análise do projeto).
+    - Dois Cron Triggers, com as strings em `CRONS` (`src/config/app.ts`) e um teste que as compara com o `wrangler.toml`: retenção às 03:17 UTC e resumo às 08:00 UTC (08:00 ou 09:00 em Lisboa). A lógica está em `src/server/scheduled.ts` e `src/server/services/operations.ts`.
+    - Resumo: para cada endereço de `ADMIN_EMAILS`, só quando há algo por moderar (por confirmar, pendentes, reportados, cartazes; os ocultos não contam como trabalho). Inclui os eventos por confirmar que começam nas próximas 48 horas (no máximo 10), que são os que urge verificar. Não há maneira de um admin deixar de o receber: se for preciso, fica para depois (uma lista à parte ou uma preferência).
+    - Links nos emails do cron: um cron não tem pedido de onde tirar a origem (#75), e não queremos o URL de produção no código. A origem é lida do `<link rel="canonical">` da home construída (`PUBLIC_SITE_URL`), pelo binding `ASSETS`. Se não houver, o email mostra só o caminho `/admin/`.
+    - Alerta: se a retenção lançar um erro, cada admin recebe um email só com o nome do erro (nunca a mensagem, que pode ter dados) e o log diz `daily job failed: <nome>`. Uma execução bem-sucedida guarda a hora em KV.
+    - Também é preciso saber quando o cron deixou de correr (sem erro nenhum): o admin avisa no topo do separador Eventos quando passam 26 horas (`ADMIN.dailyJobStaleHours`) sem uma execução bem-sucedida, ou quando ainda não há registo. Isto acontece depois de cada deploy num ambiente novo, até à primeira execução.
+    - Atividade (`GET /api/admin/activity`, fechada por omissão por cima das filas): eventos criados e importações com o Claude por dia de Lisboa, 14 dias. Os eventos vêm de `events.created_at`, por isso os que a retenção já apagou não contam. As importações são contadas em KV (`ops:extractions:<data>`, 40 dias) antes da chamada, porque o custo existe mesmo que a leitura falhe. A contagem é aproximada (o KV não tem incremento atómico), o que chega para acompanhar o custo.
+    - O estado fica no namespace KV `RATE_LIMIT` (`src/server/repos/ops-store.ts`), com o prefixo `ops:`: só contagens e datas, nada pessoal. Não justifica um namespace novo.
+    - Sem `RESEND_API_KEY`/`MAIL_FROM`, o `NullMailer` descarta o resumo e o alerta. O aviso no admin continua a funcionar.

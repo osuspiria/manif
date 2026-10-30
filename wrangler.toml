@@ -45,9 +45,10 @@ enabled = true
 [observability.logs]
 invocation_logs = false
 
-# Retention job (SPEC §7): daily at 03:17 UTC.
+# CRONS in src/config/app.ts (the strings must match): retention (SPEC §7) at
+# 03:17 UTC; moderation digest to ADMIN_EMAILS at 08:00 UTC (decisions #82).
 [triggers]
-crons = ["17 3 * * *"]
+crons = ["17 3 * * *", "0 8 * * *"]
 
 [vars]
 MODERATION_MODE = "post"

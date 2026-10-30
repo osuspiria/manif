@@ -140,6 +140,14 @@ export function adminEventsRepo(db: Db) {
     async get(id: string, nowIso: string): Promise<AdminEventRow | null> {
       return db.first<AdminEventRow>(`${select} WHERE e.id = ?`, [nowIso, id]);
     },
+    /** Creation instants of the events created since `sinceIso` (activity table). */
+    async createdSince(sinceIso: string): Promise<string[]> {
+      const rows = await db.all<{ created_at: string }>(
+        'SELECT created_at FROM events WHERE created_at >= ?',
+        [sinceIso],
+      );
+      return rows.map((r) => r.created_at);
+    },
     async contact(
       id: string,
     ): Promise<{ contact_email: string | null; created_at: string; ongoing: number } | null> {

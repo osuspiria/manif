@@ -486,6 +486,24 @@ export const AdminEventCountsSchema = z.object({
 });
 export type AdminEventCounts = z.infer<typeof AdminEventCountsSchema>;
 
+/** GET /api/admin/activity (decisions #82): counts only, newest day first. */
+export const AdminActivitySchema = z.object({
+  days: z.array(
+    z.object({
+      date: LocalDate,
+      /** Events created that day (deleted ones no longer count). */
+      events: z.number().int(),
+      /** Imports with Claude in the admin. */
+      extractions: z.number().int(),
+    }),
+  ),
+  /** When the daily job last finished without error; null = never seen. */
+  lastDailyJobAt: z.string().nullable(),
+  /** No successful run for ADMIN.dailyJobStaleHours. */
+  dailyJobStale: z.boolean(),
+});
+export type AdminActivity = z.infer<typeof AdminActivitySchema>;
+
 export const AdminEventDetailSchema = EditableEventSchema.extend({
   ongoing: z.boolean(),
   contactEmail: z.string().nullable(),

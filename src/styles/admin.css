@@ -242,3 +242,39 @@
   max-height: 360px;
   border: 2px solid var(--fg);
 }
+
+/* Activity (decisions #82). */
+.admin-activity {
+  margin-bottom: 8px;
+}
+
+.admin-activity summary {
+  padding: 10px 0;
+  cursor: pointer;
+}
+
+/* Inline, so the summary keeps its disclosure marker. */
+.admin-activity summary h2 {
+  display: inline;
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.admin-activity table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-activity th,
+.admin-activity td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--fg);
+  text-align: right;
+}
+
+.admin-activity th:first-child {
+  text-align: left;
+  font-weight: 400;
+  white-space: nowrap;
+}

@@ -46,6 +46,7 @@ import {
   type ModerationDeps,
 } from '../services/admin-moderation';
 import { createEvent, moderatorEditEvent } from '../services/event-submission';
+import { adminActivity } from '../services/operations';
 import type { GeoService } from '../services/geo-service';
 import { removePoster, setPoster, type PosterDeps } from '../services/posters';
 import { purgeEdgeCache } from './edge-cache';
@@ -209,6 +210,15 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
       .get('/events/counts', requireSession, async (c) =>
         c.json(await eventCounts(moderation(c.env))),
       )
+      .get('/activity', requireSession, async (c) =>
+        c.json(
+          await adminActivity({
+            events: adminEventsRepo(d1Db(c.env.DB)),
+            ops: deps.ops(c.env),
+            now: deps.clock(),
+          }),
+        ),
+      )
       // Import (SPEC §6): read a draft out of a post's text or a poster; nothing is stored.
       .post('/events/extract', requireSession, async (c) => {
         const extractor = deps.extractor(c.env);
@@ -223,6 +233,8 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
           .hit(`admin-extract:${key}`, RATE_LIMITS.adminExtract, HOUR, deps.clock());
         if (!ok) return c.json({ error: 'rate_limited' }, 429);
 
+        // Counted before the call: it costs whether or not a draft comes back.
+        await deps.ops(c.env).countExtraction(lisbonToday(deps.clock()));
         const result = await extractor.extract(parsed.data, lisbonToday(deps.clock()));
         if (!result.ok) return c.json({ error: result.error }, 502);
         const query = result.draft.placeQuery;

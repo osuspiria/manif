@@ -4,6 +4,7 @@
  */
 import { useEffect, useState } from 'preact/hooks';
 import { pt } from '../../i18n/pt';
+import { AdminActivity } from './AdminActivity';
 import { adminApi, setUnauthorizedHandler } from './api';
 import { AdminEventDetail } from './AdminEventDetail';
 import { AdminEvents } from './AdminEvents';
@@ -85,7 +86,11 @@ export function AdminApp() {
       ) : route.tab === 'events' && route.eventId ? (
         <AdminEventDetail id={route.eventId} />
       ) : (
-        <AdminEvents />
+        <>
+          {/* Above the queue, so a stopped daily job is seen. */}
+          <AdminActivity />
+          <AdminEvents />
+        </>
       )}
     </div>
   );

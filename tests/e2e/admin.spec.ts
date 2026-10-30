@@ -124,6 +124,17 @@ test.describe('Administração', () => {
       path: `test-results/screens/${info.project.name}-29-admin-por-confirmar.png`,
     });
 
+    // Activity (decisions #82): closed until opened; the e2e server never ran the
+    // daily job, so the warning shows.
+    await expect(page.getByRole('alert')).toContainText('trabalho diário');
+    await page.getByText('Atividade dos últimos 14 dias').click();
+    const activity = page.getByRole('table');
+    await expect(activity.getByRole('row')).toHaveCount(15);
+    await activity.scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: `test-results/screens/${info.project.name}-31-admin-atividade.png`,
+    });
+
     await page.getByRole('button', { name: 'Reportados' }).click();
     await page.getByLabel('Pesquisar por título ou concelho').fill(title);
     await page.getByRole('button', { name: 'Pesquisar', exact: true }).click();

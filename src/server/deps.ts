@@ -7,6 +7,7 @@ import { FEATURES, MODERATION_MODE, type Features, type ModerationMode } from '.
 import { lisbonToday } from '../shared/dates';
 import { systemClock, type Clock } from './clock';
 import type { Env } from './env';
+import { kvOpsStore, type OpsStore } from './repos/ops-store';
 import { r2PosterStore, type PosterStore } from './repos/poster-store';
 import { KvDevMailbox, NullMailer, ResendMailer, type Mailer } from './mailer';
 import { TurnstileVerifier, type CaptchaVerifier } from './security/captcha';
@@ -28,6 +29,8 @@ export interface AppDeps {
   extractor: (env: Env) => EventExtractor | null;
   /** Poster files (SPEC §4.7). */
   posters: (env: Env) => PosterStore;
+  /** Daily job state and import counts (docs/decisions.md #82). */
+  ops: (env: Env) => OpsStore;
   newId: () => string;
   /** Which optional features are mounted (FEATURES; tests switch them on). */
   features: Features;
@@ -51,6 +54,7 @@ export const defaultDeps: AppDeps = {
         ? new ClaudeExtractor(env.ANTHROPIC_API_KEY)
         : null,
   posters: (env) => r2PosterStore(env.POSTERS),
+  ops: (env) => kvOpsStore(env.RATE_LIMIT),
   newId: () => ulid(),
   features: FEATURES,
 };

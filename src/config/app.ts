@@ -87,6 +87,21 @@ export const ADMIN = {
   loginEmailsPerHour: 5,
   /** Rows per admin list. */
   listLimit: 100,
+  /** Days in the admin "Atividade" table (decisions #82). */
+  activityDays: 14,
+  /** The admin warns when the daily job has not finished for this long. */
+  dailyJobStaleHours: 26,
+  /** The digest lists unconfirmed events starting within this many hours. */
+  digestSoonHours: 48,
+  digestSoonMax: 10,
+} as const;
+
+/** Cron Triggers (wrangler.toml [triggers]); the strings must match. */
+export const CRONS = {
+  /** Retention (SPEC §7), 03:17 UTC. */
+  daily: '17 3 * * *',
+  /** Moderation digest to ADMIN_EMAILS, 08:00 UTC (08:00 or 09:00 in Lisbon). */
+  digest: '0 8 * * *',
 } as const;
 
 /** Per-IP rate limits (per hour). */
