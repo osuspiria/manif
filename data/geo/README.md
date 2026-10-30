@@ -8,7 +8,7 @@ What lives here:
 | `municipalities.json`     | yes                         | `{code, name, district, tz}` for the 308 municipalities, sorted by name (pt-PT). Used by the signature form (phase 5). |
 | `pt-region.geojson`       | yes                         | Rough boxes (mainland, Madeira + Porto Santo, Selvagens, Azores) used to cut the PMTiles extract.                      |
 | `raw/`                    | **no**                      | CAOP downloads and temporary files.                                                                                    |
-| `*.pmtiles`               | **no**                      | Basemap extract (~1.1 GB), hosted on R2.                                                                               |
+| `*.pmtiles`               | **no**                      | Basemap extract (~2.4 GB), hosted on R2.                                                                               |
 
 Properties of each municipality:
 
@@ -65,7 +65,7 @@ pmtiles extract https://build.protomaps.com/<YYYYMMDD>.pmtiles data/geo/pt.pmtil
   --region=data/geo/pt-region.geojson --maxzoom=15
 ```
 
-With the 20261016 build, the `--dry-run` reports an **archive of ~1.1 GB**. The mainland box includes a margin of Spain and sea (−11° to −5°, 36° to 43.5°); the map's pan limit (`MAX_BOUNDS` in `src/map/regions.ts`) matches its east and north edges, so the cut is never visible. **Keep the two in sync.** For local development, a smaller extract is enough. For example, the Lisbon area only:
+With the 20261029 build, the `--dry-run` reports an **archive of ~2.4 GB**. The extract can't resume, so if the download drops, run it again (`--download-threads=2` is more stable on a weak connection). The mainland box includes a margin of Spain and sea (−11° to 0°, 36° to 43.5°), wide enough for a desktop viewport to centre the mainland; the map's pan limit (`MAX_BOUNDS` in `src/map/regions.ts`) matches its east and north edges, so the cut is never visible. **Keep the two in sync.** For local development, a smaller extract is enough. For example, the Lisbon area only:
 
 ```bash
 pmtiles extract https://build.protomaps.com/<YYYYMMDD>.pmtiles data/geo/dev.pmtiles --bbox=-9.5,38.6,-9.0,38.85 --maxzoom=15
@@ -74,7 +74,7 @@ pmtiles extract https://build.protomaps.com/<YYYYMMDD>.pmtiles data/geo/dev.pmti
 Upload to R2. The Worker/R2 serves the file with `Range` support:
 
 ```bash
-# ~1.1 GB: too big for `wrangler r2 object put` (limit ~300 MB). Use the S3 API with rclone:
+# ~2.4 GB: too big for `wrangler r2 object put` (limit ~300 MB). Use the S3 API with rclone:
 # R2 → Manage API tokens → Object Read & Write; then `rclone config`:
 #   provider = Cloudflare, endpoint = https://<ACCOUNT_ID>.r2.cloudflarestorage.com
 rclone copyto data/geo/pt.pmtiles r2:mobilizacao-tiles/pt.pmtiles --s3-chunk-size=100M --progress

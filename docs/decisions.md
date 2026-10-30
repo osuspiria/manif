@@ -42,7 +42,7 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
 9. **Sem GDAL:** o `mapshaper` lê o GeoPackage diretamente. A simplificação é feita no CRS projetado de origem, com tolerância de 100 m: 1,2 MB em bruto, ~340 KB gzip, dentro do bundle do Worker.
 10. **Distrito nas ilhas:** "Região Autónoma da Madeira" ou "Região Autónoma dos Açores". O nome da ilha vai num campo à parte (`island`). O `tz` vem da região.
 11. **Pontos fora dos polígonos** (costa, simplificação) são atribuídos ao concelho mais próximo até 1 km (`GEO_SNAP_METERS`). Para lá disso, a resposta é `404 {"error":"outside_portugal"}`.
-12. **PMTiles:** o extrato de Portugal (z0–15, continente + Madeira + Selvagens + Açores) tinha ~711 MB; com a margem da decisão #26 passa a ~1,1 GB. Não entra no repo; o processo está documentado em `data/geo/README.md`.
+12. **PMTiles:** o extrato de Portugal (z0–15, continente + Madeira + Selvagens + Açores) tinha ~711 MB; com a margem da decisão #26 passa a ~1,1 GB, e com a revisão de 2026-10-30 (leste até 0°) a ~2,4 GB. Não entra no repo; o processo está documentado em `data/geo/README.md`.
 
 ## Arquitetura
 
@@ -92,6 +92,7 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - O fundo do estilo passa de cinzento para a cor da água.
     - O extrato do continente foi alargado para −11° a −5° de longitude e 36° a 43,5° de latitude (`data/geo/pt-region.geojson`): ~1,1 GB em z15 e 51 MB no extrato de dev (z11).
     - O limite de arrastamento (`MAX_BOUNDS`) coincide com as bordas leste e norte do extrato, por isso o corte nunca aparece no ecrã. A oeste e a sul só há mar, exceto a costa de Marrocos, que aparece como mar se se afastar o mapa entre o continente e a Madeira.
+    - **Revisto (2026-10-30, decidido pelo utilizador):** o extrato e o `MAX_BOUNDS` passam a ir até 0° a leste. Com −5°, num ecrã de computador (~1920 px) o limite empurrava a vista inicial para oeste, e Portugal ficava encostado à direita com o oceano no centro. Agora o continente fica centrado e vê-se parte de Espanha. O extrato passa a ~2,4 GB (build 20261029). O extrato de produção tem de ser gerado de novo e enviado para o R2 antes do deploy.
 
 ## Fase 4 — adicionar e editar eventos (2026-10-17)
 
