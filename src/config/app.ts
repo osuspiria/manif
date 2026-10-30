@@ -63,6 +63,8 @@ export const LIMITS = {
   /** Possible duplicates (decisions #80): same local date within this distance. */
   duplicateRadiusM: 300,
   duplicatesShown: 3,
+  /** "Adicionar evento": the map centre is taken as the place only from this zoom (streets). */
+  pickMinZoom: 14,
 } as const;
 
 export const RETENTION = {

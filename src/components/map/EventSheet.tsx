@@ -2,7 +2,13 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { pt } from '../../i18n/pt';
 import { nowIso } from '../../shared/dates';
 import { filterEvents, type WhenFilter } from '../../shared/event-filter';
-import { formatOccurrence, formatOngoing } from '../../shared/event-view';
+import {
+  collapseDailyRuns,
+  formatDailyRun,
+  formatOccurrence,
+  formatOngoing,
+  formatPlace,
+} from '../../shared/event-view';
 import { detectPlatform, mapsAppUrl } from '../../shared/maps-links';
 import type { PublicEvent, PublicOccurrence } from '../../shared/schemas';
 import { ReportForm } from './ReportForm';
@@ -40,11 +46,14 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState('');
   const [reporting, setReporting] = useState(false);
+  // Phones: the sheet opens at half height, so the map stays in view.
+  const [full, setFull] = useState(false);
 
   useEffect(() => {
     setExpanded(false);
     setStatus('');
     setReporting(false);
+    setFull(false);
     titleRef.current?.focus();
   }, [event?.id]);
 
@@ -78,6 +87,12 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
         .filter(({ o }) => shown(o))
         .sort((a, b) => (a.o.startsAt < b.o.startsAt ? -1 : 1))
     : [];
+  // Daily dates read as one line ("Todos os dias de … a …").
+  const extraEntries = collapseDailyRuns(
+    extra,
+    (x) => x.o,
+    (a, b) => a.faded === b.faded,
+  );
 
   const url = `${window.location.origin}/mapa/e/${event.id}`;
   const osm = `https://www.openstreetmap.org/?mlat=${event.lat}&mlon=${event.lng}#map=17/${event.lat}/${event.lng}`;
@@ -107,7 +122,7 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
 
   return (
     <section
-      class="event-sheet"
+      class={full ? 'event-sheet sheet-full' : 'event-sheet'}
       role="dialog"
       aria-modal="false"
       aria-labelledby="event-sheet-title"
@@ -115,6 +130,15 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
         if (e.key === 'Escape') onClose();
       }}
     >
+      <button
+        type="button"
+        class="sheet-grip"
+        aria-expanded={full}
+        aria-label={full ? pt.event.collapse : pt.event.expand}
+        onClick={() => setFull(!full)}
+      >
+        <span aria-hidden="true" />
+      </button>
       <div class="sheet-head">
         <p class="event-type">
           <TypeIcon type={event.type} size={20} /> {pt.eventTypes[event.type]}
@@ -129,9 +153,7 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
       <h2 id="event-sheet-title" tabIndex={-1} ref={titleRef}>
         {event.title}
       </h2>
-      <p class="event-place">
-        {[event.placeLabel, event.municipality, event.district].filter(Boolean).join(' · ')}
-      </p>
+      <p class="event-place">{formatPlace(event, { district: true })}</p>
       {event.poster && (
         <a
           class="event-poster"
@@ -167,15 +189,32 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
                 class="btn-link"
                 aria-expanded={expanded}
                 aria-controls="event-other-dates"
-                onClick={() => setExpanded(!expanded)}
+                onClick={() => {
+                  setExpanded(!expanded);
+                  if (!expanded) setFull(true);
+                }}
               >
                 {expanded ? pt.event.hideOtherDates : pt.event.otherDates(extra.length)}
               </button>
               {expanded && (
                 <ul id="event-other-dates" class="occ-list">
-                  {extra.map(({ o, faded }) => (
-                    <OccurrenceItem key={o.id} o={o} event={event} faded={faded} />
-                  ))}
+                  {extraEntries.map((entry) =>
+                    entry.kind === 'one' ? (
+                      <OccurrenceItem
+                        key={entry.item.o.id}
+                        o={entry.item.o}
+                        event={event}
+                        faded={entry.item.faded}
+                      />
+                    ) : (
+                      <li
+                        key={entry.first.o.id}
+                        class={entry.first.faded ? 'occ occ-faded' : 'occ'}
+                      >
+                        {formatDailyRun(entry.first.o, entry.last.o, event.tz)}
+                      </li>
+                    ),
+                  )}
                 </ul>
               )}
             </>
@@ -189,13 +228,6 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
         <p class="event-ended">{pt.event.ended}</p>
       )}
 
-      {event.description && <p class="event-description">{event.description}</p>}
-      {event.organizer && (
-        <p class="event-organizer">
-          {pt.event.organizer}: {event.organizer}
-        </p>
-      )}
-
       <div class="sheet-actions">
         <a class="btn" href={directions} rel="noopener noreferrer" target="_blank">
           {pt.event.directions}
@@ -203,22 +235,31 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
         <button type="button" class="btn" onClick={() => void share()}>
           {pt.event.share}
         </button>
-        {/* No maps app on desktop: "Como chegar" and OpenStreetMap cover it. */}
-        {mapsApp && (
+        {/* Phones open their maps app; desktops (no app) get OpenStreetMap. */}
+        {mapsApp ? (
           <a class="btn" href={mapsApp}>
             {pt.event.openInApp}
           </a>
-        )}
-        <a class="btn" href={osm} rel="noopener noreferrer" target="_blank">
-          {pt.event.openInOsm}
-        </a>
-        {!reporting && (
-          <button type="button" class="btn btn-quiet" onClick={() => setReporting(true)}>
-            {pt.report.open}
-          </button>
+        ) : (
+          <a class="btn" href={osm} rel="noopener noreferrer" target="_blank">
+            {pt.event.openInOsm}
+          </a>
         )}
       </div>
-      {reporting && <ReportForm eventId={event.id} onClose={() => setReporting(false)} />}
+
+      {event.description && <p class="event-description">{event.description}</p>}
+      {event.organizer && (
+        <p class="event-organizer">
+          {pt.event.organizer}: {event.organizer}
+        </p>
+      )}
+      {reporting ? (
+        <ReportForm eventId={event.id} onClose={() => setReporting(false)} />
+      ) : (
+        <button type="button" class="btn btn-quiet sheet-report" onClick={() => setReporting(true)}>
+          {pt.report.open}
+        </button>
+      )}
       <p class="sr-status" role="status">
         {status}
       </p>

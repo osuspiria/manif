@@ -137,6 +137,17 @@ a:hover {
   text-align: center;
 }
 
+/* A type with no events in the chosen dates: still a filter, but quieter. */
+.chip-empty:not([aria-pressed='true']) {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.chip-empty:not([aria-pressed='true']) .chip-count {
+  background: none;
+  color: var(--muted);
+}
+
 .chip[aria-pressed='true'] .chip-count {
   background: var(--accent);
   color: var(--accent-fg);

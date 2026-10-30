@@ -20,13 +20,14 @@ export function MapIntro({ hidden = false, shell = false }: Props) {
         <Title id={shell ? undefined : 'intro-title'} class="map-intro-title">
           {pt.site.title}
         </Title>
-      </div>
-      <p>
-        {pt.map.description}{' '}
+        {/* Accessible name: the full "Manifestações por distrito". */}
         <a href="/manifestacoes/" class="map-intro-link">
-          {pt.seo.districtsLink}
+          <span class="map-intro-link-lead">{pt.seo.districtsLinkLead} </span>
+          {pt.seo.districtsLinkShort}
         </a>
-      </p>
+      </div>
+      {/* On a phone only for screen readers and search engines: the map gets the room. */}
+      <p class="map-intro-text">{pt.map.description}</p>
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { sendEvent } from './send-event';
+import { pickPlace, sendEvent } from './send-event';
 
 /**
  * Posters (SPEC §4.7): picked in the add flow, invisible until the moderation
@@ -88,6 +88,7 @@ test('a poster is sent with the event, waits for moderation, then is public with
     .click();
   const flow = page.locator('.add-flow');
   await expect(flow.locator('.detected strong')).toHaveText(/ · /, { timeout: 20_000 });
+  await pickPlace(page, flow);
   await flow.getByRole('button', { name: 'Seguinte' }).click();
   await flow.getByText('Concentração', { exact: true }).click();
   await flow.getByLabel('Título').fill(title);

@@ -211,15 +211,18 @@ Chips de escolha única, em scroll horizontal:
 
 **Semântica:** um evento aparece se **pelo menos uma ocorrência** intersectar o intervalo. No popup/lista:
 - Mostra-se a **próxima ocorrência dentro do intervalo** em destaque.
-- Por baixo, "+ 4 outras datas" expansível, com as ocorrências fora do intervalo esbatidas.
+- Por baixo, "+ 4 outras datas" expansível, com as ocorrências fora do intervalo esbatidas. Três ou mais dias seguidos com o mesmo horário (sem nota nem cancelamento) aparecem numa só linha: "Todos os dias de 31 out a 12 nov · todo o dia".
 - Na lista, ordenação pela próxima ocorrência no intervalo; agrupamento por dia ("Sábado, 24 nov").
 - Marcador: ícone do tipo; se o filtro abrange vários dias, uma pequena etiqueta com o dia ("24/11") a partir de certo zoom.
+- Tipos sem eventos nas datas escolhidas continuam a ser filtros, mas com o chip esbatido (contorno tracejado).
+- Computador: filtros e lista partilham um só scroll na coluna lateral.
 
 **Implementação:** o servidor devolve **todos os eventos visíveis** num único GeoJSON (com as ocorrências futuras dentro de cada feature), em cache na edge 60 s. Todos os filtros correm no browser → instantâneos e sem pedidos extra. Revisitar só se passar de ~5 000 eventos.
 
 ### 4.3 Popup / ficha do evento
 
-Título · tipo · local e concelho · data(s) e hora(s) · descrição · organizador (se indicado) · selo **"Confirmado"** se `verified` · botões: *Como chegar* (direções no OpenStreetMap), *Abrir na app de mapas* (Apple Maps no iOS, link `geo:` no Android, escondido no computador), *Ver no OpenStreetMap*, *Partilhar* (Web Share API, fallback copiar link), *Reportar*.
+Título · tipo · local e concelho (sem repetir nomes: o distrito some quando é igual ao concelho, e um ", Lisboa" no fim do nome do local some quando é o concelho) · data(s) e hora(s) · botões: *Como chegar* (direções no OpenStreetMap), *Partilhar* (Web Share API, fallback copiar link) e um só link de mapa — *Abrir na app de mapas* no telemóvel (Apple Maps no iOS, link `geo:` no Android), *Ver no OpenStreetMap* no computador · descrição · organizador (se indicado) · *Reportar* · selo **"Confirmado"** se `verified`.
+Abrir um evento centra o mapa e aproxima até ao zoom 13 (nunca afasta). No telemóvel a ficha abre a meia altura, com uma pega para a mostrar toda; mostrar as outras datas abre-a toda.
 Cada evento tem URL próprio `/mapa/e/<id>` que abre o mapa centrado e a ficha aberta (com meta tags Open Graph para partilha).
 Se o evento tiver **cartaz aprovado** (§4.7): a ficha mostra-o (toque abre em tamanho total), com `alt`; a vista Lista mostra a miniatura (`loading="lazy"`); `/mapa/e/<id>` usa-o como `og:image` (senão `og.png`) e como `image` no JSON-LD `Event`.
 
@@ -229,7 +232,7 @@ Fluxo em passos curtos (bottom sheet em telemóvel):
 
 0. **Cartaz (opcional, fase 8B)** — "Tens um cartaz?": escolher a imagem e, opcionalmente, colar o texto do post. Botão **"Preencher a partir do cartaz"**: pede um rascunho (`POST /api/events/extract`) e preenche os passos seguintes, com os avisos do modelo; tudo fica editável. Pode-se saltar este passo ou ignorar o rascunho e preencher à mão. A imagem escolhida aqui é a do campo "Cartaz" do passo 2. Ver §4.7.
    Até à fase 8B não há passo 0: o campo **"Cartaz (opcional)"**, com o "Texto do cartaz", fica no fim do passo 2 (**O quê**).
-1. **Onde** — o mapa entra em modo "escolher ponto": pin fixo ao centro, a pessoa arrasta o mapa por baixo. Alternativas: "Usar a minha localização" ou pesquisar morada/local. Mostra o concelho detetado ("Porto · Porto"). Opcional: nome do local.
+1. **Onde** — o mapa entra em modo "escolher ponto": pin fixo ao centro, a pessoa arrasta o mapa por baixo. Alternativas: "Usar a minha localização" ou pesquisar morada/local. Mostra o concelho detetado ("Porto · Porto"). O ponto só é aceite a partir do zoom 14 (`LIMITS.pickMinZoom`, nível de rua): o mapa abre com o país todo, e até lá aparece "Aproxima o mapa até veres as ruas…". Opcional: nome do local.
 2. **O quê** — tipo (chips), título, descrição (opcional), organizador (opcional).
 3. **Quando** — lista de datas:
    - Primeira linha: data + hora de início (opcional "todo o dia") + nota (opcional). Ao criar não se pede hora de fim (o evento conta até às 06:00 do dia seguinte); a página de edição mantém a hora de fim (opcional) dos eventos existentes.
@@ -256,7 +259,7 @@ Não se pede nome nem morada de quem submete.
 
 ### 4.6 Páginas para motores de busca
 
-- `/manifestacoes/` (estática) lista os 18 distritos e as 2 regiões autónomas (`src/config/districts.ts`).
+- `/manifestacoes/` lista os 18 distritos e as 2 regiões autónomas (`src/config/districts.ts`). Página estática; o Worker junta a cada link o número de próximos eventos (o mesmo nas listas "Outros distritos e regiões"), e os distritos sem eventos ficam esbatidos.
 - `/manifestacoes/<slug>/` (ex.: `lisboa`, `porto`, `acores`, `madeira`): página estática por distrito; o Worker preenche, em cada pedido, a lista dos próximos eventos desse distrito (filtro "Próximos"), com link para `/mapa/e/<id>` e JSON-LD `ItemList`. Sem eventos: a página responde 200 com "De momento não há eventos anunciados…". Slug desconhecido: 404.
 - `/mapa/e/<id>`: além das tags Open Graph, `<link rel="canonical">`, JSON-LD schema.org `Event` (um por data futura não cancelada, máx. 10; só campos públicos) e o texto do evento dentro do `<noscript>`.
 - `/sitemap.xml` (Worker): home, `/manifestacoes/`, páginas de distrito e eventos com datas futuras. `/robots.txt` (build) aponta para ele e não bloqueia `/api/events.geojson` nem `/tiles` (o Google precisa deles para renderizar o mapa).

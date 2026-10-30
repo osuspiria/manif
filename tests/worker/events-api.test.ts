@@ -266,6 +266,35 @@ describe('GET /manifestacoes/:slug/ (district page)', () => {
   it('404s for an unknown district', async () => {
     expect((await get('/manifestacoes/atlantida/')).status).toBe(404);
   });
+
+  it('shows how many events each of the other districts has', async () => {
+    const html = await (await get('/manifestacoes/porto/')).text();
+    expect(html).toMatch(
+      /<a href="\/manifestacoes\/acores\/" class="district-link-empty">Açores<span class="visually-hidden">, 0 eventos<\/span><span class="district-count" aria-hidden="true">0<\/span><\/a>/,
+    );
+  });
+});
+
+describe('GET /manifestacoes/ (district index)', () => {
+  it('counts the upcoming events of every district and dims the empty ones', async () => {
+    const res = await get('/manifestacoes/');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('public, max-age=300');
+    const html = await res.text();
+    const link = (slug: string) =>
+      html.match(new RegExp(`<a href="/manifestacoes/${slug}/"[^>]*>.*?</a>`))?.[0] ?? '';
+    // As many as the district page lists (upcoming, published, not cancelled).
+    const porto = await (await get('/manifestacoes/porto/')).text();
+    const listed = porto.match(/<li><a href="\/mapa\/e\//g)?.length ?? 0;
+    expect(listed).toBeGreaterThan(1);
+    expect(link('porto')).toContain(
+      `<span class="district-count" aria-hidden="true">${listed}</span>`,
+    );
+    expect(link('porto')).toContain(`, ${listed} eventos<`);
+    expect(link('porto')).not.toContain('district-link-empty');
+    expect(link('acores')).toContain('class="district-link-empty"');
+    expect(link('acores')).toContain('>0</span>');
+  });
 });
 
 describe('GET /sitemap.xml', () => {

@@ -61,6 +61,8 @@ function stepOf(issue: ApiIssue): Step {
 
 export interface AddEventFlowProps {
   center: [number, number] | null;
+  /** Map zoom: the point is only taken once zoomed in to street level. */
+  zoom: number | null;
   now: Date;
   /** Events already on the map: checked for possible duplicates before sending. */
   events: readonly PublicEvent[];
@@ -106,6 +108,8 @@ export function AddEventFlow(p: AddEventFlowProps) {
   const firstCheck = useRef(true);
 
   const stepIndex = STEPS.indexOf(step);
+  // At country or region zoom the centre is only a rough guess of the place.
+  const zoomedOut = p.zoom !== null && p.zoom < LIMITS.pickMinZoom;
   const tz = place.state === 'ok' ? place.place.tz : null;
 
   useEffect(() => {
@@ -167,6 +171,7 @@ export function AddEventFlow(p: AddEventFlowProps) {
     }
     if (tz) issues.push(...checkOccurrences(rows.map(rowToOccurrence), tz, p.now));
     if (place.state !== 'ok') issues.push({ path: ['lat'], code: 'outside_portugal' });
+    else if (zoomedOut) issues.push({ path: ['lat'], code: 'zoom_in' });
     return issues.filter((i) => steps.includes(stepOf(i)));
   }
 
@@ -355,6 +360,11 @@ export function AddEventFlow(p: AddEventFlowProps) {
               <strong>
                 {place.place.municipality} · {place.place.district}
               </strong>
+            )}
+            {place.state === 'ok' && zoomedOut && (
+              <span class={errors.lat ? 'field-error detected-zoom' : 'hint detected-zoom'}>
+                {pt.add.where.zoomIn}
+              </span>
             )}
           </p>
           <button type="button" class="btn" onClick={p.onUseLocation}>

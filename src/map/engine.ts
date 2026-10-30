@@ -51,13 +51,17 @@ export interface MapEngine {
   /** Draws this event's pin as selected (bigger, orange, on top). */
   setSelected(id: string | null): void;
   fitRegion(region: RegionKey): void;
-  /** `offset`: pixels to shift the point from the centre (e.g. above a bottom sheet). */
+  /**
+   * Centres an event, zooming in to FOCUS_ZOOM if further out (never out).
+   * `offset`: pixels to shift the point from the centre (e.g. above a bottom sheet).
+   */
   focus(lng: number, lat: number, offset?: [number, number]): void;
   showUser(lng: number, lat: number): void;
   flyTo(lng: number, lat: number, zoom: number): void;
   /** Like flyTo without animation (safe right before a resize). */
   jumpTo(lng: number, lat: number, zoom: number): void;
   getCenter(): [number, number];
+  getZoom(): number;
   resize(): void;
   destroy(): void;
 }
@@ -92,6 +96,11 @@ const PIN_SELECTED = 48;
 const TIP_W = 10;
 const TIP_H = 6;
 const CLUSTER_SIZES = [32, 40, 52] as const;
+/**
+ * Zoom when an event is opened: close enough to see the streets around it and
+ * no cluster (clusterMaxZoom is 12), far enough to keep the town in view.
+ */
+const FOCUS_ZOOM = 13;
 
 /** A 2× canvas context for an image of `width`×`height` CSS pixels. */
 function canvas2d(width: number, height: number): CanvasRenderingContext2D {
@@ -180,8 +189,8 @@ export function createMapEngine(
   container: HTMLElement,
   opts: {
     onSelect: (id: string) => void;
-    /** Called with the map centre after every move (used by "escolher ponto"). */
-    onMoveEnd?: (center: [number, number]) => void;
+    /** Called with the map centre and zoom after every move (used by "escolher ponto"). */
+    onMoveEnd?: (center: [number, number], zoom: number) => void;
     initialBounds?: LngLatBoundsLike;
   },
 ): MapEngine {
@@ -202,6 +211,7 @@ export function createMapEngine(
     fitBoundsOptions: { padding: 24 },
     maxBounds: MAX_BOUNDS,
     attributionControl: { compact: true },
+    locale: pt.map.controls,
     dragRotate: false,
     pitchWithRotate: false,
     touchPitch: false,
@@ -287,7 +297,7 @@ export function createMapEngine(
 
   map.on('moveend', () => {
     const c = map.getCenter();
-    opts.onMoveEnd?.([c.lng, c.lat]);
+    opts.onMoveEnd?.([c.lng, c.lat], map.getZoom());
   });
 
   map.on('click', 'event-icons', (e) => {
@@ -321,7 +331,7 @@ export function createMapEngine(
       map.fitBounds(REGIONS[region], { padding: 24 });
     },
     focus(lng, lat, offset = [0, 0]) {
-      map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 14), offset });
+      map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), FOCUS_ZOOM), offset });
     },
     showUser(lng, lat) {
       if (!userMarker) {
@@ -343,6 +353,9 @@ export function createMapEngine(
     getCenter() {
       const c = map.getCenter();
       return [c.lng, c.lat];
+    },
+    getZoom() {
+      return map.getZoom();
     },
     resize() {
       map.resize();

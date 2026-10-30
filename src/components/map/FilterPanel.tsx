@@ -189,7 +189,7 @@ export function FilterPanel(p: Props) {
           <button
             key={type}
             type="button"
-            class="chip chip-type"
+            class={p.typeCounts[type] === 0 ? 'chip chip-type chip-empty' : 'chip chip-type'}
             aria-pressed={p.types.includes(type)}
             onClick={() => p.onToggleType(type)}
           >

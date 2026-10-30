@@ -4,6 +4,7 @@ import {
   formatDayHeading,
   formatOccurrence,
   formatOngoing,
+  formatPlace,
   groupByDay,
 } from '../../shared/event-view';
 import type { PublicEvent } from '../../shared/schemas';
@@ -47,9 +48,7 @@ export function EventList({ results, newestFirst = false, selectedId, onSelect }
                           ? formatOngoing(event.ongoingSince)
                           : formatOccurrence(highlight, event.tz)}
                       </span>
-                      <span class="event-card-meta">
-                        {[event.placeLabel, event.municipality].filter(Boolean).join(' · ')}
-                      </span>
+                      <span class="event-card-meta">{formatPlace(event)}</span>
                       <span class="event-card-type">
                         {pt.eventTypes[event.type]}
                         {more > 0 && ` · ${pt.event.otherDates(more)}`}

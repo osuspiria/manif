@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { FEATURES } from '../../src/config/app';
-import { sendEvent } from './send-event';
+import { pickPlace, sendEvent } from './send-event';
 
 /** Local date (Europe/Lisbon ≈ test machine) N days from today, 'YYYY-MM-DD'. */
 function dayFromNow(n: number): string {
@@ -25,10 +25,10 @@ async function fillUntilContact(page: Page, title: string, project: string, scre
     .first()
     .click();
 
-  // 1. Onde — the map centre (mainland) is inside Portugal.
+  // 1. Onde — zoomed in to a point in the mainland.
   const flow = page.locator('.add-flow');
   await expect(flow.getByRole('heading', { name: 'Onde' })).toBeVisible();
-  await expect(flow.locator('.detected strong')).toHaveText(/ · /, { timeout: 20_000 });
+  await pickPlace(page, flow);
   await flow.getByLabel('Nome do local (opcional)').fill('Praça de teste');
   if (screens) await shot(page, '10-adicionar-onde', project);
   await flow.getByRole('button', { name: 'Seguinte' }).click();
@@ -229,6 +229,12 @@ test.describe('Adicionar e editar evento', () => {
       .click();
     const flow = page.locator('.add-flow');
     await expect(flow.locator('.detected strong')).toHaveText(/ · /, { timeout: 20_000 });
+    // At country zoom the map centre is no place yet.
+    await flow.getByRole('button', { name: 'Seguinte' }).click();
+    await expect(flow.getByRole('heading', { name: 'Onde' })).toBeVisible();
+    await expect(flow.getByText('Corrige os campos assinalados.')).toBeVisible();
+    await expect(flow.locator('.detected .field-error')).toHaveText(/Aproxima o mapa/);
+    await pickPlace(page, flow);
     await flow.getByRole('button', { name: 'Seguinte' }).click();
     await flow.getByLabel('Título').fill('ab');
     await flow.getByRole('button', { name: 'Seguinte' }).click();

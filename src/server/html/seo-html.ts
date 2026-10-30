@@ -4,7 +4,7 @@
  * an event page, and sitemap.xml. Only public event fields are used.
  */
 import { pt } from '../../i18n/pt';
-import { formatOccurrence, formatOngoing } from '../../shared/event-view';
+import { formatOccurrence, formatOngoing, formatPlace } from '../../shared/event-view';
 import type { FilteredEvent } from '../../shared/event-filter';
 import type { PublicEvent } from '../../shared/schemas';
 import { escapeHtml } from './escape';
@@ -22,7 +22,7 @@ function whenLabel(r: FilteredEvent<PublicEvent>): string {
 }
 
 function placeLabel(e: PublicEvent): string {
-  return [e.placeLabel, e.municipality].filter(Boolean).join(', ');
+  return formatPlace(e, { separator: ', ' });
 }
 
 /** The <ol> of a district page, or a "no events" paragraph. */
@@ -42,6 +42,15 @@ export function districtEventsHtml(results: FilteredEvent<PublicEvent>[], where:
     );
   });
   return `<ol class="district-events">${items.join('')}</ol>`;
+}
+
+/** Count inside a district link: 'Porto 3', read as 'Porto, 3 eventos'. */
+export function districtCountHtml(n: number): string {
+  const label = n === 1 ? pt.count.one : pt.count.many(n);
+  return (
+    `<span class="visually-hidden">, ${escapeHtml(label)}</span>` +
+    `<span class="district-count" aria-hidden="true">${n}</span>`
+  );
 }
 
 /** Text of an event page for readers without JavaScript (the <noscript> of the map page). */

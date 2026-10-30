@@ -76,6 +76,7 @@ export function MapApp() {
   const [AddFlow, setAddFlow] = useState<ComponentType<AddEventFlowProps> | null>(null);
   const [picking, setPicking] = useState(false);
   const [center, setCenter] = useState<[number, number] | null>(null);
+  const [zoom, setZoom] = useState<number | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
 
   // Keep a focused event visible next to the event sheet (bottom on mobile, right on desktop).
@@ -352,13 +353,12 @@ export function MapApp() {
         </p>
       )}
 
-      {isDesktop && !adding && <div class="panel-side">{panel}</div>}
-
       {adding && (
         <div class={`add-container${picking ? ' add-compact' : ''}`}>
           {AddFlow ? (
             <AddFlow
               center={center}
+              zoom={zoom}
               now={now}
               events={events}
               onPickingChange={setPicking}
@@ -388,6 +388,8 @@ export function MapApp() {
         {/* Inside .content: it opens right under the top bar, whatever its height. */}
         {overlay && <div class="panel-overlay">{panel}</div>}
         <div class="list-pane" hidden={!showList}>
+          {/* Desktop: the filters scroll with the list (one scroll for the side column). */}
+          {isDesktop && <div class="panel-side">{panel}</div>}
           {shownLoad.state === 'loading' && <p class="empty">{pt.map.loading}</p>}
           {shownLoad.state === 'error' && (
             <p class="empty">
@@ -432,7 +434,10 @@ export function MapApp() {
               if (!adding) select(id);
             }}
             picking={adding && picking}
-            onCenter={setCenter}
+            onCenter={(c, z) => {
+              setCenter(c);
+              setZoom(z);
+            }}
           />
           {searchOpen && !adding && (
             <div class="map-search">

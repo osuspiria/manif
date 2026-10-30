@@ -7,6 +7,40 @@ body:has(.districts) {
   background: var(--bg);
 }
 
+/* The site header in the map's style: square mark + MANIFESTA. */
+body:has(.districts) header {
+  border-bottom: 2px solid var(--fg);
+}
+
+body:has(.districts) header nav {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+body:has(.districts) header a {
+  gap: 8px;
+  color: var(--fg);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+body:has(.districts) header a:first-child::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--fg);
+  background: var(--accent);
+}
+
+body:has(.districts) .site-footer a {
+  color: var(--fg);
+  text-decoration: underline 2px var(--accent);
+  text-underline-offset: 3px;
+}
+
 .districts {
   max-width: 680px;
   margin: 0 auto;
@@ -40,14 +74,38 @@ body:has(.districts) {
 .district-links a {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   min-height: 44px;
   padding: 0 12px;
   border: 2px solid var(--fg);
+  color: var(--fg);
   text-decoration: none;
 }
 
 .district-links a:hover {
   background: var(--accent-tint);
+}
+
+/* Filled in by the Worker: upcoming events in that district. */
+.district-count {
+  min-width: 1.5em;
+  padding: 0 4px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* No events: still a link (the page says so), but quieter. */
+.district-links a.district-link-empty {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.district-link-empty .district-count {
+  background: none;
+  color: var(--muted);
 }
 
 .district-events {
@@ -61,12 +119,29 @@ body:has(.districts) {
   border-bottom: 2px solid var(--fg);
 }
 
+/* Each event is a card-like row with an arrow, so it reads as a link. */
 .district-events a {
+  position: relative;
   display: grid;
   gap: 2px;
   min-height: 44px;
-  padding: 10px 0;
+  padding: 10px 36px 10px 8px;
+  color: var(--fg);
   text-decoration: none;
+}
+
+.district-events a::after {
+  content: '→';
+  content: '→' / '';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 800;
+}
+
+.district-events a:hover {
+  background: var(--accent-tint);
 }
 
 .district-events a:hover .district-event-title {

@@ -45,13 +45,111 @@ export function formatShortDate(date: string): string {
   return `${p.day}/${p.month}`;
 }
 
-/** 'ter, 24 nov · 15:00–18:00', with '(hora dos Açores)' when relevant. */
-export function formatOccurrence(o: LocalOccurrence, tz: Tz): string {
-  const day = formatShortDayLabel(o.localDate);
-  if (o.startTime === null) return `${day} · ${pt.event.allDay}`;
+/** '15:00–18:00', 'todo o dia', with '(hora dos Açores)' when relevant. */
+function formatTimes(o: LocalOccurrence, tz: Tz): string {
+  if (o.startTime === null) return pt.event.allDay;
   const time = o.endTime ? `${o.startTime}–${o.endTime}` : o.startTime;
   const suffix = tz === 'Atlantic/Azores' ? ` ${pt.tz.azoresSuffix}` : '';
-  return `${day} · ${time}${suffix}`;
+  return `${time}${suffix}`;
+}
+
+/** 'ter, 24 nov · 15:00–18:00', with '(hora dos Açores)' when relevant. */
+export function formatOccurrence(o: LocalOccurrence, tz: Tz): string {
+  return `${formatShortDayLabel(o.localDate)} · ${formatTimes(o, tz)}`;
+}
+
+/** 'Todos os dias de 31 out a 12 nov · todo o dia' — a run from collapseDailyRuns. */
+export function formatDailyRun(first: LocalOccurrence, last: LocalOccurrence, tz: Tz): string {
+  const day = (date: string) => {
+    const p = parts(date);
+    return `${p.day} ${p.monthShort}`;
+  };
+  return `${pt.event.dailyRun(day(first.localDate), day(last.localDate))} · ${formatTimes(first, tz)}`;
+}
+
+export interface RunnableOccurrence extends LocalOccurrence {
+  cancelled: boolean;
+  note: string | null;
+}
+
+export type DateEntry<T> =
+  { kind: 'one'; item: T } | { kind: 'daily'; first: T; last: T; count: number };
+
+/** Shortest run of daily dates worth folding into one line. */
+const MIN_DAILY_RUN = 3;
+
+/**
+ * Folds consecutive days with the same times into one entry, so a daily event
+ * reads as one line instead of a column of identical dates. Cancelled dates and
+ * dates with a note always stay on their own. `items` must be in date order;
+ * `together` can keep apart items the caller shows differently.
+ */
+export function collapseDailyRuns<T>(
+  items: readonly T[],
+  occ: (item: T) => RunnableOccurrence,
+  together: (a: T, b: T) => boolean = () => true,
+): DateEntry<T>[] {
+  const plain = (o: RunnableOccurrence) => !o.cancelled && !o.note;
+  const follows = (prev: T, next: T) => {
+    const a = occ(prev);
+    const b = occ(next);
+    return (
+      plain(a) &&
+      plain(b) &&
+      a.startTime === b.startTime &&
+      a.endTime === b.endTime &&
+      together(prev, next) &&
+      Temporal.PlainDate.from(a.localDate).add({ days: 1 }).toString() === b.localDate
+    );
+  };
+
+  const entries: DateEntry<T>[] = [];
+  let run: T[] = [];
+  const flush = () => {
+    const first = run[0];
+    const last = run.at(-1);
+    if (first !== undefined && last !== undefined && run.length >= MIN_DAILY_RUN) {
+      entries.push({ kind: 'daily', first, last, count: run.length });
+    } else {
+      for (const item of run) entries.push({ kind: 'one', item });
+    }
+    run = [];
+  };
+  for (const item of items) {
+    const prev = run.at(-1);
+    if (prev !== undefined && !follows(prev, item)) flush();
+    run.push(item);
+  }
+  flush();
+  return entries;
+}
+
+export interface PlaceParts {
+  placeLabel: string | null;
+  municipality: string;
+  district: string;
+}
+
+const fold = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase();
+
+/**
+ * 'Alameda D. Afonso Henriques · Lisboa': the place name, the municipality and
+ * (with `district`) the district, without saying the same name twice — people
+ * often type the town in the place name, and some municipalities share the
+ * name of their district.
+ */
+export function formatPlace(
+  e: PlaceParts,
+  { district = false, separator = ' · ' }: { district?: boolean; separator?: string } = {},
+): string {
+  const town = fold(e.municipality);
+  let label = e.placeLabel?.trim() ?? '';
+  const comma = label.lastIndexOf(',');
+  if (comma > 0 && fold(label.slice(comma + 1)) === town) label = label.slice(0, comma).trim();
+  if (fold(label) === town) label = '';
+  const items = [label, e.municipality];
+  if (district && fold(e.district) !== town) items.push(e.district);
+  return items.filter(Boolean).join(separator);
 }
 
 /** 'Todos os dias desde seg, 12 out' — ongoing ("sem fim") events. */

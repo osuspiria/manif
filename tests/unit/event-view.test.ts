@@ -7,11 +7,14 @@ import {
   type FilterableOccurrence,
 } from '../../src/shared/event-filter';
 import {
+  collapseDailyRuns,
   countByType,
+  formatDailyRun,
   formatDayHeading,
   formatLongDate,
   formatOccurrence,
   formatOngoing,
+  formatPlace,
   formatShortDate,
   groupByDay,
   showsDayLabels,
@@ -183,5 +186,140 @@ describe('groupByDay', () => {
       ['2026-11-03', ['c', 'b']],
       ['2026-11-01', ['a']],
     ]);
+  });
+});
+
+describe('formatPlace', () => {
+  const place = (placeLabel: string | null, municipality: string, district: string) => ({
+    placeLabel,
+    municipality,
+    district,
+  });
+
+  it('joins place, municipality and district', () => {
+    expect(formatPlace(place('Praça da Sé', 'Guimarães', 'Braga'), { district: true })).toBe(
+      'Praça da Sé · Guimarães · Braga',
+    );
+  });
+
+  it('leaves out the district when it repeats the municipality', () => {
+    expect(formatPlace(place('Avenida dos Aliados', 'Porto', 'Porto'), { district: true })).toBe(
+      'Avenida dos Aliados · Porto',
+    );
+  });
+
+  it('drops a trailing municipality already typed in the place name', () => {
+    expect(formatPlace(place('Alameda D. Afonso Henriques, Lisboa', 'Lisboa', 'Lisboa'))).toBe(
+      'Alameda D. Afonso Henriques · Lisboa',
+    );
+    expect(formatPlace(place('Rossio,  viseu ', 'Viseu', 'Viseu'))).toBe('Rossio · Viseu');
+  });
+
+  it('keeps a place name that only is the municipality, once', () => {
+    expect(formatPlace(place('Lisboa', 'Lisboa', 'Lisboa'))).toBe('Lisboa');
+    expect(formatPlace(place(null, 'Boticas', 'Vila Real'), { district: true })).toBe(
+      'Boticas · Vila Real',
+    );
+  });
+
+  it('keeps names that only contain the municipality elsewhere', () => {
+    expect(formatPlace(place('Largo de Lisboa', 'Lisboa', 'Lisboa'))).toBe(
+      'Largo de Lisboa · Lisboa',
+    );
+  });
+
+  it('takes a custom separator', () => {
+    expect(formatPlace(place('Rossio, Lisboa', 'Lisboa', 'Lisboa'), { separator: ', ' })).toBe(
+      'Rossio, Lisboa',
+    );
+  });
+});
+
+describe('collapseDailyRuns', () => {
+  const occ = (
+    localDate: string,
+    startTime: string | null = null,
+    extra: { cancelled?: boolean; note?: string | null } = {},
+  ) => ({ localDate, startTime, endTime: null, cancelled: false, note: null, ...extra });
+  const shape = (entries: ReturnType<typeof collapseDailyRuns<ReturnType<typeof occ>>>) =>
+    entries.map((e) =>
+      e.kind === 'one' ? e.item.localDate : `${e.first.localDate}..${e.last.localDate}`,
+    );
+
+  it('folds three or more consecutive days with the same times into one run', () => {
+    const items = ['2026-10-31', '2026-11-01', '2026-11-02', '2026-11-03'].map((d) => occ(d));
+    expect(shape(collapseDailyRuns(items, (x) => x))).toEqual(['2026-10-31..2026-11-03']);
+    const [run] = collapseDailyRuns(items, (x) => x);
+    expect(run?.kind === 'daily' && run.count).toBe(4);
+  });
+
+  it('keeps short runs, gaps and different times as single dates', () => {
+    const items = [
+      occ('2026-11-01'),
+      occ('2026-11-02'),
+      occ('2026-11-04', '18:00'),
+      occ('2026-11-05', '18:00'),
+      occ('2026-11-06', '19:00'),
+    ];
+    expect(shape(collapseDailyRuns(items, (x) => x))).toEqual([
+      '2026-11-01',
+      '2026-11-02',
+      '2026-11-04',
+      '2026-11-05',
+      '2026-11-06',
+    ]);
+  });
+
+  it('never folds a cancelled date or one with a note', () => {
+    const items = [
+      occ('2026-11-01'),
+      occ('2026-11-02'),
+      occ('2026-11-03', null, { cancelled: true }),
+      occ('2026-11-04'),
+      occ('2026-11-05', null, { note: 'Com concerto' }),
+      occ('2026-11-06'),
+      occ('2026-11-07'),
+      occ('2026-11-08'),
+    ];
+    expect(shape(collapseDailyRuns(items, (x) => x))).toEqual([
+      '2026-11-01',
+      '2026-11-02',
+      '2026-11-03',
+      '2026-11-04',
+      '2026-11-05',
+      '2026-11-06..2026-11-08',
+    ]);
+  });
+
+  it('runs across a month end and the October clock change', () => {
+    const items = ['2026-10-24', '2026-10-25', '2026-10-26'].map((d) => occ(d, '19:00'));
+    expect(shape(collapseDailyRuns(items, (x) => x))).toEqual(['2026-10-24..2026-10-26']);
+  });
+
+  it('only joins items the caller says belong together', () => {
+    const items = ['2026-11-01', '2026-11-02', '2026-11-03', '2026-11-04'].map((d, i) => ({
+      o: occ(d),
+      faded: i >= 2,
+    }));
+    const entries = collapseDailyRuns(
+      items,
+      (x) => x.o,
+      (a, b) => a.faded === b.faded,
+    );
+    expect(entries.map((e) => e.kind)).toEqual(['one', 'one', 'one', 'one']);
+  });
+});
+
+describe('formatDailyRun', () => {
+  it('describes a run of all-day dates', () => {
+    expect(formatDailyRun(o('2026-10-31', null), o('2026-11-12', null), 'Europe/Lisbon')).toBe(
+      'Todos os dias de 31 out a 12 nov · todo o dia',
+    );
+  });
+
+  it('describes a run with times, with the Azores suffix', () => {
+    expect(
+      formatDailyRun(o('2026-11-01', '19:00'), o('2026-11-05', '19:00'), 'Atlantic/Azores'),
+    ).toBe('Todos os dias de 1 nov a 5 nov · 19:00 (hora dos Açores)');
   });
 });

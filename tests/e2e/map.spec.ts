@@ -186,7 +186,7 @@ test.describe('map page (/)', () => {
     await expect(page.locator('#filters')).toBeVisible();
   });
 
-  test('"Abrir na app de mapas": Apple Maps on iOS, geo: on Android, hidden on desktop', async ({
+  test('"Abrir na app de mapas": Apple Maps on iOS, geo: on Android, OpenStreetMap on desktop', async ({
     browser,
     request,
   }, info) => {
@@ -224,6 +224,10 @@ test.describe('map page (/)', () => {
       const link = sheet.getByRole('link', { name: 'Abrir na app de mapas' });
       if (c.href) await expect(link).toHaveAttribute('href', c.href);
       else await expect(link).toHaveCount(0);
+      // One map link only: the app on a phone, OpenStreetMap where there is none.
+      await expect(sheet.getByRole('link', { name: 'Ver no OpenStreetMap' })).toHaveCount(
+        c.href ? 0 : 1,
+      );
       await context.close();
     }
   });

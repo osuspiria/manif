@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from 'preact/hooks';
 import { pt } from '../../i18n/pt';
+import { formatPlace } from '../../shared/event-view';
 import type { ApiIssue, EditableEvent } from '../../shared/schemas';
 import { EventEditForm, type SaveResult } from '../forms/EventEditForm';
 import { OwnerPoster } from './OwnerPoster';
@@ -60,8 +61,7 @@ export function EditEventApp() {
         </span>
       </p>
       <p>
-        <strong>{pt.edit.place}:</strong>{' '}
-        {[e.placeLabel, e.municipality, e.district].filter(Boolean).join(' · ')}
+        <strong>{pt.edit.place}:</strong> {formatPlace(e, { district: true })}
       </p>
       <EventEditForm
         event={e}

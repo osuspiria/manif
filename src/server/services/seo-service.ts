@@ -13,6 +13,8 @@ const MAX_DISTRICT_EVENTS = 100;
 export interface SeoService {
   /** Upcoming events in the district, by date of their next occurrence. */
   districtEvents(district: District, now: Date): Promise<FilteredEvent<PublicEvent>[]>;
+  /** Upcoming events per district slug (0 for a district without any). */
+  districtCounts(now: Date): Promise<Record<string, number>>;
   /** Paths for sitemap.xml: home, district pages, then every visible event. */
   sitemapPaths(now: Date): Promise<string[]>;
 }
@@ -27,6 +29,17 @@ export function createSeoService(events: EventsService): SeoService {
       return filterEvents(inDistrict, { when: { kind: 'upcoming' }, types: [] }, now).slice(
         0,
         MAX_DISTRICT_EVENTS,
+      );
+    },
+
+    async districtCounts(now) {
+      const upcoming = filterEvents(
+        await visible(now),
+        { when: { kind: 'upcoming' }, types: [] },
+        now,
+      );
+      return Object.fromEntries(
+        DISTRICTS.map((d) => [d.slug, upcoming.filter((r) => r.event.district === d.name).length]),
       );
     },
 

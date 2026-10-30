@@ -22,7 +22,7 @@ interface Props {
   onSelect: (id: string) => void;
   /** "Escolher ponto": fixed pin in the centre; the map moves under it. */
   picking?: boolean;
-  onCenter?: (center: [number, number]) => void;
+  onCenter?: (center: [number, number], zoom: number) => void;
 }
 
 /** Hosts the lazily-loaded MapLibre engine. */
@@ -53,9 +53,9 @@ export function MapCanvas({
       if (cancelled || !container.current) return;
       const e = createMapEngine(container.current, {
         onSelect: (id) => latest.current.onSelect(id),
-        onMoveEnd: (c) => latest.current.onCenter?.(c),
+        onMoveEnd: (c, z) => latest.current.onCenter?.(c, z),
       });
-      latest.current.onCenter?.(e.getCenter());
+      latest.current.onCenter?.(e.getCenter(), e.getZoom());
       e.setMarkers(latest.current.markers);
       e.setSelected(latest.current.selectedId);
       engine.current = e;
@@ -84,7 +84,7 @@ export function MapCanvas({
   useEffect(() => {
     if (picking && engine.current) {
       engine.current.resize();
-      onCenter?.(engine.current.getCenter());
+      onCenter?.(engine.current.getCenter(), engine.current.getZoom());
     }
   }, [picking]);
 

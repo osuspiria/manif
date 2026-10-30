@@ -70,6 +70,8 @@ export function PosterField(p: Props) {
       ) : (
         <>
           <label for={p.id}>{p.label ?? t.label}</label>
+          {/* The native picker (its text in the browser's language) stays for keyboard and
+              assistive tech, out of sight; the second label is the visible button. */}
           <input
             id={p.id}
             type="file"
@@ -83,6 +85,18 @@ export function PosterField(p: Props) {
               void pick(input.files?.[0]).then(() => (input.value = ''));
             }}
           />
+          <label for={p.id} class="btn poster-pick">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+              <path
+                d="M4 5h16v14H4zM4 16l5-5 4 4 2-2 5 5M15.5 9.5h.01"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linejoin="round"
+              />
+            </svg>
+            {t.pick}
+          </label>
           <p class="hint" id={hintId}>
             {t.hint}
           </p>

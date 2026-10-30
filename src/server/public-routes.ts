@@ -233,6 +233,11 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   },
   {
     method: 'GET',
+    route: '/manifestacoes/',
+    samples: [{ url: '/manifestacoes/' }],
+  },
+  {
+    method: 'GET',
     route: '/manifestacoes/:slug/',
     samples: [{ url: '/manifestacoes/porto/' }, { url: '/manifestacoes/nope/' }],
   },

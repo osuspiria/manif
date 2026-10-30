@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { FEATURES } from '../../src/config/app';
+import { pickPlace } from './send-event';
 
 /**
  * Phase 7 acceptance (SPEC §9, §10): axe finds no WCAG 2.1 A/AA violations on
@@ -134,6 +135,7 @@ test.describe('Acessibilidade (axe), CSP e pedidos a terceiros', () => {
       .click();
     const flow = page.locator('.add-flow');
     await expect(flow.locator('.detected strong')).toHaveText(/ · /, { timeout: 20_000 });
+    await pickPlace(page, flow);
     await check(page, thirdParty, 'add: onde');
     await flow.getByRole('button', { name: 'Seguinte' }).click();
     await flow.getByRole('button', { name: 'Seguinte' }).click();

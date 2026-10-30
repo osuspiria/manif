@@ -398,6 +398,7 @@ body.form-page {
 /* --- poster (SPEC §4.7) --------------------------------------------------- */
 
 .poster-field {
+  position: relative;
   display: grid;
   gap: 8px;
   justify-items: start;
@@ -408,9 +409,37 @@ body.form-page {
   font-weight: 700;
 }
 
+/* Out of sight but focusable; .poster-pick (its second label) is the button. */
 .field input.poster-input {
-  min-height: 44px;
-  padding: 8px;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+.field > label.poster-pick {
+  display: inline-flex;
+  margin: 0;
+  padding: 0 14px;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.poster-input:focus-visible + .poster-pick {
+  outline: 3px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.poster-input:disabled + .poster-pick {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.poster-input[aria-invalid='true'] + .poster-pick {
+  border-color: var(--danger);
 }
 
 .poster-field .field {
@@ -465,4 +494,9 @@ body.form-page {
   box-sizing: border-box;
   color: var(--fg);
   font-weight: 600;
+}
+
+/* "Onde": under the detected municipality, while the map is too far out. */
+.detected-zoom {
+  display: block;
 }

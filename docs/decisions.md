@@ -349,3 +349,12 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Atividade (`GET /api/admin/activity`, fechada por omissão por cima das filas): eventos criados e importações com o Claude por dia de Lisboa, 14 dias. Os eventos vêm de `events.created_at`, por isso os que a retenção já apagou não contam. As importações são contadas em KV (`ops:extractions:<data>`, 40 dias) antes da chamada, porque o custo existe mesmo que a leitura falhe. A contagem é aproximada (o KV não tem incremento atómico), o que chega para acompanhar o custo.
     - O estado fica no namespace KV `RATE_LIMIT` (`src/server/repos/ops-store.ts`), com o prefixo `ops:`: só contagens e datas, nada pessoal. Não justifica um namespace novo.
     - Sem `RESEND_API_KEY`/`MAIL_FROM`, o `NullMailer` descarta o resumo e o alerta. O aviso no admin continua a funcionar.
+
+83. **Melhorias de UI/UX a partir de uma análise ao site em produção** (escolha do utilizador: as 10 propostas).
+    - "Onde" só aceita o ponto a partir do zoom 14 (`LIMITS.pickMinZoom`). Antes, "Seguinte" aceitava o centro do país sem mexer no mapa, o que deixava os eventos mal localizados. Não se bloqueia o botão: o erro aparece junto ao concelho detetado, como nos outros campos.
+    - Abrir um evento aproxima até ao zoom 13 (antes 14): o primeiro zoom sem clusters (`clusterMaxZoom` 12), ainda com a vila à volta.
+    - Datas diárias seguidas (3 ou mais, mesmo horário, sem nota nem cancelamento) numa só linha (`collapseDailyRuns`).
+    - Telemóvel: ficha a meia altura com pega; cabeçalho numa linha (a descrição fica só para leitores de ecrã e motores de busca); um só link de mapa (a app no telemóvel, o OpenStreetMap no computador).
+    - Computador: filtros e lista num só scroll (antes duas zonas, com os filtros cortados a 30vh).
+    - Controlos do MapLibre com 44 px e rótulos em português (`pt.map.controls`). O botão compacto dos créditos fica com o tamanho do MapLibre (24 px): fica num canto, longe dos outros alvos, e mudar o tamanho mexia na disposição dos créditos.
+    - Locais sem repetições (`formatPlace`), contagem de eventos por distrito (o Worker reescreve `/manifestacoes/`), botão próprio para escolher o cartaz e tipos sem eventos esbatidos.
