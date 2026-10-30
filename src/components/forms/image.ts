@@ -4,6 +4,7 @@
  * leaves the device. createImageBitmap applies the EXIF orientation first.
  */
 import { LIMITS } from '../../config/app';
+import { stripJpegMetadata } from './jpeg-metadata';
 
 async function draw(file: Blob, maxSide: number): Promise<HTMLCanvasElement> {
   const bitmap = await createImageBitmap(file);
@@ -51,6 +52,10 @@ export async function encodeImage(
         blob = await toBlob(canvas, 'image/jpeg', quality);
       }
       if (blob && blob.size <= maxBytes) {
+        if (blob.type === 'image/jpeg') {
+          const bytes = stripJpegMetadata(new Uint8Array(await blob.arrayBuffer()));
+          blob = new Blob([bytes], { type: 'image/jpeg' });
+        }
         return { blob, width: canvas.width, height: canvas.height };
       }
     }

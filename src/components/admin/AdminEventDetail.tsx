@@ -123,7 +123,6 @@ export function AdminEventDetail({ id }: { id: string }) {
           setDetail(next);
           setStatus(pt.edit.saved);
         }}
-        onError={() => setStatus(pt.admin.actionError)}
       />
 
       {d.possibleDuplicates.length > 0 && (

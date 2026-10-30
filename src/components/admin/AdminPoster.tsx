@@ -9,24 +9,32 @@ import { adminApi } from './api';
 interface Props {
   detail: AdminEventDetail;
   onChanged: (next: AdminEventDetail) => void;
-  onError: () => void;
 }
 
-export function AdminPoster({ detail: d, onChanged, onError }: Props) {
+export function AdminPoster({ detail: d, onChanged }: Props) {
   const [draft, setDraft] = useState<PosterDraft | null>(null);
   const [busy, setBusy] = useState(false);
+  // The server's reason (e.g. exif_not_allowed), next to the button that failed.
+  const [error, setError] = useState('');
   // The moderation's route serves the poster in any state; the cookie goes along.
   const src = `/api/admin/events/${d.id}/poster`;
 
   async function call(init: { method: string; form?: FormData }) {
     setBusy(true);
+    setError('');
     try {
-      const r = await adminApi<AdminEventDetail>(`/events/${d.id}/poster`, init);
-      if (!r.ok) return onError();
+      const r = await adminApi<AdminEventDetail & { error?: string }>(
+        `/events/${d.id}/poster`,
+        init,
+      );
+      if (!r.ok) {
+        const code = r.data.error ?? 'generic';
+        return setError(pt.poster.errors[code] ?? pt.poster.errors.generic);
+      }
       setDraft(null);
       onChanged(r.data);
     } catch {
-      onError();
+      setError(pt.admin.actionError);
     } finally {
       setBusy(false);
     }
@@ -55,7 +63,10 @@ export function AdminPoster({ detail: d, onChanged, onError }: Props) {
         id="admin-poster"
         label={d.posterStatus ? pt.poster.replace : pt.admin.posterAdd}
         value={draft}
-        onChange={setDraft}
+        onChange={(v) => {
+          setDraft(v);
+          setError('');
+        }}
       />
       <div class="admin-actions">
         {draft && (
@@ -79,6 +90,9 @@ export function AdminPoster({ detail: d, onChanged, onError }: Props) {
           </button>
         )}
       </div>
+      <p role="status" class={error ? 'field-error' : 'hint'}>
+        {error}
+      </p>
     </section>
   );
 }
