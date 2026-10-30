@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "404-page"
-run_worker_first = ["/api/*", "/tiles/*", "/mapa", "/mapa/", "/mapa/e/*", "/map/fonts/*", "/manifestacoes/*", "/sitemap.xml"]
+run_worker_first = ["/api/*", "/tiles/*", "/mapa", "/mapa/", "/mapa/e/*", "/map/fonts/*", "/posters/*", "/manifestacoes/*", "/sitemap.xml"]
 
 [[d1_databases]]
 binding = "DB"
@@ -18,6 +18,10 @@ migrations_dir = "migrations"
 [[r2_buckets]]
 binding = "TILES"
 bucket_name = "mobilizacao-tiles"
+
+[[r2_buckets]]
+binding = "POSTERS"
+bucket_name = "mobilizacao-posters"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT"

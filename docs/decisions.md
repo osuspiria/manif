@@ -304,3 +304,19 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Endpoint próprio `/api/past-events.geojson`, pedido só quando o filtro é escolhido: o GeoJSON principal não cresce com o histórico. Este ficheiro cresce com o tempo; se ficar pesado, paginar ou limitar por período.
     - Retenção (escolha do utilizador): os eventos publicados deixam de ser apagados. 30 dias depois da última data perdem o email de contacto, o link de edição (`edit_token_hash = ''`, que nunca coincide com um SHA-256) e as denúncias. Os pendentes e ocultos continuam a ser apagados. Sem migration.
     - Consequência para o SEO (#76): `/mapa/e/<id>` de um evento antigo deixa de dar 404 e mostra "Este evento já terminou."; o sitemap continua só com eventos futuros.
+
+## Cartazes nos eventos (30/10/2026)
+
+79. **Cartaz associado a cada evento e pré-preenchimento do formulário público a partir dele** (pedido: quase toda a divulgação é feita por cartazes no Instagram; facilitar a submissão e mostrar o cartaz). Ver SPEC §4.7. Fase 8A implementada (30/10/2026); 8B por implementar.
+    - O cartaz só fica visível depois de aprovado pela moderação, mesmo com o evento já publicado em `MODERATION_MODE = post` (escolha do utilizador): uma imagem carregada por qualquer pessoa é o vetor de abuso mais óbvio. Os cartazes juntados no admin ficam aprovados logo, como o "Confirmado" do #77.
+    - O formulário público pode usar a Anthropic para o rascunho (escolha do utilizador). Reutiliza o `EventExtractor` do #77 (mesmo modelo e `normalizeDraft`); muda só a proteção: Turnstile, 5/h/IP e um teto global diário (`RATE_LIMITS.publicExtractPerDay`), porque o custo deixa de depender só da moderação.
+    - Redução no browser (canvas → WebP/JPEG, ≤ 1600 px, + miniatura de 320 px) em vez de Cloudflare Images: sem custo nem dependência nova, o admin já o faz, e recodificar apaga o EXIF (GPS das fotos tiradas com o telemóvel). O servidor só valida tipo, tamanho e dimensões.
+    - Envio separado depois da criação, com o token de edição (`PUT /api/events/:id/poster`): `POST /api/events` continua em JSON e o mesmo endpoint serve a página de edição.
+    - Um cartaz por evento, em colunas de `events` (sem tabela nova). Chave R2 nova a cada envio, para servir com cache `immutable` sem invalidação; rejeitar ou substituir apaga o ficheiro antigo.
+    - Bucket R2 próprio (`POSTERS`), separado dos tiles.
+    - Na 8A o campo "Cartaz" fica no passo "O quê" e não num passo 0: um passo a mais só se justifica quando o cartaz preencher o formulário (8B).
+    - Cache de `/posters/*` de um dia (`max-age=86400, immutable`) em vez de um ano: um cartaz aprovado e depois removido deixa de se ver ao fim de um dia.
+    - O servidor rejeita EXIF (JPEG APP1, chunk `EXIF`/flag VP8X em WebP, `eXIf` em PNG) em vez de o apagar: o browser recodifica sempre, por isso só apanha quem chama a API à mão, e não precisamos de reescrever ficheiros no Worker. As verificações vivem em `src/server/services/image-check.ts` (funções puras).
+    - Um cartaz pendente não tem URL público; a moderação vê-o por `GET /api/admin/events/:id/poster` (o cookie `Path=/api/admin` segue no `<img>`). `/posters/…` confirma no D1 que a chave é a aprovada de um evento publicado; ocultar o evento esconde o cartaz.
+    - Na importação do admin, a imagem lida passa a ser guardada como cartaz (aprovado), salvo se o moderador desmarcar "Guardar a imagem como cartaz do evento".
+    - A retenção apaga do R2 os cartazes dos eventos que apaga; os publicados antigos mantêm o cartaz.

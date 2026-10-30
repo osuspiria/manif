@@ -46,9 +46,11 @@ import {
 } from '../services/admin-moderation';
 import { createEvent, moderatorEditEvent } from '../services/event-submission';
 import type { GeoService } from '../services/geo-service';
+import { removePoster, setPoster, type PosterDeps } from '../services/posters';
 import { purgeEdgeCache } from './edge-cache';
 import { EVENT_LISTS } from './events';
 import { readJson, zodIssues } from './http';
+import { posterResponse, readPosterUpload } from './poster-files';
 
 export const ADMIN_COOKIE = 'admin_session';
 export const ADMIN_REQUEST_HEADER = 'X-Admin-Request';
@@ -82,8 +84,24 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
       read: eventsRepo(db),
       write: eventsWriteRepo(db),
       signatures: adminSignaturesRepo(db),
+      posters: deps.posters(env),
       now: deps.clock(),
     };
+  };
+  const posterDeps = (env: Env): PosterDeps => ({
+    write: eventsWriteRepo(d1Db(env.DB)),
+    store: deps.posters(env),
+    newId: deps.newId,
+    now: deps.clock(),
+  });
+  /** The poster file in any state (moderation preview); private, never cached. */
+  const adminPoster = async (c: AC, variant: 'full' | 'thumb') => {
+    const id = idParam(c);
+    const key = id
+      ? ((await eventsWriteRepo(d1Db(c.env.DB)).getOwner(id))?.poster_key ?? null)
+      : null;
+    const res = key ? await posterResponse(deps.posters(c.env), key, variant, 'no-store') : null;
+    return res ?? c.json({ error: 'not_found' }, 404);
   };
   const submission = (env: Env) => {
     const db = d1Db(env.DB);
@@ -262,6 +280,35 @@ export function adminRoutes(geo: GeoService, deps: AppDeps) {
         }
         const detail = await eventDetail(id, moderation(c.env));
         return c.json(detail);
+      })
+
+      // Poster (SPEC §4.7): the moderation sees it in any state; its own uploads are approved.
+      .get('/events/:id/poster', requireSession, (c) => adminPoster(c, 'full'))
+      .get('/events/:id/poster/thumb', requireSession, (c) => adminPoster(c, 'thumb'))
+      .put('/events/:id/poster', requireSession, async (c) => {
+        const id = idParam(c);
+        const row = id ? await eventsWriteRepo(d1Db(c.env.DB)).getOwner(id) : null;
+        if (!id || !row) return c.json({ error: 'not_found' }, 404);
+        const read = await readPosterUpload(c.req.raw);
+        if (!read.ok) return c.json({ error: read.error }, 400);
+        const result = await setPoster(
+          id,
+          row.poster_key,
+          read.upload,
+          { approved: true },
+          posterDeps(c.env),
+        );
+        if (!result.ok) return c.json({ error: result.error }, result.status);
+        await purgeEdgeCache(c, EVENT_LISTS);
+        return c.json(await eventDetail(id, moderation(c.env)));
+      })
+      .delete('/events/:id/poster', requireSession, async (c) => {
+        const id = idParam(c);
+        const row = id ? await eventsWriteRepo(d1Db(c.env.DB)).getOwner(id) : null;
+        if (!id || !row) return c.json({ error: 'not_found' }, 404);
+        await removePoster(id, row.poster_key, posterDeps(c.env));
+        await purgeEdgeCache(c, EVENT_LISTS);
+        return c.json(await eventDetail(id, moderation(c.env)));
       })
 
       // --- signatures --------------------------------------------------------------------

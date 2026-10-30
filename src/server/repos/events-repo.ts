@@ -16,7 +16,15 @@ export interface EventRow {
   verified: number;
   /** Ongoing ("sem fim"): first non-cancelled local date; null for normal events. */
   ongoing_since: string | null;
+  /** Poster (SPEC §4.7). Only an approved one may reach the public API (see toPublicEvent). */
+  poster_key: string | null;
+  poster_status: PosterStatus | null;
+  poster_width: number | null;
+  poster_height: number | null;
+  poster_alt: string | null;
 }
+
+export type PosterStatus = 'pending' | 'approved';
 
 export interface OccurrenceRow {
   id: string;
@@ -32,6 +40,7 @@ export interface OccurrenceRow {
 
 const EVENT_COLUMNS = `e.id, e.type, e.title, e.description, e.organizer, e.lat, e.lng,
   e.place_label, e.municipality, e.district, e.tz, e.verified,
+  e.poster_key, e.poster_status, e.poster_width, e.poster_height, e.poster_alt,
   CASE WHEN e.ongoing = 1 THEN (SELECT MIN(oo.local_date) FROM event_occurrences oo
     WHERE oo.event_id = e.id AND oo.cancelled = 0) END AS ongoing_since`;
 
@@ -167,6 +176,19 @@ export interface EventsWriteRepo {
     created_at: string;
   }): Promise<number>;
   setStatus(id: string, status: 'pending' | 'published' | 'hidden', nowIso: string): Promise<void>;
+  /** Sets (or, with null, clears) the poster columns. */
+  setPoster(id: string, poster: PosterFields | null, nowIso: string): Promise<void>;
+  setPosterStatus(id: string, status: PosterStatus, nowIso: string): Promise<void>;
+  /** Event id of an approved poster of a published event, or null. */
+  approvedPoster(key: string): Promise<string | null>;
+}
+
+export interface PosterFields {
+  key: string;
+  status: PosterStatus;
+  width: number;
+  height: number;
+  alt: string | null;
 }
 
 const INSERT_OCC = `INSERT INTO event_occurrences (id, event_id, local_date, start_time, end_time,
@@ -292,6 +314,38 @@ export function eventsWriteRepo(db: Db): EventsWriteRepo {
         nowIso,
         id,
       ]);
+    },
+
+    async setPoster(id, p, nowIso) {
+      await db.run(
+        `UPDATE events SET poster_key = ?, poster_status = ?, poster_width = ?, poster_height = ?,
+           poster_alt = ?, updated_at = ? WHERE id = ?`,
+        [
+          p?.key ?? null,
+          p?.status ?? null,
+          p?.width ?? null,
+          p?.height ?? null,
+          p?.alt ?? null,
+          nowIso,
+          id,
+        ],
+      );
+    },
+
+    async setPosterStatus(id, status, nowIso) {
+      await db.run(
+        'UPDATE events SET poster_status = ?, updated_at = ? WHERE id = ? AND poster_key IS NOT NULL',
+        [status, nowIso, id],
+      );
+    },
+
+    async approvedPoster(key) {
+      const row = await db.first<{ id: string }>(
+        `SELECT id FROM events
+         WHERE poster_key = ? AND poster_status = 'approved' AND status = 'published'`,
+        [key],
+      );
+      return row?.id ?? null;
     },
   };
 }

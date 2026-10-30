@@ -132,6 +132,23 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
       <p class="event-place">
         {[event.placeLabel, event.municipality, event.district].filter(Boolean).join(' · ')}
       </p>
+      {event.poster && (
+        <a
+          class="event-poster"
+          href={event.poster.url}
+          target="_blank"
+          rel="noopener"
+          aria-label={pt.poster.open}
+        >
+          <img
+            src={event.poster.url}
+            width={event.poster.width}
+            height={event.poster.height}
+            alt={event.poster.alt ?? event.title}
+            decoding="async"
+          />
+        </a>
+      )}
 
       {match ? (
         <div class="event-dates">

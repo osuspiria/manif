@@ -10,6 +10,7 @@ import type {
 import { EventEditForm, type SaveResult } from '../forms/EventEditForm';
 import { adminApi } from './api';
 import { EventActions, EventBadges } from './AdminEvents';
+import { AdminPoster } from './AdminPoster';
 
 function toListItem(d: Detail): AdminEventListItem {
   return {
@@ -24,6 +25,7 @@ function toListItem(d: Detail): AdminEventListItem {
     createdAt: d.createdAt,
     reports: d.reports.length,
     nextStartsAt: null,
+    posterStatus: d.posterStatus,
   };
 }
 
@@ -113,6 +115,15 @@ export function AdminEventDetail({ id }: { id: string }) {
       <p class="form-ok" role="status">
         {status}
       </p>
+
+      <AdminPoster
+        detail={d}
+        onChanged={(next) => {
+          setDetail(next);
+          setStatus(pt.edit.saved);
+        }}
+        onError={() => setStatus(pt.admin.actionError)}
+      />
 
       <h3>{pt.admin.reportsHeading}</h3>
       {d.reports.length ? (

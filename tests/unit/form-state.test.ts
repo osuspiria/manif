@@ -78,6 +78,8 @@ describe('fromEditable', () => {
         tz: 'Europe/Lisbon',
         verified: false,
         ongoingSince: null,
+        poster: null,
+        posterStatus: null,
         status: 'published',
         occurrences: [
           {

@@ -3,6 +3,8 @@ export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
   TILES: R2Bucket;
+  /** Event posters (SPEC §4.7): '<eventId>/<ulid>' and '<eventId>/<ulid>/thumb'. */
+  POSTERS: R2Bucket;
   /** Rate-limit counters (hashed client keys only). */
   RATE_LIMIT: KVNamespace;
   MODERATION_MODE: string;

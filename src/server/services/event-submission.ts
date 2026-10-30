@@ -25,6 +25,7 @@ import type {
   OwnerEventRow,
 } from '../repos/events-repo';
 import { hashToken, newToken, safeEqual } from '../security/tokens';
+import { publicPoster } from './events-service';
 import type { GeoService } from './geo-service';
 import type { z } from 'zod';
 
@@ -142,7 +143,8 @@ export async function createEvent(
 
 // --- owner access ---------------------------------------------------------------
 
-async function ownerRow(
+/** The event if `token` is its edit token, else null. */
+export async function ownerRow(
   id: string,
   token: string,
   d: SubmissionDeps,
@@ -167,6 +169,8 @@ export function toEditable(row: OwnerEventRow, occurrences: OccurrenceRow[]): Ed
     tz: toTz(row.tz),
     verified: row.verified === 1,
     ongoingSince: row.ongoing_since,
+    poster: publicPoster(row),
+    posterStatus: row.poster_status,
     status: row.status,
     occurrences: occurrences.map((o) => ({
       id: o.id,

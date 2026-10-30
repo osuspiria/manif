@@ -32,6 +32,7 @@ export function eventJsonLd(event: PublicEvent, url: string, now: Date): JsonLd[
     name: event.title,
     ...(event.description ? { description: event.description } : {}),
     url,
+    ...(event.poster ? { image: new URL(event.poster.url, url).toString() } : {}),
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location: {
       '@type': 'Place',

@@ -10,9 +10,12 @@ import {
 } from '../../shared/schemas';
 import { adminApi } from './api';
 
-/** Approve / hide / "Confirmado" / "Sem fim" buttons, shared by the list and the detail view. */
+/** Approve / hide / "Confirmado" / "Sem fim" / poster buttons, shared by the list and the detail view. */
 export function EventActions(props: {
-  event: Pick<AdminEventListItem, 'id' | 'status' | 'verified' | 'ongoing' | 'reports'>;
+  event: Pick<
+    AdminEventListItem,
+    'id' | 'status' | 'verified' | 'ongoing' | 'reports' | 'posterStatus'
+  >;
   onDone: (item: AdminEventListItem) => void;
   onError: () => void;
 }) {
@@ -74,6 +77,27 @@ export function EventActions(props: {
       >
         {e.ongoing ? pt.admin.unmarkOngoing : pt.admin.markOngoing}
       </button>
+      {e.posterStatus === 'pending' && (
+        <>
+          <button
+            type="button"
+            class="btn-primary"
+            disabled={busy}
+            onClick={() => void act('poster_approve')}
+          >
+            {pt.admin.posterApprove}
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            disabled={busy}
+            title={pt.admin.posterRejectNote}
+            onClick={() => void act('poster_reject')}
+          >
+            {pt.admin.posterReject}
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -87,6 +111,9 @@ export function EventBadges({ e }: { e: AdminEventListItem }) {
       </span>
       {e.ongoing && <span class="badge badge-ok">{pt.admin.ongoing}</span>}
       {e.reports > 0 && <span class="badge badge-warn">{pt.admin.reports(e.reports)}</span>}
+      {e.posterStatus === 'pending' && (
+        <span class="badge badge-warn">{pt.admin.posterPending}</span>
+      )}
     </span>
   );
 }

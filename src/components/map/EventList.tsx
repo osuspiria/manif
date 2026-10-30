@@ -55,6 +55,16 @@ export function EventList({ results, newestFirst = false, selectedId, onSelect }
                         {more > 0 && ` · ${pt.event.otherDates(more)}`}
                       </span>
                     </span>
+                    {event.poster && (
+                      // Decorative here: the title is right next to it.
+                      <img
+                        class="event-card-thumb"
+                        src={event.poster.thumbUrl}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    )}
                   </button>
                 </li>
               );

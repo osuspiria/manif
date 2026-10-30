@@ -30,6 +30,7 @@ function event(occs: Occ[], over: Partial<PublicEvent> = {}): PublicEvent {
     tz,
     verified: false,
     ongoingSince: null,
+    poster: null,
     ...over,
     occurrences: occs.map((o, i) => {
       const local = { localDate: o.localDate, startTime: o.startTime, endTime: o.endTime ?? null };

@@ -56,9 +56,19 @@ export function sharePageRoutes(clock: Clock) {
       ['og:title', event.title],
       ['og:description', description],
       ['og:url', url],
-      ['og:image', new URL('/og.png', c.req.url).toString()],
-      ['og:image:width', '1200'],
-      ['og:image:height', '630'],
+      // The approved poster (SPEC §4.7), else the site's image.
+      ...(event.poster
+        ? [
+            ['og:image', new URL(event.poster.url, c.req.url).toString()],
+            ['og:image:width', String(event.poster.width)],
+            ['og:image:height', String(event.poster.height)],
+            ['og:image:alt', event.poster.alt ?? event.title],
+          ]
+        : [
+            ['og:image', new URL('/og.png', c.req.url).toString()],
+            ['og:image:width', '1200'],
+            ['og:image:height', '630'],
+          ]),
     ]
       .map(([p, v]) => `<meta property="${p}" content="${escapeHtml(v ?? '')}">`)
       .join('');

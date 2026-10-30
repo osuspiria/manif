@@ -54,6 +54,12 @@ export const LIMITS = {
   dayStripDays: 60,
   /** Admin import: text pasted from a post. */
   extractTextMax: 5000,
+  /** Posters (SPEC §4.7): the browser resizes; the server rejects anything larger. */
+  posterMaxBytes: 600_000,
+  posterThumbMaxBytes: 60_000,
+  posterMaxSide: 1600,
+  posterThumbMaxSide: 320,
+  posterAltMax: 600,
 } as const;
 
 export const RETENTION = {
@@ -88,6 +94,8 @@ export const RATE_LIMITS = {
   adminLogin: 10,
   /** Admin import (Claude API calls), per admin address. */
   adminExtract: 60,
+  /** Poster uploads (owner), per IP. */
+  poster: 10,
 } as const;
 
 /** Basemap archive, served by the Worker from R2 (see data/geo/README.md). */

@@ -7,6 +7,7 @@ import { FEATURES, MODERATION_MODE, type Features, type ModerationMode } from '.
 import { lisbonToday } from '../shared/dates';
 import { systemClock, type Clock } from './clock';
 import type { Env } from './env';
+import { r2PosterStore, type PosterStore } from './repos/poster-store';
 import { KvDevMailbox, NullMailer, ResendMailer, type Mailer } from './mailer';
 import { TurnstileVerifier, type CaptchaVerifier } from './security/captcha';
 import { KvRateLimiter, type RateLimiter } from './security/rate-limit';
@@ -25,6 +26,8 @@ export interface AppDeps {
   placeSearch: (env: Env) => PlaceSearch;
   /** Admin import; null when not configured (no ANTHROPIC_API_KEY). */
   extractor: (env: Env) => EventExtractor | null;
+  /** Poster files (SPEC §4.7). */
+  posters: (env: Env) => PosterStore;
   newId: () => string;
   /** Which optional features are mounted (FEATURES; tests switch them on). */
   features: Features;
@@ -47,6 +50,7 @@ export const defaultDeps: AppDeps = {
       : env.ANTHROPIC_API_KEY
         ? new ClaudeExtractor(env.ANTHROPIC_API_KEY)
         : null,
+  posters: (env) => r2PosterStore(env.POSTERS),
   newId: () => ulid(),
   features: FEATURES,
 };

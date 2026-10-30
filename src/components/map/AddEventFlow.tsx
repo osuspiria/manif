@@ -30,6 +30,8 @@ import {
 } from '../forms/form-state';
 import { OccurrencesEditor } from '../forms/OccurrencesEditor';
 import { PlaceSearchBox } from '../forms/PlaceSearchBox';
+import { uploadOwnerPoster, type PosterDraft } from '../forms/poster-api';
+import { PosterField } from '../forms/PosterField';
 import { getTurnstileToken } from '../forms/turnstile';
 import '../../styles/forms.css';
 
@@ -68,6 +70,13 @@ export interface AddEventFlowProps {
 }
 
 type Place = { state: 'idle' | 'loading' | 'outside' } | { state: 'ok'; place: ReverseResult };
+/** Poster upload after the event was created: null = none chosen. */
+type PosterUpload = null | { state: 'sending' | 'sent' } | { state: 'failed'; error: string };
+
+/** The edit token from `/editar/#e=<id>&t=<token>`. */
+function tokenOf(editUrl: string): string {
+  return new URLSearchParams(new URL(editUrl).hash.slice(1)).get('t') ?? '';
+}
 
 export function AddEventFlow(p: AddEventFlowProps) {
   const [step, setStep] = useState<Step>('where');
@@ -81,6 +90,8 @@ export function AddEventFlow(p: AddEventFlowProps) {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<(CreateEventResponse & { emailed: boolean }) | null>(null);
   const [copied, setCopied] = useState(false);
+  const [poster, setPoster] = useState<PosterDraft | null>(null);
+  const [posterUpload, setPosterUpload] = useState<PosterUpload>(null);
   const root = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const captchaRef = useRef<HTMLDivElement>(null);
@@ -164,6 +175,12 @@ export function AddEventFlow(p: AddEventFlowProps) {
     setStep(STEPS[stepIndex - 1] ?? step);
   }
 
+  async function sendPoster(created: CreateEventResponse, draft: PosterDraft) {
+    setPosterUpload({ state: 'sending' });
+    const error = await uploadOwnerPoster(created.id, tokenOf(created.editUrl), draft);
+    setPosterUpload(error ? { state: 'failed', error } : { state: 'sent' });
+  }
+
   async function submit() {
     const issues = validate(STEPS);
     const first = issues[0];
@@ -185,6 +202,8 @@ export function AddEventFlow(p: AddEventFlowProps) {
         issues?: ApiIssue[];
       };
       if (res.ok) {
+        // The event exists now: the poster follows with its edit token (SPEC §4.7).
+        if (poster) await sendPoster(body, poster);
         setDone({ ...body, emailed: FEATURES.eventContactEmail && email.trim() !== '' });
         p.onCreated(body);
       } else if (body.issues?.[0]) {
@@ -221,6 +240,24 @@ export function AddEventFlow(p: AddEventFlowProps) {
           </button>
         </div>
         <p>{published ? pt.add.done.publishedText : pt.add.done.pendingText}</p>
+        {posterUpload && (
+          <div class="poster-upload-status" role="status">
+            {posterUpload.state === 'sending' && <p class="hint">{pt.poster.uploading}</p>}
+            {posterUpload.state === 'sent' && <p>{pt.poster.doneNote}</p>}
+            {posterUpload.state === 'failed' && (
+              <>
+                <p class="field-error">
+                  {pt.poster.errors[posterUpload.error] ?? pt.poster.errors.generic}
+                </p>
+                {poster && (
+                  <button type="button" class="btn" onClick={() => void sendPoster(done, poster)}>
+                    {pt.poster.retry}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        )}
         <div class="edit-link-box">
           <h3>{pt.add.done.linkHeading}</h3>
           <p>{pt.add.done.linkText}</p>
@@ -318,6 +355,7 @@ export function AddEventFlow(p: AddEventFlowProps) {
       {step === 'what' && (
         <div class="add-body">
           <EventDetailsFields value={details} onChange={setDetails} errors={errors} />
+          <PosterField id="poster" value={poster} onChange={setPoster} />
         </div>
       )}
 

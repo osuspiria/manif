@@ -20,6 +20,14 @@ export interface EventFixture {
   editTokenHash?: string;
   verified?: boolean;
   ongoing?: boolean;
+  /** Poster row only; store the files with putPosterFiles. */
+  poster?: {
+    key: string;
+    status: 'pending' | 'approved';
+    width?: number;
+    height?: number;
+    alt?: string | null;
+  };
   occurrences: OccFixture[];
 }
 
@@ -31,6 +39,8 @@ export const SENTINELS = {
   signaturePhone: '939 876 543',
   contactName: 'Responsável Secreto Sentinela',
   confirmTokenHash: 'c'.repeat(64),
+  /** Key of a poster awaiting moderation: never in a public response. */
+  pendingPosterKey: '01JC0000000000000000000AAA/01JC000000000000000000PEND',
 };
 
 let occSeq = 0;
@@ -53,8 +63,9 @@ export async function insertEvent(f: EventFixture): Promise<void> {
     env.DB.prepare(
       `INSERT INTO events (id, type, title, description, organizer, lat, lng, place_label,
          municipality, district, tz, status, verified, ongoing, contact_email, edit_token_hash,
-         created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '2026-11-01T00:00:00Z', '2026-11-01T00:00:00Z')`,
+         poster_key, poster_status, poster_width, poster_height, poster_alt, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+         '2026-11-01T00:00:00Z', '2026-11-01T00:00:00Z')`,
     ).bind(
       f.id,
       f.type ?? 'rally',
@@ -72,6 +83,11 @@ export async function insertEvent(f: EventFixture): Promise<void> {
       f.ongoing ? 1 : 0,
       f.contactEmail ?? SENTINELS.contactEmail,
       f.editTokenHash ?? SENTINELS.editTokenHash,
+      f.poster?.key ?? null,
+      f.poster?.status ?? null,
+      f.poster ? (f.poster.width ?? 800) : null,
+      f.poster ? (f.poster.height ?? 1000) : null,
+      f.poster?.alt ?? null,
     ),
     ...f.occurrences.map((o) => {
       const endTime = o.endTime ?? null;
@@ -96,6 +112,19 @@ export async function insertEvent(f: EventFixture): Promise<void> {
     }),
   ];
   await env.DB.batch(stmts);
+}
+
+/** Stores both poster files (any bytes) under `key`. */
+export async function putPosterFiles(key: string, contentType = 'image/webp'): Promise<void> {
+  const httpMetadata = { contentType };
+  await env.POSTERS.put(key, new Uint8Array([1, 2, 3]), { httpMetadata });
+  await env.POSTERS.put(`${key}/thumb`, new Uint8Array([4, 5]), { httpMetadata });
+}
+
+/** R2 also persists across tests: empties the poster bucket. */
+export async function clearPosters(): Promise<void> {
+  const listed = await env.POSTERS.list();
+  if (listed.objects.length) await env.POSTERS.delete(listed.objects.map((o) => o.key));
 }
 
 /** Valid ULIDs for fixtures. */

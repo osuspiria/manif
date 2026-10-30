@@ -532,6 +532,17 @@ body.map-page {
   color: var(--muted);
 }
 
+/* Poster thumbnail (SPEC §4.7): last, so title and dates keep their place. */
+.event-card-thumb {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  margin-left: auto;
+  object-fit: cover;
+  border: 1px solid var(--fg);
+  background: var(--bg);
+}
+
 /* --- event sheet ---------------------------------------------------------- */
 
 .event-sheet {
@@ -577,6 +588,22 @@ body.map-page {
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.01em;
+}
+
+.event-poster {
+  display: block;
+  margin: 10px 0;
+}
+
+.event-poster img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 40vh;
+  object-fit: contain;
+  border: 2px solid var(--fg);
+  background: var(--bg);
 }
 
 .event-place {

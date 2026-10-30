@@ -27,6 +27,7 @@ npx wrangler whoami            # anota o Account ID
 npx wrangler d1 create mobilizacao-pt               # database_id → wrangler.toml
 npx wrangler kv namespace create RATE_LIMIT         # id → wrangler.toml
 npx wrangler r2 bucket create mobilizacao-tiles
+npx wrangler r2 bucket create mobilizacao-posters   # cartazes dos eventos (SPEC §4.7)
 ```
 
 Para o domínio próprio, descomenta o bloco `[[routes]]` no `wrangler.toml`.

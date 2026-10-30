@@ -7,6 +7,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { pt } from '../../i18n/pt';
 import type { ApiIssue, EditableEvent } from '../../shared/schemas';
 import { EventEditForm, type SaveResult } from '../forms/EventEditForm';
+import { OwnerPoster } from './OwnerPoster';
 
 type Load = { state: 'loading' } | { state: 'invalid' } | { state: 'ok'; event: EditableEvent };
 
@@ -21,13 +22,15 @@ export function EditEventApp() {
   const [link] = useState(readFragment);
   const [load, setLoad] = useState<Load>({ state: 'loading' });
 
-  useEffect(() => {
+  function reload() {
     if (!link) return setLoad({ state: 'invalid' });
     fetch(`/api/events/${link.id}/edit`, { headers: { 'X-Edit-Token': link.token } })
       .then((r) => (r.ok ? (r.json() as Promise<EditableEvent>) : null))
       .then((e) => setLoad(e ? { state: 'ok', event: e } : { state: 'invalid' }))
       .catch(() => setLoad({ state: 'invalid' }));
-  }, []);
+  }
+
+  useEffect(reload, []);
 
   async function save(body: unknown): Promise<SaveResult> {
     if (!link) return { ok: false };
@@ -66,6 +69,7 @@ export function EditEventApp() {
         onSaved={(event) => setLoad({ state: 'ok', event })}
         verifiedNote={pt.edit.verifiedNote}
       />
+      {link && <OwnerPoster event={e} token={link.token} onChanged={reload} />}
     </>
   );
 }

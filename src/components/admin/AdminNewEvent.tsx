@@ -33,28 +33,22 @@ import {
   type RowState,
 } from '../forms/form-state';
 import { OccurrencesEditor } from '../forms/OccurrencesEditor';
+import { Checkbox } from '../forms/fields';
+import { preparePoster, toBase64Jpeg } from '../forms/image';
 import { PlaceSearchBox } from '../forms/PlaceSearchBox';
+import { posterFormData } from '../forms/poster-api';
 import { adminApi } from './api';
 
 /** Longest side sent to the API: larger images cost more and read no better. */
 const IMAGE_MAX_SIDE = 1568;
 
-type Image = NonNullable<AdminExtractRequest['image']> & { preview: string };
+/** The image to read, plus the original file (to keep it as the event's poster). */
+type Image = NonNullable<AdminExtractRequest['image']> & { preview: string; file: Blob };
 type Place = { result: PlaceResult; reverse: ReverseResult | null; outside: boolean };
 
 /** Shrinks the image in the browser and returns it as base64 JPEG. */
 async function loadImage(file: Blob): Promise<Image> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, IMAGE_MAX_SIDE / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('canvas');
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  const url = canvas.toDataURL('image/jpeg', 0.85);
-  return { mediaType: 'image/jpeg', data: url.slice(url.indexOf(',') + 1), preview: url };
+  return { ...(await toBase64Jpeg(file, IMAGE_MAX_SIDE)), file };
 }
 
 function draftToForm(d: EventDraft): { details: DetailsState; rows: RowState[] } {
@@ -83,6 +77,7 @@ function draftToForm(d: EventDraft): { details: DetailsState; rows: RowState[] }
 export function AdminNewEvent() {
   const [text, setText] = useState('');
   const [image, setImage] = useState<Image | null>(null);
+  const [keepPoster, setKeepPoster] = useState(true);
   const [reading, setReading] = useState(false);
   const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -196,6 +191,17 @@ export function AdminNewEvent() {
     requestAnimationFrame(() => focusFirstError(formRef.current));
   }
 
+  async function savePoster(id: string, file: Blob): Promise<boolean> {
+    try {
+      const prepared = await preparePoster(file);
+      URL.revokeObjectURL(prepared.preview);
+      const form = posterFormData({ prepared, alt: '' });
+      return (await adminApi(`/events/${id}/poster`, { method: 'PUT', form })).ok;
+    } catch {
+      return false;
+    }
+  }
+
   async function publish(e: Event) {
     e.preventDefault();
     const issues: ApiIssue[] = [];
@@ -219,6 +225,10 @@ export function AdminNewEvent() {
         json: parsed.data,
       });
       if (r.ok) {
+        // The imported image becomes the poster, approved (SPEC §4.7).
+        if (image && keepPoster && !(await savePoster(r.data.id, image.file))) {
+          setFormError(t.posterFailed);
+        }
         window.location.hash = `#eventos/${r.data.id}`;
       } else if (r.data.issues?.length) {
         showIssues(r.data.issues);
@@ -351,6 +361,14 @@ export function AdminNewEvent() {
           mode="create"
         />
 
+        {image && (
+          <Checkbox
+            id="keep-poster"
+            label={t.keepPoster}
+            checked={keepPoster}
+            onChecked={setKeepPoster}
+          />
+        )}
         <p class="hint">{t.publishNote}</p>
         <p class="form-error" role="alert">
           {formError}

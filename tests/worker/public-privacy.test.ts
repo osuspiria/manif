@@ -11,7 +11,18 @@ import { FEATURES } from '../../src/config/app';
 import { PUBLIC_ROUTES, publicRoutes } from '../../src/server/public-routes';
 import { FakeCaptcha } from '../../src/server/security/captcha';
 import { MemoryRateLimiter } from '../../src/server/security/rate-limit';
-import { IDS, insertEvent, insertSignature, resetDb, SENTINELS } from './fixtures';
+import {
+  clearPosters,
+  IDS,
+  insertEvent,
+  insertSignature,
+  putPosterFiles,
+  resetDb,
+  SENTINELS,
+} from './fixtures';
+
+const APPROVED_POSTER = `${IDS.b}/01JC00000000000000000APPRV`;
+const HIDDEN_POSTER = `${IDS.c}/01JC000000000000000000HDDN`;
 
 const fixedApp = createApp({
   clock: () => new Date('2026-11-11T10:00:00Z'),
@@ -113,22 +124,39 @@ describe('public API privacy', () => {
       name: `${r.method} ${s.url}`,
       method: r.method,
       init: s.init,
-      url: s.url.replace('{eventId}', IDS.a).replace('{hiddenEventId}', IDS.c),
+      url: s.url
+        .replace('{eventId}', IDS.a)
+        .replace('{hiddenEventId}', IDS.c)
+        .replace('{pendingPoster}', SENTINELS.pendingPosterKey)
+        .replace('{approvedPoster}', APPROVED_POSTER)
+        .replace('{hiddenPoster}', HIDDEN_POSTER),
     })),
   );
 
   beforeEach(async () => {
     await resetDb();
-    // Fixtures carry a contact email and an edit-token hash that must never leak.
+    await clearPosters();
+    // Fixtures carry a contact email and an edit-token hash that must never leak,
+    // and posters that must not be public: one pending, one of a pending event.
     await insertEvent({
       id: IDS.a,
+      poster: { key: SENTINELS.pendingPosterKey, status: 'pending' },
       occurrences: [{ localDate: '2026-11-18', startTime: '18:00', note: 'Concentração às 18h' }],
+    });
+    await insertEvent({
+      id: IDS.b,
+      poster: { key: APPROVED_POSTER, status: 'approved' },
+      occurrences: [{ localDate: '2026-11-19', startTime: '18:00' }],
     });
     await insertEvent({
       id: IDS.c,
       status: 'pending',
+      poster: { key: HIDDEN_POSTER, status: 'approved' },
       occurrences: [{ localDate: '2026-11-18', startTime: '18:00' }],
     });
+    for (const key of [SENTINELS.pendingPosterKey, APPROVED_POSTER, HIDDEN_POSTER]) {
+      await putPosterFiles(key);
+    }
     // Signatures in every state, all carrying a sentinel email, phone and contact name.
     await insertSignature({ id: IDS.a });
     await insertSignature({ id: IDS.b, pseudonym: 'Pseudónimo Público' });
@@ -154,6 +182,18 @@ describe('public API privacy', () => {
     } else {
       expect(EMAIL_RE.test(body), 'email-like text in non-JSON body').toBe(false);
     }
+  });
+
+  it('serves a poster only once approved, and only for a published event', async () => {
+    const status = async (key: string) =>
+      (await fixedApp.request(`http://localhost/posters/${key}`, {}, env)).status;
+    expect(await status(APPROVED_POSTER)).toBe(200);
+    expect(await status(`${APPROVED_POSTER}/thumb`)).toBe(200);
+    expect(await status(SENTINELS.pendingPosterKey)).toBe(404);
+    expect(await status(`${SENTINELS.pendingPosterKey}/thumb`)).toBe(404);
+    expect(await status(HIDDEN_POSTER)).toBe(404);
+    // Another event's id with an approved key: the key belongs to IDS.b.
+    expect(await status(APPROVED_POSTER.replace(IDS.b, IDS.a))).toBe(404);
   });
 });
 

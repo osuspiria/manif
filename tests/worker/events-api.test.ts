@@ -166,6 +166,33 @@ describe('GET /mapa/e/:id (share page)', () => {
     expect(html).toMatch(/<meta name="description" content="qua, 18 nov · 18:00–20:00/);
   });
 
+  it('uses the approved poster as preview image and in the Event data, never a pending one', async () => {
+    const key = `${IDS.a}/01JC0000000000000000000PST`;
+    const setPoster = (status: string) =>
+      env.DB.prepare(
+        `UPDATE events SET poster_key = ?, poster_status = ?, poster_width = 1131,
+           poster_height = 1600, poster_alt = 'Cartaz da concentração' WHERE id = ?`,
+      )
+        .bind(key, status, IDS.a)
+        .run();
+
+    await setPoster('pending');
+    let html = await (await get(`/mapa/e/${IDS.a}`)).text();
+    expect(html).toContain('<meta property="og:image" content="http://localhost/og.png">');
+    expect(html).not.toContain(key);
+
+    await setPoster('approved');
+    html = await (await get(`/mapa/e/${IDS.a}`)).text();
+    const image = `http://localhost/posters/${key}`;
+    expect(html.match(/property="og:image"/g)).toHaveLength(1);
+    expect(html).toContain(`<meta property="og:image" content="${image}">`);
+    expect(html).toContain('<meta property="og:image:width" content="1131">');
+    expect(html).toContain('<meta property="og:image:height" content="1600">');
+    expect(html).toContain('<meta property="og:image:alt" content="Cartaz da concentração">');
+    const ld = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)?.[1];
+    expect(JSON.parse(ld ?? '[]')[0]).toMatchObject({ image });
+  });
+
   it('has a canonical URL, schema.org Event data and the event text for search engines', async () => {
     const html = await (await get(`/mapa/e/${IDS.a}`)).text();
     // The home page has a canonical only when dist/ was built with PUBLIC_SITE_URL

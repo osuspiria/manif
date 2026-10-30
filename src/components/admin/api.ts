@@ -18,16 +18,17 @@ export interface ApiResult<T> {
 /** Throws only on network errors. */
 export async function adminApi<T>(
   path: string,
-  init: { method?: string; json?: unknown } = {},
+  /** `form`: multipart body (the browser sets its Content-Type). */
+  init: { method?: string; json?: unknown; form?: FormData } = {},
 ): Promise<ApiResult<T>> {
-  const method = init.method ?? (init.json === undefined ? 'GET' : 'POST');
+  const method = init.method ?? (init.json === undefined && !init.form ? 'GET' : 'POST');
   const headers: Record<string, string> = {};
   if (method !== 'GET') headers['X-Admin-Request'] = '1';
   if (init.json !== undefined) headers['Content-Type'] = 'application/json';
   const res = await fetch(`/api/admin${path}`, {
     method,
     headers,
-    body: init.json === undefined ? undefined : JSON.stringify(init.json),
+    body: init.form ?? (init.json === undefined ? undefined : JSON.stringify(init.json)),
     credentials: 'same-origin',
   });
   if (res.status === 401 && !path.startsWith('/session')) onUnauthorized();

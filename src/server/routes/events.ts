@@ -14,13 +14,16 @@ import {
   createEvent,
   editEvent,
   getForOwner,
+  ownerRow,
   reportEvent,
   type ServiceResult,
   type SubmissionDeps,
 } from '../services/event-submission';
 import { createEventsService } from '../services/events-service';
+import { removePoster, setPoster, type PosterDeps } from '../services/posters';
 import { BROWSER_NO_CACHE, edgeCached, purgeEdgeCache } from './edge-cache';
 import { readJson, zodIssues, type C } from './http';
+import { readPosterUpload } from './poster-files';
 
 const ID_RE = /^[0-9A-HJKMNP-TV-Z]{26}$/; // ULID
 const HOUR = 3600;
@@ -57,6 +60,12 @@ export function eventsRoutes(geo: GeoService, deps: AppDeps) {
     return !(await deps.rateLimiter(c.env).hit(`${action}:${key}`, limit, HOUR, deps.clock()));
   };
   const token = (c: C) => c.req.header('X-Edit-Token') ?? '';
+  const posterDeps = (env: Env): PosterDeps => ({
+    write: eventsWriteRepo(d1Db(env.DB)),
+    store: deps.posters(env),
+    newId: deps.newId,
+    now: deps.clock(),
+  });
 
   return (
     new Hono<{ Bindings: Env }>()
@@ -128,6 +137,39 @@ export function eventsRoutes(geo: GeoService, deps: AppDeps) {
         const edited = await editEvent(id, token(c), parsed.data, submission(c.env));
         if (edited.ok) await purgeEdgeCache(c, EVENT_LISTS);
         return respond(c, edited);
+      })
+
+      // Poster (SPEC §4.7): waits for moderation; never public before that.
+      .put('/events/:id/poster', async (c) => {
+        const id = c.req.param('id');
+        if (!ID_RE.test(id) || !token(c)) return c.json({ error: 'not_found' }, 404);
+        c.header('Cache-Control', 'no-store');
+        const row = await ownerRow(id, token(c), submission(c.env));
+        if (!row) return c.json({ error: 'not_found' }, 404);
+        if (await limited(c, 'poster', RATE_LIMITS.poster)) {
+          return c.json({ error: 'rate_limited' }, 429);
+        }
+        const read = await readPosterUpload(c.req.raw);
+        if (!read.ok) return c.json({ error: read.error }, 400);
+        const result = await setPoster(
+          id,
+          row.poster_key,
+          read.upload,
+          { approved: false },
+          posterDeps(c.env),
+        );
+        if (result.ok && row.poster_status === 'approved') await purgeEdgeCache(c, EVENT_LISTS);
+        return respond(c, result);
+      })
+      .delete('/events/:id/poster', async (c) => {
+        const id = c.req.param('id');
+        if (!ID_RE.test(id) || !token(c)) return c.json({ error: 'not_found' }, 404);
+        c.header('Cache-Control', 'no-store');
+        const row = await ownerRow(id, token(c), submission(c.env));
+        if (!row) return c.json({ error: 'not_found' }, 404);
+        await removePoster(id, row.poster_key, posterDeps(c.env));
+        if (row.poster_status === 'approved') await purgeEdgeCache(c, EVENT_LISTS);
+        return c.json({ status: null });
       })
 
       // --- report (SPEC §4.3, §4.5) ---------------------------------------------

@@ -2,8 +2,18 @@ import { env } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { retentionRepo } from '../../src/server/repos/admin-repo';
 import { d1Db } from '../../src/server/repos/db';
+import { r2PosterStore } from '../../src/server/repos/poster-store';
 import { runRetention } from '../../src/server/services/retention';
-import { IDS, insertEvent, insertReport, insertSignature, resetDb, SENTINELS } from './fixtures';
+import {
+  clearPosters,
+  IDS,
+  insertEvent,
+  insertReport,
+  insertSignature,
+  putPosterFiles,
+  resetDb,
+  SENTINELS,
+} from './fixtures';
 
 // 20 Dec 2026, 10:00 Lisbon: 30 days back is 20 Nov.
 const NOW = new Date('2026-12-20T10:00:00Z');
@@ -69,6 +79,29 @@ describe('retention job (SPEC §7)', () => {
       .bind(IDS.a, IDS.d, IDS.a, IDS.d)
       .first<{ n: number }>();
     expect(orphans?.n).toBe(0);
+  });
+
+  it('deletes the poster files of deleted events; published ones keep theirs', async () => {
+    await clearPosters();
+    const gone = `${IDS.a}/01JC0000000000000000000GNE`;
+    const kept = `${IDS.b}/01JC0000000000000000000KPT`;
+    await insertEvent({
+      id: IDS.a,
+      status: 'pending',
+      poster: { key: gone, status: 'pending' },
+      occurrences: [{ localDate: '2026-11-15', startTime: '18:00' }],
+    });
+    await insertEvent({
+      id: IDS.b,
+      poster: { key: kept, status: 'approved' },
+      occurrences: [{ localDate: '2026-11-15', startTime: '18:00' }],
+    });
+    await putPosterFiles(gone);
+    await putPosterFiles(kept);
+    const r = await runRetention(repo(), NOW, null, r2PosterStore(env.POSTERS));
+    expect(r.events).toBe(1);
+    const keys = (await env.POSTERS.list()).objects.map((o) => o.key).sort();
+    expect(keys).toEqual([kept, `${kept}/thumb`]);
   });
 
   it('keeps published past events ("Já aconteceram") but strips contact email, edit link and reports', async () => {

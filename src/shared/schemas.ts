@@ -339,6 +339,22 @@ export const PublicOccurrenceSchema = z.object({
 });
 export type PublicOccurrence = z.infer<typeof PublicOccurrenceSchema>;
 
+/** An approved poster (SPEC §4.7); site-relative URLs. A pending one never appears here. */
+export const PublicPosterSchema = z.object({
+  url: z.string(),
+  thumbUrl: z.string(),
+  width: z.number().int(),
+  height: z.number().int(),
+  alt: z.string().nullable(),
+});
+export type PublicPoster = z.infer<typeof PublicPosterSchema>;
+
+export const POSTER_STATUSES = ['pending', 'approved'] as const;
+export type PosterStatus = (typeof POSTER_STATUSES)[number];
+
+/** Text alternative of a poster (form field `alt` of PUT …/poster); empty = none. */
+export const PosterAltSchema = OptionalText(LIMITS.posterAltMax);
+
 export const PublicEventSchema = z.object({
   id: z.string(),
   type: z.enum(EVENT_TYPE_KEYS),
@@ -354,6 +370,7 @@ export const PublicEventSchema = z.object({
   verified: z.boolean(),
   /** Ongoing ("sem fim"): first local date, shown every day from then on; null = normal event. */
   ongoingSince: z.string().nullable(),
+  poster: PublicPosterSchema.nullable(),
   occurrences: z.array(PublicOccurrenceSchema),
 });
 export type PublicEvent = z.infer<typeof PublicEventSchema>;
@@ -377,6 +394,8 @@ export type PublicEventCollection = z.infer<typeof PublicEventCollectionSchema>;
 /** GET /api/events/:id/edit (owner only): public fields + moderation status. */
 export const EditableEventSchema = PublicEventSchema.extend({
   status: z.enum(['pending', 'published', 'hidden']),
+  /** Poster moderation state; null = no poster. `poster` stays null until approved. */
+  posterStatus: z.enum(POSTER_STATUSES).nullable(),
 });
 export type EditableEvent = z.infer<typeof EditableEventSchema>;
 
@@ -393,7 +412,7 @@ export interface ApiIssue {
 export const AdminLoginRequestSchema = z.object({ email: RequiredEmail });
 export const AdminSessionRequestSchema = z.object({ token: z.string().min(20).max(100) });
 
-export const ADMIN_EVENT_FILTERS = ['pending', 'reported', 'hidden', 'all'] as const;
+export const ADMIN_EVENT_FILTERS = ['pending', 'reported', 'hidden', 'posters', 'all'] as const;
 export type AdminEventFilter = (typeof ADMIN_EVENT_FILTERS)[number];
 
 /** Free-text search in admin lists: trimmed, empty = none. */
@@ -410,7 +429,19 @@ export const AdminEventsQuerySchema = z.object({
 });
 
 export const AdminEventActionSchema = z.object({
-  action: z.enum(['publish', 'hide', 'verify', 'unverify', 'ongoing', 'not_ongoing'], 'required'),
+  action: z.enum(
+    [
+      'publish',
+      'hide',
+      'verify',
+      'unverify',
+      'ongoing',
+      'not_ongoing',
+      'poster_approve',
+      'poster_reject',
+    ],
+    'required',
+  ),
 });
 export type AdminEventAction = z.infer<typeof AdminEventActionSchema>['action'];
 
@@ -431,6 +462,8 @@ export const AdminEventListItemSchema = z.object({
   reports: z.number().int(),
   /** Start of the next occurrence that has not ended (cancelled ones excluded). */
   nextStartsAt: z.string().nullable(),
+  /** Poster moderation state; null = no poster. */
+  posterStatus: z.enum(POSTER_STATUSES).nullable(),
 });
 export type AdminEventListItem = z.infer<typeof AdminEventListItemSchema>;
 export const AdminEventListSchema = z.object({ items: z.array(AdminEventListItemSchema) });

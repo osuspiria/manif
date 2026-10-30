@@ -46,7 +46,7 @@
 | Clustering | Clustering nativo do MapLibre (GeoJSON source `cluster: true`) | Sem dependências |
 | API | **Cloudflare Workers** (Hono) | Edge, barato, aguenta picos |
 | BD | **Cloudflare D1** (SQLite) | Suficiente para milhares de eventos/assinaturas |
-| Ficheiros | **Cloudflare R2** para o `.pmtiles` | Range requests |
+| Ficheiros | **Cloudflare R2**: `TILES` para o `.pmtiles`, `POSTERS` para os cartazes (§4.7) | Range requests; servidos por nós |
 | Anti-spam | **Cloudflare Turnstile** + honeypot + rate limit | Sem cookies de tracking, sem puzzles |
 | Email | Provider transacional atrás de uma interface `Mailer` (ex.: Resend, Brevo) | Confirmação de assinatura |
 | Geodados PT | CAOP (DGT) simplificada → GeoJSON de concelhos/distritos; lista de 308 municípios (INE) | Saber o concelho de cada ponto, sem serviços externos |
@@ -80,6 +80,11 @@ CREATE TABLE events (
   verified      INTEGER NOT NULL DEFAULT 0,-- confirmado por moderação
   contact_email TEXT,                      -- opcional, nunca público, só para moderação
   edit_token_hash TEXT NOT NULL,           -- link secreto para quem criou editar/cancelar
+  poster_key    TEXT,                      -- cartaz no R2 (§4.7): '<eventId>/<ulid>', muda a cada substituição
+  poster_status TEXT,                      -- NULL (sem cartaz) | 'pending' | 'approved'
+  poster_width  INTEGER,
+  poster_height INTEGER,
+  poster_alt    TEXT,                      -- ≤ 600 chars, texto do cartaz para leitores de ecrã
   created_at    TEXT NOT NULL,
   updated_at    TEXT NOT NULL
 );
@@ -216,11 +221,14 @@ Chips de escolha única, em scroll horizontal:
 
 Título · tipo · local e concelho · data(s) e hora(s) · descrição · organizador (se indicado) · selo **"Confirmado"** se `verified` · botões: *Como chegar* (direções no OpenStreetMap), *Abrir na app de mapas* (Apple Maps no iOS, link `geo:` no Android, escondido no computador), *Ver no OpenStreetMap*, *Partilhar* (Web Share API, fallback copiar link), *Reportar*.
 Cada evento tem URL próprio `/mapa/e/<id>` que abre o mapa centrado e a ficha aberta (com meta tags Open Graph para partilha).
+Se o evento tiver **cartaz aprovado** (§4.7): a ficha mostra-o (toque abre em tamanho total), com `alt`; a vista Lista mostra a miniatura (`loading="lazy"`); `/mapa/e/<id>` usa-o como `og:image` (senão `og.png`) e como `image` no JSON-LD `Event`.
 
 ### 4.4 Adicionar evento (`➕`)
 
 Fluxo em passos curtos (bottom sheet em telemóvel):
 
+0. **Cartaz (opcional, fase 8B)** — "Tens um cartaz?": escolher a imagem e, opcionalmente, colar o texto do post. Botão **"Preencher a partir do cartaz"**: pede um rascunho (`POST /api/events/extract`) e preenche os passos seguintes, com os avisos do modelo; tudo fica editável. Pode-se saltar este passo ou ignorar o rascunho e preencher à mão. A imagem escolhida aqui é a do campo "Cartaz" do passo 2. Ver §4.7.
+   Até à fase 8B não há passo 0: o campo **"Cartaz (opcional)"**, com o "Texto do cartaz", fica no fim do passo 2 (**O quê**).
 1. **Onde** — o mapa entra em modo "escolher ponto": pin fixo ao centro, a pessoa arrasta o mapa por baixo. Alternativas: "Usar a minha localização" ou pesquisar morada/local. Mostra o concelho detetado ("Porto · Porto"). Opcional: nome do local.
 2. **O quê** — tipo (chips), título, descrição (opcional), organizador (opcional).
 3. **Quando** — lista de datas:
@@ -230,7 +238,7 @@ Fluxo em passos curtos (bottom sheet em telemóvel):
    - Inputs nativos `type="date"` e `type="time"` (são os melhores em telemóvel).
 4. **Contacto (opcional)** — email só para a moderação, nunca publicado. Texto: "Se quiseres que te avisemos ou te possamos perguntar algo."
 5. **Enviar** — Turnstile invisível + honeypot. Ecrã final com:
-   - estado ("Publicado" ou "A aguardar moderação", conforme `MODERATION_MODE`);
+   - estado ("Publicado" ou "A aguardar moderação", conforme `MODERATION_MODE`); com cartaz, também "O cartaz fica visível depois de verificado";
    - **link secreto de edição** (para guardar; também enviado por email se foi indicado) que permite editar datas, cancelar uma ocorrência ou o evento inteiro.
      Formato: `/editar/#e=<id>&t=<token>`. O token fica no fragmento do URL (nunca é enviado ao servidor em pedidos de página, nem aparece em logs ou no Referer) e segue só no header `X-Edit-Token`.
 
@@ -242,6 +250,7 @@ Não se pede nome nem morada de quem submete.
   - `pre`: novos eventos ficam `pending` até aprovação.
   - `post`: publicados logo, com aspeto "não confirmado", e entram na fila para verificação.
 - Auto-ocultar quando um evento recebe ≥ N reports (config, ex.: 3) até revisão.
+- Cartazes: moderados à parte do evento, sempre antes de ficarem visíveis, qualquer que seja o `MODERATION_MODE` (§4.7).
 - Página `/admin` (ver §6).
 
 ### 4.6 Páginas para motores de busca
@@ -251,6 +260,19 @@ Não se pede nome nem morada de quem submete.
 - `/mapa/e/<id>`: além das tags Open Graph, `<link rel="canonical">`, JSON-LD schema.org `Event` (um por data futura não cancelada, máx. 10; só campos públicos) e o texto do evento dentro do `<noscript>`.
 - `/sitemap.xml` (Worker): home, `/manifestacoes/`, páginas de distrito e eventos com datas futuras. `/robots.txt` (build) aponta para ele e não bloqueia `/api/events.geojson` nem `/tiles` (o Google precisa deles para renderizar o mapa).
 - A introdução do mapa tem um link "Manifestações por distrito".
+
+### 4.7 Cartazes (fase 8)
+
+A divulgação faz-se sobretudo por cartazes no Instagram. Cada evento pode ter **um** cartaz, que serve para mostrar na ficha e na pré-visualização de links e, na fase 8B, para pré-preencher o formulário. Ver `docs/decisions.md` #79.
+
+- **Redução no browser** (reutiliza o código da importação do admin, movido para `src/components/forms/image.ts`): WebP (JPEG se o browser não codificar WebP), lado maior ≤ 1600 px, ≤ 400 KB, mais uma miniatura de 320 px. Recodificar apaga os metadados (EXIF, incluindo GPS).
+- **Envio:** depois de criado o evento, com o token de edição (`PUT /api/events/:id/poster`); `POST /api/events` continua em JSON. Se o envio falhar, o ecrã final diz que o evento foi criado e oferece "Tentar outra vez". O servidor valida o tipo pelos magic bytes (WebP, JPEG ou PNG, os dois ficheiros do mesmo tipo), o tamanho (≤ 600 KB a imagem, ≤ 60 KB a miniatura), as dimensões do cabeçalho (≤ 1600 px / ≤ 320 px) e **rejeita imagens com EXIF** (`exif_not_allowed`; o browser apaga-o sempre). Guarda no R2 (`POSTERS`) com uma chave nova a cada envio: primeiro os ficheiros novos, depois a linha, por fim os ficheiros antigos.
+- **Quem vê o quê:** um cartaz pendente não tem URL público; quem submeteu vê o estado ("A aguardar verificação") e a pré-visualização local, e a moderação vê-o pela rota do admin.
+- **Moderação:** um cartaz novo ou substituído fica `pending` e **nunca é público** até ser aprovado, mesmo com o evento publicado (`MODERATION_MODE = post`). Ao aprovar, verificar conteúdo impróprio e contactos pessoais visíveis (telefones, emails de particulares). Rejeitar apaga o ficheiro e limpa as colunas. Cartazes juntados no admin (incluindo os da importação, §6) ficam aprovados logo.
+- **Edição:** quem tem o link de edição pode substituir ou remover o cartaz.
+- **Texto alternativo:** `poster_alt`, preenchido à mão ou pelo rascunho da fase 8B (o texto do cartaz); sem ele, o `alt` é o título do evento.
+- **Retenção:** o cartaz é apagado com o evento; os eventos publicados antigos (filtro "Já aconteceram") mantêm-no.
+- **Pré-preenchimento (fase 8B):** o mesmo `EventExtractor` da importação do admin (`src/server/services/event-extractor.ts`, `normalizeDraft`, datas sem ano resolvidas em Lisboa). O texto e a imagem só vão para a Anthropic quando a pessoa carrega no botão; o extrator não guarda nada (o cartaz só é guardado se o evento for submetido). O ecrã avisa disto. Turnstile próprio (os tokens são de uso único), 5 pedidos/h/IP e um teto global diário (`RATE_LIMITS.publicExtractPerDay`) para limitar o custo. Sem `ANTHROPIC_API_KEY`, ou com o teto atingido, responde 503 e o botão esconde-se.
 
 ---
 
@@ -311,8 +333,8 @@ O concelho é guardado pelo código DICO da CAOP (há nomes repetidos, como "Lag
 
 Necessário para as duas funcionalidades, mantido mínimo:
 - Login por **magic link** para emails numa allowlist (`ADMIN_EMAILS`): `/admin/entrar/#t=<token>`, 15 minutos, uso único. Sessão com cookie estritamente necessário: `admin_session`, `Path=/api/admin`, `HttpOnly`, `Secure`, `SameSite=Strict`, 24 horas (ver `docs/decisions.md` #48–50).
-- Separador **Eventos**: pendentes, reportados, ocultos, todos; aprovar (descarta as denúncias), ocultar, marcar "confirmado", marcar "sem fim", editar (sem perder o "confirmado").
-- **Novo evento** (`#eventos/novo`): formulário completo, sem Turnstile; o evento fica logo publicado e "confirmado", sem email de contacto. Opcionalmente **importado** de um post ou cartaz: cola-se o texto e/ou junta-se uma imagem (reduzida no browser a ≤ 1568 px); o Worker pede ao Claude (`claude-opus-5-5`, `ANTHROPIC_API_KEY`) um rascunho (tipo, título, descrição, organização, local, datas, avisos) e procura o local com a pesquisa de locais; o formulário fica preenchido para rever. Nada do que se cola é guardado. Limite: `RATE_LIMITS.adminExtract` por hora e por admin. Ver `docs/decisions.md` #77.
+- Separador **Eventos**: pendentes, reportados, ocultos, cartazes por aprovar, todos; aprovar ou rejeitar um cartaz (§4.7); aprovar (descarta as denúncias), ocultar, marcar "confirmado", marcar "sem fim", editar (sem perder o "confirmado").
+- **Novo evento** (`#eventos/novo`): formulário completo, sem Turnstile; o evento fica logo publicado e "confirmado", sem email de contacto. Opcionalmente **importado** de um post ou cartaz: cola-se o texto e/ou junta-se uma imagem (reduzida no browser a ≤ 1568 px); o Worker pede ao Claude (`claude-opus-5-5`, `ANTHROPIC_API_KEY`) um rascunho (tipo, título, descrição, organização, local, datas, avisos) e procura o local com a pesquisa de locais; o formulário fica preenchido para rever. Nada do que se cola é guardado, exceto a imagem, se o moderador a quiser como cartaz do evento. Limite: `RATE_LIMITS.adminExtract` por hora e por admin. Ver `docs/decisions.md` #77.
 - Separador **Assinaturas**: organizações por aprovar; pesquisa; apagar a pedido.
 - **Exportar CSV** só de quem aceitou recontacto.
 - Funciona bem em telemóvel.
@@ -330,6 +352,7 @@ Necessário para as duas funcionalidades, mantido mínimo:
 - Retenção: assinaturas não confirmadas 7 dias; eventos não publicados 30 dias após a última ocorrência (exceto os marcados como sem fim), e os publicados ficam sem email de contacto, link de edição e denúncias; assinaturas até X meses após o fim da campanha (`CAMPAIGN_END` + `RETENTION.signatureMonthsAfterCampaign` em `src/config/app.ts`) ou até a pessoa retirar. Um Cron Trigger diário aplica estas regras.
 - Direitos: retirar assinatura por link; pedidos de acesso/apagamento por email.
 - **Sem cookies** no site público; nada de analytics de terceiros. Se forem precisas métricas: contadores agregados no servidor, sem IP.
+- Cartazes (§4.7): guardados no R2 e servidos por nós, sem metadados EXIF; só públicos depois de aprovados. No pré-preenchimento público, o texto e a imagem vão para a **Anthropic** (subcontratante) só quando a pessoa o pede, e não ficam guardados; a página de privacidade tem de o dizer.
 - IPs: usados só para rate limit, guardados como hash com sal diário, nunca persistidos em BD.
 - Página `/privacidade` gerada a partir de `content/privacidade.md`; responsável e contacto vêm de `DATA_CONTROLLER` (`src/config/app.ts`). Ligada a partir do rodapé de todas as páginas e do fim da vista Lista.
 - Content-Security-Policy em todas as páginas: só pedidos ao próprio site e ao Turnstile (`challenges.cloudflare.com`).
@@ -347,6 +370,10 @@ Necessário para as duas funcionalidades, mantido mínimo:
 | GET | `/api/events/:id/edit` | Dados para edição, com o estado de moderação (header `X-Edit-Token`) |
 | PATCH | `/api/events/:id` | Editar (header `X-Edit-Token`): corpo `{…campos, occurrences}` ou `{cancelEvent: true}` |
 | POST | `/api/events/:id/report` | Reportar |
+| PUT | `/api/events/:id/poster` | Cartaz (multipart: `image`, `thumb`, `alt`), header `X-Edit-Token` → fica `pending` (§4.7) |
+| DELETE | `/api/events/:id/poster` | Remover o cartaz (header `X-Edit-Token`) |
+| POST | `/api/events/extract` | Fase 8B: rascunho a partir de `{text?, image?}` (Turnstile) → mesmo formato que a importação do admin |
+| GET | `/posters/<eventId>/<ulid>` e `…/thumb` | Só cartazes aprovados de eventos publicados (senão 404); `Cache-Control: public, max-age=86400, immutable` (a chave muda a cada substituição; um dia limita quanto tempo um cartaz removido ainda se vê) |
 | GET | `/api/geo/search?q=` | Proxy de pesquisa de locais (só PT, cache) |
 | GET | `/api/geo/reverse?lat&lng` | Concelho/distrito/tz via CAOP local |
 | POST | `/api/signatures` | Assinar (Turnstile): JSON → `202 {status:"check_email"}`; formulário HTML → `303` ou página de erro |
@@ -358,9 +385,11 @@ Necessário para as duas funcionalidades, mantido mínimo:
 | POST | `/api/admin/session` | Trocar o token do link por sessão `{token}` (define o cookie) |
 | POST | `/api/admin/logout` | Terminar sessão |
 | GET | `/api/admin/me` | Email da sessão |
-| GET | `/api/admin/events?filter&q` | Fila de eventos: `pending`, `reported`, `hidden`, `all` |
+| GET | `/api/admin/events?filter&q` | Fila de eventos: `pending`, `reported`, `hidden`, `posters`, `all` |
 | GET/PATCH | `/api/admin/events/:id` | Detalhe (com email de contacto e denúncias) / editar |
-| POST | `/api/admin/events/:id/moderate` | `{action: publish \| hide \| verify \| unverify \| ongoing \| not_ongoing}` |
+| POST | `/api/admin/events/:id/moderate` | `{action: publish \| hide \| verify \| unverify \| ongoing \| not_ongoing \| poster_approve \| poster_reject}` |
+| GET | `/api/admin/events/:id/poster` e `…/poster/thumb` | O cartaz em qualquer estado (pré-visualização da moderação, `no-store`) |
+| PUT/DELETE | `/api/admin/events/:id/poster` | Juntar ou substituir (fica aprovado logo) / remover; devolve o detalhe do evento |
 | GET | `/api/admin/signatures?filter&q` | `orgs_pending`, `organizations`, `individuals`, `unconfirmed` |
 | POST | `/api/admin/signatures/:id/moderate` | `{action: approve \| reject}` (organizações confirmadas) |
 | DELETE | `/api/admin/signatures/:id` | Apagar a pedido |
@@ -368,7 +397,9 @@ Necessário para as duas funcionalidades, mantido mínimo:
 
 Todas as rotas `/api/admin/*` exceto `login`, `session` e `logout` exigem sessão; as escritas exigem o header `X-Admin-Request: 1`.
 
-Validação partilhada entre cliente e servidor com **Zod** (`src/shared/schemas.ts`). Rate limits: criar evento 5/h/IP; assinar 10/h/IP; report 10/h/IP.
+A API pública (`/api/events/:id` e os GeoJSON) devolve `poster: {url, thumbUrl, width, height, alt} | null`, só com o cartaz aprovado; um cartaz pendente não aparece em nenhum endpoint público. Aprovar, rejeitar, juntar ou remover um cartaz apaga a cache da edge, como as outras escritas.
+
+Validação partilhada entre cliente e servidor com **Zod** (`src/shared/schemas.ts`). Rate limits: criar evento 5/h/IP; assinar 10/h/IP; report 10/h/IP; cartaz 10/h/IP; pré-preenchimento 5/h/IP e `RATE_LIMITS.publicExtractPerDay` no total.
 
 ---
 
@@ -397,6 +428,8 @@ Validação partilhada entre cliente e servidor com **Zod** (`src/shared/schemas
 | 5 | Assinaturas (individual + organização), confirmação por email, contador, lista pública | E2E com mailer fake |
 | 6 | Admin + moderação + exportação + jobs de retenção | |
 | 7 | Privacidade, acessibilidade, performance, OG tags, páginas de erro | Lighthouse + axe sem erros |
+| 8A | Cartazes (§4.7): redução no browser, envio, R2, moderação, ficha/lista/`og:image` | E2E em 360×740: submeter com cartaz → invisível enquanto pendente → aprovar no admin → visível na ficha e no `og:image`; teste de API: cartaz pendente fora de todos os endpoints públicos; teste: imagem guardada sem EXIF |
+| 8B | Pré-preenchimento público a partir do cartaz e do texto | E2E com `FAKE_EXTERNAL=on`: rascunho preenche o formulário; 503 esconde o botão; teto diário respeitado |
 
 ---
 

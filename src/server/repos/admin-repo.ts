@@ -57,6 +57,7 @@ export interface AdminEventRow {
   created_at: string;
   reports: number;
   next_starts_at: string | null;
+  poster_status: 'pending' | 'approved' | null;
 }
 
 export interface AdminReportRow {
@@ -68,14 +69,14 @@ export interface AdminReportRow {
 export function adminEventsRepo(db: Db) {
   const select = `SELECT e.id, e.type, e.title, e.status, e.verified, e.ongoing, e.municipality,
       e.district,
-      e.created_at,
+      e.created_at, e.poster_status,
       (SELECT COUNT(*) FROM event_reports r WHERE r.event_id = e.id) AS reports,
       (SELECT MIN(o.starts_at) FROM event_occurrences o
         WHERE o.event_id = e.id AND o.cancelled = 0 AND o.ends_at > ?) AS next_starts_at
     FROM events e`;
   return {
     async list(
-      filter: 'pending' | 'reported' | 'hidden' | 'all',
+      filter: 'pending' | 'reported' | 'hidden' | 'posters' | 'all',
       q: string | null,
       nowIso: string,
       limit: number,
@@ -84,6 +85,7 @@ export function adminEventsRepo(db: Db) {
       const params: unknown[] = [nowIso];
       if (filter === 'pending') where.push("e.status = 'pending'");
       if (filter === 'hidden') where.push("e.status = 'hidden'");
+      if (filter === 'posters') where.push("e.poster_status = 'pending'");
       if (filter === 'reported')
         where.push('EXISTS (SELECT 1 FROM event_reports r WHERE r.event_id = e.id)');
       if (q) {
@@ -226,6 +228,15 @@ export function retentionRepo(db: Db) {
      * "Já aconteceram" (see anonymizeEventsEndedBefore). Ongoing events are
      * kept until a moderator unmarks them.
      */
+    /** Poster keys of the events deleteEventsEndedBefore(iso) is about to delete. */
+    async posterKeysOfEventsEndedBefore(iso: string): Promise<string[]> {
+      const rows = await db.all<{ poster_key: string }>(
+        `SELECT poster_key FROM events WHERE poster_key IS NOT NULL
+           AND id IN (${staleEvents} AND e.status <> 'published')`,
+        [iso, iso],
+      );
+      return rows.map((r) => r.poster_key);
+    },
     async deleteEventsEndedBefore(iso: string): Promise<number> {
       const stale = `${staleEvents} AND e.status <> 'published'`;
       const n = await count(`SELECT COUNT(*) AS n FROM (${stale})`, [iso, iso]);

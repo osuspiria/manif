@@ -4,7 +4,12 @@
  */
 import { isEventType } from '../../config/event-types';
 import { nowIso, TIME_ZONES, type Tz } from '../../shared/dates';
-import type { PublicEvent, PublicEventCollection, PublicOccurrence } from '../../shared/schemas';
+import type {
+  PublicEvent,
+  PublicEventCollection,
+  PublicOccurrence,
+  PublicPoster,
+} from '../../shared/schemas';
 import type { EventRow, EventsRepo, OccurrenceRow } from '../repos/events-repo';
 
 function toTz(value: string): Tz {
@@ -24,6 +29,24 @@ function toPublicOccurrence(o: OccurrenceRow): PublicOccurrence {
   };
 }
 
+/** The poster as the public API shows it: only once approved (SPEC §4.7), else null. */
+export function publicPoster(e: EventRow): PublicPoster | null {
+  if (e.poster_status !== 'approved' || !e.poster_key) return null;
+  if (e.poster_width === null || e.poster_height === null) return null;
+  return {
+    url: posterPath(e.poster_key),
+    thumbUrl: posterPath(e.poster_key, 'thumb'),
+    width: e.poster_width,
+    height: e.poster_height,
+    alt: e.poster_alt,
+  };
+}
+
+/** Site path of a poster (served by routes/posters.ts). */
+export function posterPath(key: string, variant?: 'thumb'): string {
+  return `/posters/${key}${variant ? '/thumb' : ''}`;
+}
+
 function toPublicEvent(e: EventRow, occurrences: OccurrenceRow[]): PublicEvent {
   return {
     id: e.id,
@@ -39,6 +62,7 @@ function toPublicEvent(e: EventRow, occurrences: OccurrenceRow[]): PublicEvent {
     tz: toTz(e.tz),
     verified: e.verified === 1,
     ongoingSince: e.ongoing_since,
+    poster: publicPoster(e),
     occurrences: occurrences.map(toPublicOccurrence),
   };
 }

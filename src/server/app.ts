@@ -11,6 +11,7 @@ import { seoPagesRoutes } from './routes/seo-pages';
 import { glyphRoutes } from './routes/glyphs';
 import { sharePageRoutes } from './routes/share-page';
 import { signaturesRoutes } from './routes/signatures';
+import { postersRoutes } from './routes/posters';
 import { tilesRoutes } from './routes/tiles';
 import { createGeoService, type MunicipalityCollection } from './services/geo-service';
 
@@ -51,6 +52,7 @@ export function createApp(overrides: Partial<AppDeps> = {}) {
     })
     .route('/api', api)
     .route('/tiles', tilesRoutes())
+    .route('/posters', postersRoutes(deps))
     .route('/map/fonts', glyphRoutes())
     .route('/mapa/e', sharePageRoutes(clock))
     .route('/', seoPagesRoutes(clock))

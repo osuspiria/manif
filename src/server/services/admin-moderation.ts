@@ -21,14 +21,17 @@ import type {
 } from '../../shared/schemas';
 import type { AdminEventRow, AdminEventsRepo, AdminSignaturesRepo } from '../repos/admin-repo';
 import type { EventsRepo, EventsWriteRepo } from '../repos/events-repo';
+import type { PosterStore } from '../repos/poster-store';
 import type { SignatureRow } from '../repos/signatures-repo';
 import { toEditable } from './event-submission';
+import { removePoster } from './posters';
 
 export interface ModerationDeps {
   events: AdminEventsRepo;
   read: EventsRepo;
   write: EventsWriteRepo;
   signatures: AdminSignaturesRepo;
+  posters: PosterStore;
   now: Date;
 }
 
@@ -47,6 +50,7 @@ function toListItem(r: AdminEventRow): AdminEventListItem {
     createdAt: r.created_at,
     reports: r.reports,
     nextStartsAt: r.next_starts_at,
+    posterStatus: r.poster_status,
   };
 }
 
@@ -94,6 +98,11 @@ export async function moderateEvent(
     await d.events.setVerified(id, action === 'verify', at);
   if (action === 'ongoing' || action === 'not_ongoing')
     await d.events.setOngoing(id, action === 'ongoing', at);
+  if (action === 'poster_approve') await d.write.setPosterStatus(id, 'approved', at);
+  if (action === 'poster_reject') {
+    const key = (await d.write.getOwner(id))?.poster_key ?? null;
+    await removePoster(id, key, { write: d.write, store: d.posters, now: d.now });
+  }
   const row = await d.events.get(id, at);
   return row ? toListItem(row) : null;
 }

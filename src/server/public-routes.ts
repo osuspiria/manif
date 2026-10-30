@@ -7,10 +7,12 @@ import type { Features } from '../config/app';
  * in the app is missing from this list.
  *
  * Placeholders in sample URLs: {eventId} = a published event fixture,
- * {hiddenEventId} = a pending event fixture.
+ * {hiddenEventId} = a pending event fixture, {pendingPoster} = the published
+ * event's poster awaiting moderation, {approvedPoster} = an approved poster of
+ * a published event, {hiddenPoster} = an approved poster of the pending event.
  */
 export interface PublicRoute {
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   /** Route pattern as registered in Hono, e.g. '/api/events/:id'. */
   route: string;
   /** Concrete requests exercising the route (success and error paths). */
@@ -34,6 +36,15 @@ const form = (fields: Record<string, string>): RequestInit => ({
   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   body: new URLSearchParams(fields).toString(),
 });
+
+/** Multipart poster upload (the files are checked only after the edit token). */
+const posterForm = (headers: Record<string, string>): RequestInit => {
+  const body = new FormData();
+  body.set('image', new File([new Uint8Array([0xff, 0xd8, 0xff])], 'cartaz.jpg'));
+  body.set('thumb', new File([new Uint8Array([0xff, 0xd8, 0xff])], 'mini.jpg'));
+  body.set('alt', 'Texto do cartaz');
+  return { headers, body };
+};
 
 const NEW_SIGNATURE = {
   kind: 'individual',
@@ -167,6 +178,21 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
     ],
   },
   {
+    method: 'PUT',
+    route: '/api/events/:id/poster',
+    samples: [
+      { url: '/api/events/{eventId}/poster', init: posterForm({ 'X-Edit-Token': 'wrong' }) },
+      { url: '/api/events/{eventId}/poster', init: posterForm({}) },
+    ],
+  },
+  {
+    method: 'DELETE',
+    route: '/api/events/:id/poster',
+    samples: [
+      { url: '/api/events/{eventId}/poster', init: { headers: { 'X-Edit-Token': 'wrong' } } },
+    ],
+  },
+  {
     method: 'POST',
     route: '/api/events/:id/report',
     samples: [{ url: '/api/events/{eventId}/report', init: json({ reason: 'fake' }) }],
@@ -219,6 +245,24 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
     method: 'GET',
     route: '/map/fonts/:font/:range',
     samples: [{ url: '/map/fonts/Noto%20Sans%20Regular/1536-1791.pbf' }],
+  },
+  {
+    method: 'GET',
+    route: '/posters/:eventId/:id',
+    samples: [
+      { url: '/posters/{approvedPoster}' },
+      { url: '/posters/{pendingPoster}' },
+      { url: '/posters/{hiddenPoster}' },
+      { url: '/posters/nope/nope' },
+    ],
+  },
+  {
+    method: 'GET',
+    route: '/posters/:eventId/:id/thumb',
+    samples: [
+      { url: '/posters/{approvedPoster}/thumb' },
+      { url: '/posters/{pendingPoster}/thumb' },
+    ],
   },
   {
     method: 'GET',
