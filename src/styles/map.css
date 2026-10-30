@@ -546,6 +546,8 @@ body.map-page {
 /* --- event sheet ---------------------------------------------------------- */
 
 .event-sheet {
+  /* max-height includes padding and border: a tall sheet (poster) stays inside the map. */
+  box-sizing: border-box;
   position: absolute;
   left: 0;
   right: 0;
