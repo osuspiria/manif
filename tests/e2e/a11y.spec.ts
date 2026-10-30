@@ -119,12 +119,10 @@ test.describe('Acessibilidade (axe), CSP e pedidos a terceiros', () => {
     await check(page, thirdParty, 'event sheet');
 
     await page.goto('/?vista=lista');
-    // On the phone the filters open from the summary button; on desktop they are always shown.
+    // The filters open from the summary button (a panel on the phone, above the list on desktop).
     const summary = page.locator('#summary-button');
-    if ((page.viewportSize()?.width ?? 0) < 900) {
-      await summary.click();
-      await expect(summary).toHaveAttribute('aria-expanded', 'true');
-    }
+    await summary.click();
+    await expect(summary).toHaveAttribute('aria-expanded', 'true');
     await expect(page.getByRole('group', { name: 'Tipo' })).toBeVisible();
     await check(page, thirdParty, 'filters');
 

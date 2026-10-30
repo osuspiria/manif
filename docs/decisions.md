@@ -355,6 +355,6 @@ Registo das decisões tomadas, por ordem. Para as decisões em aberto do `SPEC.m
     - Abrir um evento aproxima até ao zoom 13 (antes 14): o primeiro zoom sem clusters (`clusterMaxZoom` 12), ainda com a vila à volta.
     - Datas diárias seguidas (3 ou mais, mesmo horário, sem nota nem cancelamento) numa só linha (`collapseDailyRuns`).
     - Telemóvel: ficha a meia altura com pega; cabeçalho numa linha (a descrição fica só para leitores de ecrã e motores de busca); um só link de mapa (a app no telemóvel, o OpenStreetMap no computador).
-    - Computador: filtros e lista num só scroll (antes duas zonas, com os filtros cortados a 30vh).
+    - Computador: filtros e lista num só scroll (antes duas zonas, com os filtros cortados a 30vh). Depois, a pedido do utilizador, os filtros passaram a recolhíveis no botão do resumo, como no telemóvel, e começam fechados: abertos ocupavam quase todo o primeiro ecrã. O estado não fica guardado (nada no browser).
     - Controlos do MapLibre com 44 px e rótulos em português (`pt.map.controls`). O botão compacto dos créditos fica com o tamanho do MapLibre (24 px): fica num canto, longe dos outros alvos, e mudar o tamanho mexia na disposição dos créditos.
     - Locais sem repetições (`formatPlace`), contagem de eventos por distrito (o Worker reescreve `/manifestacoes/`), botão próprio para escolher o cartaz e tipos sem eventos esbatidos.

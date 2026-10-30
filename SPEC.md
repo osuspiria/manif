@@ -215,7 +215,7 @@ Chips de escolha única, em scroll horizontal:
 - Na lista, ordenação pela próxima ocorrência no intervalo; agrupamento por dia ("Sábado, 24 nov").
 - Marcador: ícone do tipo; se o filtro abrange vários dias, uma pequena etiqueta com o dia ("24/11") a partir de certo zoom.
 - Tipos sem eventos nas datas escolhidas continuam a ser filtros, mas com o chip esbatido (contorno tracejado).
-- Computador: filtros e lista partilham um só scroll na coluna lateral.
+- Computador: os filtros abrem e fecham no botão do resumo ("58 eventos · Próximos · Filtros"), por cima da lista. Começam fechados; abertos, partilham o scroll da coluna lateral com a lista. Com filtros fechados e diferentes do defeito, "Limpar" aparece ao lado do resumo.
 
 **Implementação:** o servidor devolve **todos os eventos visíveis** num único GeoJSON (com as ocorrências futuras dentro de cada feature), em cache na edge 60 s. Todos os filtros correm no browser → instantâneos e sem pedidos extra. Revisitar só se passar de ~5 000 eventos.
 

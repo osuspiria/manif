@@ -68,6 +68,8 @@ export function MapApp() {
   } | null>(null);
   const [now, setNow] = useState(currentTime);
   const [panelOpen, setPanelOpen] = useState(false);
+  // Desktop: the filters fold away above the list (closed at first, so the list gets the room).
+  const [desktopFilters, setDesktopFilters] = useState(false);
   const [dayStripOpen, setDayStripOpen] = useState(() => url.when.kind === 'day');
   const [command, setCommand] = useState<MapCommand | null>(null);
   const [message, setMessage] = useState('');
@@ -256,6 +258,7 @@ export function MapApp() {
   const showList = !adding && (isDesktop || url.view === 'list');
   const showMap = isDesktop || url.view === 'map' || adding;
   const overlay = !isDesktop && panelOpen && !adding;
+  const filtersShown = isDesktop ? desktopFilters : panelOpen;
   // On a phone the intro makes room for the filters and the event sheet.
   const showIntro = !adding && (isDesktop || (!panelOpen && !selectedId));
 
@@ -291,38 +294,35 @@ export function MapApp() {
       <MapIntro hidden={!showIntro} />
 
       <div class="topbar">
-        {isDesktop ? (
-          <p class="summary-text" aria-live="polite">
-            {summary}
-          </p>
-        ) : (
-          <button
-            id="summary-button"
-            type="button"
-            class="summary-button"
-            aria-expanded={panelOpen}
-            aria-controls="filters"
-            onClick={() => {
-              if (!panelOpen) setSelectedId(null);
-              setPanelOpen(!panelOpen);
-            }}
-          >
-            <span class="summary-label">
-              <span class="summary-count">{summaryCount}</span>
-              <span class="summary-when">{summaryRest}</span>
-            </span>
-            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
-              <path
-                d="M4 6h16M7 12h10M10 18h4"
-                stroke="currentColor"
-                stroke-width="2"
-                fill="none"
-                stroke-linecap="round"
-              />
-            </svg>
-          </button>
-        )}
-        {!isDefault && !isDesktop && (
+        <button
+          id="summary-button"
+          type="button"
+          class="summary-button"
+          aria-expanded={filtersShown}
+          aria-controls="filters"
+          onClick={() => {
+            if (isDesktop) return setDesktopFilters(!desktopFilters);
+            if (!panelOpen) setSelectedId(null);
+            setPanelOpen(!panelOpen);
+          }}
+        >
+          <span class="summary-label">
+            <span class="summary-count">{summaryCount}</span>
+            <span class="summary-when">{summaryRest}</span>
+          </span>
+          {isDesktop && <span class="summary-toggle">{pt.map.filtersHeading}</span>}
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+            <path
+              d="M4 6h16M7 12h10M10 18h4"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        {/* Open filters have their own "Limpar". */}
+        {!isDefault && !(isDesktop && desktopFilters) && (
           <button type="button" class="btn-link topbar-clear" onClick={clear}>
             {pt.when.clear}
           </button>
@@ -347,11 +347,9 @@ export function MapApp() {
         )}
       </div>
 
-      {!isDesktop && (
-        <p class="visually-hidden" aria-live="polite">
-          {summary}
-        </p>
-      )}
+      <p class="visually-hidden" aria-live="polite">
+        {summary}
+      </p>
 
       {adding && (
         <div class={`add-container${picking ? ' add-compact' : ''}`}>
@@ -388,8 +386,8 @@ export function MapApp() {
         {/* Inside .content: it opens right under the top bar, whatever its height. */}
         {overlay && <div class="panel-overlay">{panel}</div>}
         <div class="list-pane" hidden={!showList}>
-          {/* Desktop: the filters scroll with the list (one scroll for the side column). */}
-          {isDesktop && <div class="panel-side">{panel}</div>}
+          {/* Desktop: open filters scroll with the list (one scroll for the side column). */}
+          {isDesktop && desktopFilters && <div class="panel-side">{panel}</div>}
           {shownLoad.state === 'loading' && <p class="empty">{pt.map.loading}</p>}
           {shownLoad.state === 'error' && (
             <p class="empty">

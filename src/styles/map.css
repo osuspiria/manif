@@ -176,9 +176,10 @@ body.map-page {
   color: var(--muted);
 }
 
-.summary-text {
-  margin: 0;
-  font-weight: 600;
+.summary-toggle {
+  margin-left: auto;
+  font-size: 0.875rem;
+  font-weight: 700;
 }
 
 .topbar-clear {

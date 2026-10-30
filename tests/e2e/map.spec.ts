@@ -43,7 +43,7 @@ test.describe('map page (/)', () => {
   test('filters: Quando chips update summary and URL; Limpar resets', async ({ page }, info) => {
     await page.goto('/');
     await expect(page.getByText(/\d+ eventos · Próximos/).first()).toBeVisible();
-    if (isMobile(info.project.name)) await page.locator('#summary-button').click();
+    await page.locator('#summary-button').click();
 
     const panel = page.locator('#filters');
     await expect(panel).toBeVisible();
@@ -66,7 +66,7 @@ test.describe('map page (/)', () => {
   }, info) => {
     await page.goto('/');
     await expect(page.getByText(/\d+ eventos · Próximos/).first()).toBeVisible();
-    if (isMobile(info.project.name)) await page.locator('#summary-button').click();
+    await page.locator('#summary-button').click();
 
     const panel = page.locator('#filters');
     await panel.getByRole('button', { name: 'Já aconteceram', exact: true }).click();
@@ -94,7 +94,7 @@ test.describe('map page (/)', () => {
   test('"Escolher dia" opens the day strip; empty days are disabled', async ({ page }, info) => {
     await page.goto('/');
     await expect(page.getByText(/\d+ eventos · Próximos/).first()).toBeVisible();
-    if (isMobile(info.project.name)) await page.locator('#summary-button').click();
+    await page.locator('#summary-button').click();
 
     await page.getByRole('button', { name: /Escolher dia/ }).click();
     const strip = page.getByRole('group', { name: 'Escolher um dia' });
@@ -155,6 +155,29 @@ test.describe('map page (/)', () => {
     await page.goto('/mapa?quando=hoje');
     await expect(page).toHaveURL(/\/\?quando=hoje$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Manifesta' })).toBeVisible();
+  });
+
+  test('desktop: the filters fold away above the list', async ({ page }, info) => {
+    test.skip(isMobile(info.project.name), 'desktop layout only');
+    await page.goto('/?vista=lista');
+    const summary = page.locator('#summary-button');
+    // Closed at first: the list starts right under the summary.
+    await expect(summary).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('#filters')).toHaveCount(0);
+    await expect(page.locator('.event-card').first()).toBeInViewport();
+
+    await summary.click();
+    await expect(summary).toHaveAttribute('aria-expanded', 'true');
+    const panel = page.locator('#filters');
+    await panel.getByRole('button', { name: 'Hoje', exact: true }).click();
+    await expect(page).toHaveURL(/quando=hoje/);
+    // Open, the panel has its own "Limpar"; closed, the top bar shows it.
+    await expect(page.locator('.topbar-clear')).toHaveCount(0);
+    await summary.click();
+    await expect(panel).toHaveCount(0);
+    await expect(summary).toContainText('Hoje');
+    await page.locator('.topbar-clear').click();
+    await expect(page).not.toHaveURL(/quando=/);
   });
 
   test('the intro makes room for the filters and the event sheet on a phone', async ({
@@ -232,9 +255,9 @@ test.describe('map page (/)', () => {
     }
   });
 
-  test('URL state is restored on load', async ({ page }, info) => {
+  test('URL state is restored on load', async ({ page }) => {
     await page.goto('/?quando=hoje&tipo=rally,assembly');
-    if (isMobile(info.project.name)) await page.locator('#summary-button').click();
+    await page.locator('#summary-button').click();
     const panel = page.locator('#filters');
     await expect(panel.getByRole('button', { name: 'Hoje', exact: true })).toHaveAttribute(
       'aria-pressed',
