@@ -594,7 +594,18 @@ body.map-page {
 
 .event-poster {
   display: block;
+  /* Hug the image: a full-width link would show the link hover fill beside it. */
+  width: fit-content;
+  max-width: 100%;
   margin: 10px 0;
+}
+
+.event-poster:hover {
+  background: none;
+}
+
+.event-poster:hover img {
+  border-color: var(--accent);
 }
 
 .event-poster img {

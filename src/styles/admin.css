@@ -222,6 +222,20 @@
 }
 
 /* Poster (SPEC §4.7). */
+.admin-poster a {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.admin-poster a:hover {
+  background: none;
+}
+
+.admin-poster a:hover .admin-poster-img {
+  border-color: var(--accent);
+}
+
 .admin-poster-img {
   display: block;
   max-width: 100%;
