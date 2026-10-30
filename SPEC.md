@@ -224,7 +224,7 @@ Chips de escolha única, em scroll horizontal:
 Título · tipo · local e concelho (sem repetir nomes: o distrito some quando é igual ao concelho, e um ", Lisboa" no fim do nome do local some quando é o concelho) · data(s) e hora(s) · botões: *Como chegar* (direções no OpenStreetMap), *Partilhar* (Web Share API, fallback copiar link) e um só link de mapa — *Abrir na app de mapas* no telemóvel (Apple Maps no iOS, link `geo:` no Android), *Ver no OpenStreetMap* no computador · descrição · organizador (se indicado) · *Reportar* · selo **"Confirmado"** se `verified`.
 Abrir um evento centra o mapa e aproxima até ao zoom 13 (nunca afasta). No telemóvel a ficha abre a meia altura, com uma pega para a mostrar toda; mostrar as outras datas abre-a toda.
 Cada evento tem URL próprio `/mapa/e/<id>` que abre o mapa centrado e a ficha aberta (com meta tags Open Graph para partilha).
-Se o evento tiver **cartaz aprovado** (§4.7): a ficha mostra-o (toque abre em tamanho total), com `alt`; a vista Lista mostra a miniatura (`loading="lazy"`); `/mapa/e/<id>` usa-o como `og:image` (senão `og.png`) e como `image` no JSON-LD `Event`.
+Se o evento tiver **cartaz aprovado** (§4.7): a ficha mostra-o (no telemóvel, com a ficha a meia altura, como miniatura ao lado do título e da data, e em grande com a ficha toda aberta; toque abre em tamanho total), com `alt`; a vista Lista mostra a miniatura (`loading="lazy"`); `/mapa/e/<id>` usa-o como `og:image` (senão `og.png`) e como `image` no JSON-LD `Event`.
 
 ### 4.4 Adicionar evento (`➕`)
 

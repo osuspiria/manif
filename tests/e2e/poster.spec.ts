@@ -162,4 +162,16 @@ test('a poster is sent with the event, waits for moderation, then is public with
     .poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth))
     .toBeGreaterThan(0);
   await shot(page, '16-ficha-com-cartaz', project);
+
+  // Phone: the half-height sheet shows a thumbnail, with the date and the
+  // actions in view; the full sheet shows the poster large.
+  if (project === 'mobile-360') {
+    const width = () => img.evaluate((el) => el.getBoundingClientRect().width);
+    expect(await width()).toBeLessThanOrEqual(88);
+    await expect(sheet.locator('.occ-highlight')).toBeInViewport();
+    await expect(sheet.getByRole('button', { name: 'Partilhar' })).toBeInViewport();
+    await sheet.getByRole('button', { name: 'Mostrar a ficha toda' }).click();
+    await expect.poll(width).toBeGreaterThan(150);
+    await shot(page, '17-ficha-com-cartaz-inteira', project);
+  }
 });

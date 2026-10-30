@@ -663,6 +663,36 @@ body.map-page {
   background: var(--bg);
 }
 
+/* Phone, half-height sheet: the poster is a thumbnail left of the title,
+   place and dates; the full sheet (grip) shows it large again. */
+@media (max-width: 959.98px) {
+  .event-sheet:not(.sheet-full) .sheet-main.has-poster {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: start;
+  }
+
+  .event-sheet:not(.sheet-full) .sheet-main.has-poster > * {
+    grid-column: 2;
+  }
+
+  .event-sheet:not(.sheet-full) .sheet-main.has-poster > .event-poster {
+    grid-column: 1;
+    grid-row: 1 / span 6;
+    width: 100%;
+    margin: 10px 0 0;
+  }
+
+  .event-sheet:not(.sheet-full) .event-poster img {
+    box-sizing: border-box;
+    width: 100%;
+    max-height: 132px;
+    object-fit: cover;
+    object-position: top;
+  }
+}
+
 .event-place {
   margin: 0 0 10px;
   color: var(--muted);

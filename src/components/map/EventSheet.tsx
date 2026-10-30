@@ -150,83 +150,87 @@ export function EventSheet({ event, loading, when, now, onClose }: Props) {
           ×
         </button>
       </div>
-      <h2 id="event-sheet-title" tabIndex={-1} ref={titleRef}>
-        {event.title}
-      </h2>
-      <p class="event-place">{formatPlace(event, { district: true })}</p>
-      {event.poster && (
-        <a
-          class="event-poster"
-          href={event.poster.url}
-          target="_blank"
-          rel="noopener"
-          aria-label={pt.poster.open}
-        >
-          <img
-            src={event.poster.url}
-            width={event.poster.width}
-            height={event.poster.height}
-            alt={event.poster.alt ?? event.title}
-            decoding="async"
-          />
-        </a>
-      )}
+      {/* Half-height sheet on a phone: the poster shrinks to a thumbnail beside
+          the title and dates, so they stay in view (map.css). */}
+      <div class={event.poster ? 'sheet-main has-poster' : 'sheet-main'}>
+        <h2 id="event-sheet-title" tabIndex={-1} ref={titleRef}>
+          {event.title}
+        </h2>
+        <p class="event-place">{formatPlace(event, { district: true })}</p>
+        {event.poster && (
+          <a
+            class="event-poster"
+            href={event.poster.url}
+            target="_blank"
+            rel="noopener"
+            aria-label={pt.poster.open}
+          >
+            <img
+              src={event.poster.url}
+              width={event.poster.width}
+              height={event.poster.height}
+              alt={event.poster.alt ?? event.title}
+              decoding="async"
+            />
+          </a>
+        )}
 
-      {match ? (
-        <div class="event-dates">
-          <p class="occ-highlight">
-            {event.ongoingSince
-              ? formatOngoing(event.ongoingSince)
-              : formatOccurrence(match.highlight, event.tz)}
-          </p>
-          {!event.ongoingSince && match.highlight.note && (
-            <p class="occ-note">{match.highlight.note}</p>
-          )}
-          {extra.length > 0 && (
-            <>
-              <button
-                type="button"
-                class="btn-link"
-                aria-expanded={expanded}
-                aria-controls="event-other-dates"
-                onClick={() => {
-                  setExpanded(!expanded);
-                  if (!expanded) setFull(true);
-                }}
-              >
-                {expanded ? pt.event.hideOtherDates : pt.event.otherDates(extra.length)}
-              </button>
-              {expanded && (
-                <ul id="event-other-dates" class="occ-list">
-                  {extraEntries.map((entry) =>
-                    entry.kind === 'one' ? (
-                      <OccurrenceItem
-                        key={entry.item.o.id}
-                        o={entry.item.o}
-                        event={event}
-                        faded={entry.item.faded}
-                      />
-                    ) : (
-                      <li
-                        key={entry.first.o.id}
-                        class={entry.first.faded ? 'occ occ-faded' : 'occ'}
-                      >
-                        {formatDailyRun(entry.first.o, entry.last.o, event.tz)}
-                      </li>
-                    ),
-                  )}
-                </ul>
-              )}
-            </>
-          )}
-        </div>
-      ) : (
-        <p class="event-ended">{pt.event.ended}</p>
-      )}
-      {/* "Já aconteceram": the past date is shown above; say so if none is left. */}
-      {match && when.kind === 'past' && match.others.length === 0 && (
-        <p class="event-ended">{pt.event.ended}</p>
-      )}
+        {match ? (
+          <div class="event-dates">
+            <p class="occ-highlight">
+              {event.ongoingSince
+                ? formatOngoing(event.ongoingSince)
+                : formatOccurrence(match.highlight, event.tz)}
+            </p>
+            {!event.ongoingSince && match.highlight.note && (
+              <p class="occ-note">{match.highlight.note}</p>
+            )}
+            {extra.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  class="btn-link"
+                  aria-expanded={expanded}
+                  aria-controls="event-other-dates"
+                  onClick={() => {
+                    setExpanded(!expanded);
+                    if (!expanded) setFull(true);
+                  }}
+                >
+                  {expanded ? pt.event.hideOtherDates : pt.event.otherDates(extra.length)}
+                </button>
+                {expanded && (
+                  <ul id="event-other-dates" class="occ-list">
+                    {extraEntries.map((entry) =>
+                      entry.kind === 'one' ? (
+                        <OccurrenceItem
+                          key={entry.item.o.id}
+                          o={entry.item.o}
+                          event={event}
+                          faded={entry.item.faded}
+                        />
+                      ) : (
+                        <li
+                          key={entry.first.o.id}
+                          class={entry.first.faded ? 'occ occ-faded' : 'occ'}
+                        >
+                          {formatDailyRun(entry.first.o, entry.last.o, event.tz)}
+                        </li>
+                      ),
+                    )}
+                  </ul>
+                )}
+              </>
+            )}
+          </div>
+        ) : (
+          <p class="event-ended">{pt.event.ended}</p>
+        )}
+        {/* "Já aconteceram": the past date is shown above; say so if none is left. */}
+        {match && when.kind === 'past' && match.others.length === 0 && (
+          <p class="event-ended">{pt.event.ended}</p>
+        )}
+      </div>
 
       <div class="sheet-actions">
         <a class="btn" href={directions} rel="noopener noreferrer" target="_blank">
